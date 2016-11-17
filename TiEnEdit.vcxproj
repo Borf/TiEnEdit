@@ -83,11 +83,40 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="menu\ActionMenuItem.h" />
+    <ClInclude Include="menu\Menu.h" />
+    <ClInclude Include="menu\MenuItem.h" />
+    <ClInclude Include="menu\MenuOverlay.h" />
+    <ClInclude Include="menu\SubMenuMenuItem.h" />
+    <ClInclude Include="menu\ToggleMenuItem.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="TienEdit.h" />
+    <ClInclude Include="wm\Component.h" />
+    <ClInclude Include="wm\Panel.h" />
+    <ClInclude Include="wm\RenderComponent.h" />
+    <ClInclude Include="wm\SplitPanel.h" />
+    <ClInclude Include="wm\TabPanel.h" />
+    <ClInclude Include="wm\Tree.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="menu\Menu.cpp" />
+    <ClCompile Include="menu\MenuItem.cpp" />
+    <ClCompile Include="menu\MenuOverlay.cpp" />
+    <ClCompile Include="menu\SubMenuMenuItem.cpp" />
     <ClCompile Include="TienEdit.cpp" />
+    <ClCompile Include="wm\Component.cpp" />
+    <ClCompile Include="wm\Panel.cpp" />
+    <ClCompile Include="wm\RenderComponent.cpp" />
+    <ClCompile Include="wm\SplitPanel.cpp" />
+    <ClCompile Include="wm\TabPanel.cpp" />
+    <ClCompile Include="wm\Tree.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TiEnEdit.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="editor.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

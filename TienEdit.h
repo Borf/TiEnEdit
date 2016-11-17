@@ -5,12 +5,21 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#include "menu/MenuOverlay.h"
+class Component;
+
+namespace vrlib
+{
+	class Kernel;
+}
 
 class TienEdit : public vrlib:: NormalApp
 {
-	vrlib::tien::Tien tien;
 public:
-
+	vrlib::Kernel* kernel;
+	vrlib::tien::Tien tien;
+	MenuOverlay menuOverlay;
+	Component* panel;
 
 	TienEdit(const std::string &filename);
 	~TienEdit();
@@ -22,7 +31,7 @@ public:
 
 	virtual void mouseMove(int x, int y) override;
 	virtual void mouseScroll(int offset) override;
-
+	virtual void mouseUp(MouseButton button) override;
 
 
 

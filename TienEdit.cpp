@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define _USE_MATH_DEFINES
 #include "TienEdit.h"
+#include "resource.h"
 
 #include <Windows.h>
 #include <direct.h>
@@ -36,6 +37,14 @@
 #include <vrlib/tien/components/ModelRenderer.h>
 #include <vrlib/tien/components/MeshRenderer.h>
 
+
+#include "menu/MenuOverlay.h"
+#include "wm/SplitPanel.h"
+#include "wm/RenderComponent.h"
+#include "wm/Tree.h"
+#include "wm/Panel.h"
+
+
 TienEdit::TienEdit(const std::string &fileName) : NormalApp("TiEn scene Editor")
 {
 }
@@ -49,9 +58,35 @@ TienEdit::~TienEdit()
 
 void TienEdit::init()
 {
+	HWND hWnd = GetActiveWindow();
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+	HICON icon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
+	SendMessage(hWnd, WM_SETICON, ICON_SMALL,	(LPARAM)icon);
+	SendMessage(hWnd, WM_SETICON, ICON_BIG,		(LPARAM)icon);
+
+	kernel = vrlib::Kernel::getInstance();
+
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	tien.init();
+	menuOverlay.init();
+	menuOverlay.loadMenu("data/TiEnEdit/menu.json");
 
+	SplitPanel* mainPanel = new SplitPanel();
+
+	Tree* objectTree = new Tree();
+	mainPanel->addPanel(objectTree);
+	
+	mainPanel->addPanel(new RenderComponent());
+
+	mainPanel->addPanel(new Panel());
+
+
+
+
+	panel = mainPanel;
+	panel->position = glm::ivec2(0, 0);
+	panel->size = glm::ivec2(1920, 1080);
+	panel->onReposition();
 
 	vrlib::tien::Node* sunlight;
 	{
@@ -103,30 +138,55 @@ void TienEdit::init()
 
 void TienEdit::preFrame(double frameTime, double totalTime)
 {
+	menuOverlay.setWindowSize(kernel->getWindowSize());
+	menuOverlay.hover();
+
 	tien.update((float)(frameTime / 1000.0f));
 }
 
 
 void TienEdit::draw()
 {
+	float aspect = (float)kernel->getWindowWidth() / kernel->getWindowHeight();
+
+
+	glViewport(0, 0, kernel->getWindowWidth(), kernel->getWindowHeight());
+	menuOverlay.draw();
+
+	
+	
+	
 	glm::mat4 projectionMatrix = glm::perspective(70.0f, (1920-200) / (1080.0f-20), 0.01f, 100.0f);
 	glm::mat4 modelViewMatrix = glm::mat4();	
 
 
-	glViewport(200, 20, 1920 - 200, 1080 - 20);
+	//glViewport(200, 20, 1920 - 200, 1080 - 20);
 
-	tien.render(projectionMatrix, modelViewMatrix);
+	//tien.render(projectionMatrix, modelViewMatrix);
 }
 
 void TienEdit::mouseMove(int x, int y)
 {
 	//mousePos.x = (float)x;
 	//mousePos.y = (float)y;
+	menuOverlay.mousePos = glm::vec2(x, y);
+
 }
 
 void TienEdit::mouseScroll(int offset)
 {
 	//if (overlay)
 	//	overlay->scroll(offset);
+}
+
+void TienEdit::mouseUp(MouseButton button)
+{
+	//if click
+	{
+		if (menuOverlay.click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left))
+			return;
+	}
+
+
 }
 

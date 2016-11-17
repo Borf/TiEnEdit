@@ -1,0 +1,63 @@
+[
+	{
+		"name" : "file",
+		"type" : "menu",
+		"subitems" :
+		[
+			{
+				"name" : "new",
+				"type" : "item"
+			},
+			{
+				"name" : "open",
+				"type" : "item"
+			},
+			{
+				"name" : "save",
+				"type" : "item"
+			},
+			{
+				"name" : "save as",
+				"type" : "item"
+			}
+		]
+	},
+	{
+		"name" :  "Scene",
+		"type" :  "menu",
+		"subitems" : 
+		[
+			{
+				"name" : "clear",
+				"type" : "item"
+			},
+			{
+				"name" : "properties",
+				"type" : "item"
+			}
+		]
+	},
+	{
+		"name" :  "Object",
+		"type" :  "menu",
+		"subitems" : 
+		[
+			{
+				"name" : "copy",
+				"type" :  "item"
+			},
+			{
+				"name" : "paste",
+				"type" :  "item"
+			},
+			{
+				"name" : "delete",
+				"type" :  "item"
+			},
+			{
+				"name" : "focus with camera",
+				"type" :  "item"
+			}
+		]
+	}
+]

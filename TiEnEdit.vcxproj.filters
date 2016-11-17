@@ -13,10 +13,55 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="wm">
+      <UniqueIdentifier>{47fb5acf-c680-4c8b-9521-8547dc4ea35b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="menu">
+      <UniqueIdentifier>{1b5d90fa-adf0-4890-97e4-55d076098c34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TienEdit.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\SplitPanel.h">
+      <Filter>wm</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\TabPanel.h">
+      <Filter>wm</Filter>
+    </ClInclude>
+    <ClInclude Include="menu\ActionMenuItem.h">
+      <Filter>menu</Filter>
+    </ClInclude>
+    <ClInclude Include="menu\Menu.h">
+      <Filter>menu</Filter>
+    </ClInclude>
+    <ClInclude Include="menu\MenuItem.h">
+      <Filter>menu</Filter>
+    </ClInclude>
+    <ClInclude Include="menu\SubMenuMenuItem.h">
+      <Filter>menu</Filter>
+    </ClInclude>
+    <ClInclude Include="menu\ToggleMenuItem.h">
+      <Filter>menu</Filter>
+    </ClInclude>
+    <ClInclude Include="menu\MenuOverlay.h">
+      <Filter>menu</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\Component.h">
+      <Filter>wm</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\Tree.h">
+      <Filter>wm</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\RenderComponent.h">
+      <Filter>wm</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\Panel.h">
+      <Filter>wm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -26,5 +71,45 @@
     <ClCompile Include="TienEdit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wm\SplitPanel.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\TabPanel.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="menu\Menu.cpp">
+      <Filter>menu</Filter>
+    </ClCompile>
+    <ClCompile Include="menu\MenuItem.cpp">
+      <Filter>menu</Filter>
+    </ClCompile>
+    <ClCompile Include="menu\SubMenuMenuItem.cpp">
+      <Filter>menu</Filter>
+    </ClCompile>
+    <ClCompile Include="menu\MenuOverlay.cpp">
+      <Filter>menu</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\Component.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\Tree.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\RenderComponent.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\Panel.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TiEnEdit.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="editor.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
