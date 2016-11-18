@@ -21,6 +21,8 @@ public:
 	MenuOverlay menuOverlay;
 	Component* panel;
 
+	Component* renderPanel;
+
 	TienEdit(const std::string &filename);
 	~TienEdit();
 

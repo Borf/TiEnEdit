@@ -12,6 +12,9 @@
 #include <string>
 #include <regex>
 
+extern "C" {
+	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
 
 int main(int argc, char** argv) {	
 	vrlib::Kernel* kernel = vrlib::Kernel::getInstance();

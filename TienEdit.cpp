@@ -76,7 +76,7 @@ void TienEdit::init()
 	Tree* objectTree = new Tree();
 	mainPanel->addPanel(objectTree);
 	
-	mainPanel->addPanel(new RenderComponent());
+	mainPanel->addPanel(renderPanel = new RenderComponent());
 
 	mainPanel->addPanel(new Panel());
 
@@ -84,8 +84,11 @@ void TienEdit::init()
 
 
 	panel = mainPanel;
-	panel->position = glm::ivec2(0, 0);
-	panel->size = glm::ivec2(1920, 1080);
+	panel->position = glm::ivec2(0, 25+36);
+	panel->size = glm::ivec2(1920, 1080-25-36);
+	mainPanel->sizes[0] = 300;
+	mainPanel->sizes[2] = 300;
+	mainPanel->sizes[1] = mainPanel->size.x - 600;
 	panel->onReposition();
 
 	vrlib::tien::Node* sunlight;
@@ -160,9 +163,9 @@ void TienEdit::draw()
 	glm::mat4 modelViewMatrix = glm::mat4();	
 
 
-	//glViewport(200, 20, 1920 - 200, 1080 - 20);
-
-	//tien.render(projectionMatrix, modelViewMatrix);
+	//glViewport(renderPanel->position.x, renderPanel->position.y, renderPanel->size.x, renderPanel->size.y);
+	glViewport(renderPanel->position.x, kernel->getWindowHeight() - renderPanel->position.y - renderPanel->size.y, renderPanel->size.x, renderPanel->size.y);
+	tien.render(projectionMatrix, modelViewMatrix);
 }
 
 void TienEdit::mouseMove(int x, int y)
