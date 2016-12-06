@@ -73,7 +73,57 @@ void TienEdit::init()
 
 	SplitPanel* mainPanel = new SplitPanel();
 
+
+	class TienNodeTree : public Tree::TreeLoader
+	{
+		TienEdit* edit;
+	public:
+		TienNodeTree(TienEdit* edit)
+		{
+			this->edit = edit;
+		}
+		virtual std::string getName(void* data)
+		{
+			if (data == nullptr)
+				return "root";
+			auto n = static_cast<vrlib::tien::Node*>(data);
+			return n->name;
+		}
+		virtual int getChildCount(void* data)
+		{
+			if (data == nullptr)
+				return edit->tien.scene.getChildren().size();
+			auto n = static_cast<vrlib::tien::Node*>(data);
+			return n->getChildren().size();
+		}
+		virtual void* getChild(void* data, int index)
+		{
+			if (data == nullptr)
+				return edit->tien.scene.getChild(index);
+			else
+			{
+				auto n = static_cast<vrlib::tien::Node*>(data);
+				return n->getChild(index);
+			}
+		}
+		virtual int getIcon(void* data)
+		{
+			auto n = static_cast<vrlib::tien::Node*>(data);
+			if (n->getComponent<vrlib::tien::components::ModelRenderer>())
+				return 2;
+			if (n->getComponent<vrlib::tien::components::MeshRenderer>())
+				return 2;
+			if (n->getComponent<vrlib::tien::components::Camera>())
+				return 4;
+			if (n->getComponent<vrlib::tien::components::Light>())
+				return 5;
+
+			return 3;
+		}
+	};
+
 	Tree* objectTree = new Tree();
+	objectTree->loader = new TienNodeTree(this);
 	mainPanel->addPanel(objectTree);
 	
 	mainPanel->addPanel(renderPanel = new RenderComponent());
@@ -85,7 +135,7 @@ void TienEdit::init()
 
 	panel = mainPanel;
 	panel->position = glm::ivec2(0, 25+36);
-	panel->size = glm::ivec2(1920, 1080-25-36);
+	panel->size = glm::ivec2(kernel->getWindowWidth(), kernel->getWindowHeight());
 	mainPanel->sizes[0] = 300;
 	mainPanel->sizes[2] = 300;
 	mainPanel->sizes[1] = mainPanel->size.x - 600;
@@ -113,7 +163,7 @@ void TienEdit::init()
 		tien.scene.cameraNode = n;
 	}
 
-
+	vrlib::tien::Node* parent;
 	{
 		vrlib::tien::Node* n = new vrlib::tien::Node("GroundPlane", &tien.scene);
 		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, -0.01f, 0)));
@@ -132,7 +182,30 @@ void TienEdit::init()
 		vrlib::gl::setP3(v, glm::vec3(-100, 0, 100));		vrlib::gl::setT2(v, glm::vec2(-25, 25));		mesh->vertices.push_back(v);
 
 		n->addComponent(new vrlib::tien::components::MeshRenderer(mesh));
+		parent = n;
 	}
+
+	{
+		vrlib::tien::Node* n = new vrlib::tien::Node("OtherPlane", parent);
+		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 1, 0)));
+
+		vrlib::tien::components::MeshRenderer::Mesh* mesh = new vrlib::tien::components::MeshRenderer::Mesh();
+		mesh->material.texture = vrlib::Texture::loadCached("data/NetworkEngine/textures/grid.png");
+		mesh->indices = { 2, 1, 0, 2, 0, 3 };
+		vrlib::gl::VertexP3N2B2T2T2 v;
+		vrlib::gl::setN3(v, glm::vec3(0, 1, 0));
+		vrlib::gl::setTan3(v, glm::vec3(1, 0, 0));
+		vrlib::gl::setBiTan3(v, glm::vec3(0, 0, 1));
+
+		vrlib::gl::setP3(v, glm::vec3(-1, 0, -1));		vrlib::gl::setT2(v, glm::vec2(-1, -1));		mesh->vertices.push_back(v);
+		vrlib::gl::setP3(v, glm::vec3(1, 0, -1));		vrlib::gl::setT2(v, glm::vec2(1, -1));		mesh->vertices.push_back(v);
+		vrlib::gl::setP3(v, glm::vec3(1, 0, 1));		vrlib::gl::setT2(v, glm::vec2(1, 1));		mesh->vertices.push_back(v);
+		vrlib::gl::setP3(v, glm::vec3(-1, 0, 1));		vrlib::gl::setT2(v, glm::vec2(-1, 1));		mesh->vertices.push_back(v);
+
+		n->addComponent(new vrlib::tien::components::MeshRenderer(mesh));
+	}
+
+	objectTree->update();
 
 
 	tien.start();
@@ -144,7 +217,34 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 	menuOverlay.setWindowSize(kernel->getWindowSize());
 	menuOverlay.hover();
 
+	panel->size = glm::ivec2(kernel->getWindowWidth(), kernel->getWindowHeight() - 25 - 36);
+	panel->onReposition();
+
+
+
+	glm::vec3 cameraMovement(0, 0, 0);
+	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_W))		cameraMovement.z = -1;
+	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_S))		cameraMovement.z = 1;
+	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_A))		cameraMovement.x = -1;
+	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_D))		cameraMovement.x = 1;
+	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_Q))		cameraMovement.y = 1;
+	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_Z))		cameraMovement.y = -1;
+
+	cameraMovement *= frameTime / 100.0f;
+	cameraPos += cameraMovement * cameraRot;
+
+	if (mouseState.middle)
+	{
+		cameraRot = cameraRot * glm::quat(glm::vec3(0, .01f * (mouseState.pos.x - lastMouseState.pos.x), 0));
+		cameraRot = glm::quat(glm::vec3(.01f * (mouseState.pos.y - lastMouseState.pos.y), 0, 0)) * cameraRot;
+	}
+
+
+
 	tien.update((float)(frameTime / 1000.0f));
+
+
+	lastMouseState = mouseState;
 }
 
 
@@ -154,13 +254,17 @@ void TienEdit::draw()
 
 
 	glViewport(0, 0, kernel->getWindowWidth(), kernel->getWindowHeight());
-	menuOverlay.draw();
+	menuOverlay.drawInit();
+	menuOverlay.drawRootMenu();
+	panel->draw(&menuOverlay);
+	menuOverlay.drawPopups();
 
 	
-	
-	
-	glm::mat4 projectionMatrix = glm::perspective(70.0f, (1920-200) / (1080.0f-20), 0.01f, 100.0f);
-	glm::mat4 modelViewMatrix = glm::mat4();	
+	glm::mat4 cameraMat = glm::translate(glm::toMat4(cameraRot), -cameraPos);
+
+
+	glm::mat4 projectionMatrix = glm::perspective(70.0f, (1920-200) / (1080.0f-20), 0.01f, 500.0f);
+	glm::mat4 modelViewMatrix = cameraMat;
 
 
 	//glViewport(renderPanel->position.x, renderPanel->position.y, renderPanel->size.x, renderPanel->size.y);
@@ -170,10 +274,12 @@ void TienEdit::draw()
 
 void TienEdit::mouseMove(int x, int y)
 {
+	mouseState.pos.x = x;
+	mouseState.pos.y = y;
+
 	//mousePos.x = (float)x;
 	//mousePos.y = (float)y;
 	menuOverlay.mousePos = glm::vec2(x, y);
-
 }
 
 void TienEdit::mouseScroll(int offset)
@@ -182,12 +288,25 @@ void TienEdit::mouseScroll(int offset)
 	//	overlay->scroll(offset);
 }
 
+
+void TienEdit::mouseDown(MouseButton button)
+{
+	mouseState.buttons[(int)button] = true;
+}
+
+
 void TienEdit::mouseUp(MouseButton button)
 {
+	mouseState.buttons[(int)button] = false;
 	//if click
 	{
 		if (menuOverlay.click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left))
 			return;
+
+		if (panel->click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left, mouseState.pos))
+			return;
+
+
 	}
 
 

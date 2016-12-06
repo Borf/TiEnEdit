@@ -19,6 +19,14 @@
 			{
 				"name" : "save as",
 				"type" : "item"
+			},
+			{
+				"name" : "options",
+				"type" : "item"
+			},
+			{
+				"name" : "exit",
+				"type" : "item"
 			}
 		]
 	},

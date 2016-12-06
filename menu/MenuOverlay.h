@@ -54,13 +54,14 @@ public:
 	inline void setWindowSize(const glm::ivec2 &size) { this->windowSize = size; }
 
 	void init();
-	void draw();
+	void drawInit();
+	void drawPopups();
+	void drawRootMenu();
 
 
 	bool click(bool button);
 	void hover();
 
-	void drawRootMenu();
 
 
 	void flushVerts();

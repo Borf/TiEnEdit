@@ -19,6 +19,15 @@
     <Filter Include="menu">
       <UniqueIdentifier>{1b5d90fa-adf0-4890-97e4-55d076098c34}</UniqueIdentifier>
     </Filter>
+    <Filter Include="data">
+      <UniqueIdentifier>{54348b8b-fd07-427e-b436-1b3854a133cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data\shaders">
+      <UniqueIdentifier>{25ca6b91-6ca8-4dba-a195-ed04f7b85995}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data\textures">
+      <UniqueIdentifier>{772f6a1e-caa3-4b4a-81b1-eba6483452b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TienEdit.h">
@@ -111,5 +120,19 @@
     <Image Include="editor.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="data\TiEnEdit\textures\skin.png">
+      <Filter>data\textures</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\TiEnEdit\menu.json">
+      <Filter>data</Filter>
+    </None>
+    <None Include="data\TiEnEdit\shaders\overlay.frag">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\TiEnEdit\shaders\overlay.vert">
+      <Filter>data\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

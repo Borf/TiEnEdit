@@ -25,3 +25,20 @@ void SplitPanel::onReposition()
 	for (auto p : panels)
 		p->onReposition();
 }
+
+void SplitPanel::draw(MenuOverlay * overlay)
+{
+	for (auto p : panels)
+		p->draw(overlay);
+}
+
+bool SplitPanel::click(bool leftButton, const glm::ivec2 & clickPos)
+{
+	if (!inComponent(clickPos))
+		return false;
+
+	for (auto p : panels)
+		if (p->inComponent(clickPos))
+			return p->click(leftButton, clickPos);
+	return false;
+}

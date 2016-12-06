@@ -116,7 +116,13 @@
     <ResourceCompile Include="TiEnEdit.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="data\TiEnEdit\textures\skin.png" />
     <Image Include="editor.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\TiEnEdit\menu.json" />
+    <None Include="data\TiEnEdit\shaders\overlay.frag" />
+    <None Include="data\TiEnEdit\shaders\overlay.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -46,8 +46,7 @@ void MenuOverlay::loadMenu(const std::string &menuFile)
 }
 
 
-
-void MenuOverlay::draw()
+void MenuOverlay::drawInit()
 {
 	glDisable(GL_DEPTH_TEST);
 	shader->use();
@@ -58,10 +57,49 @@ void MenuOverlay::draw()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+
+
 	verts.clear();
+}
 
-	drawRootMenu();
 
+void MenuOverlay::drawPopups()
+{
+	for (auto m : popupMenus)
+	{
+		shader->setUniform(Uniforms::colorMult, glm::vec4(1, 1, 1, 1));
+		shader->setUniform(Uniforms::modelMatrix, glm::mat4());
+		skinTexture->bind();
+
+		float width = 0;
+		for (auto mm : m.second->menuItems)
+			width = glm::max(width, font->textlen(mm->name) + 40);
+
+		drawRect(glm::vec2(64, 416), glm::vec2(64 + 32, 416 + 32), m.first, m.first + glm::vec2(width, m.second->menuItems.size() * menuItemHeight + 10));
+		flushVerts();
+
+		float y = m.first.y + 5;
+		for (auto mm : m.second->menuItems)
+		{
+			if (isInRectangle(mousePos, glm::vec2(m.first.x, y), glm::vec2(m.first.x + width, y + 11)))
+			{
+				shader->setUniform(Uniforms::colorMult, glm::vec4(1, 1, 1, 1));
+				shader->setUniform(Uniforms::modelMatrix, glm::mat4());
+				skinTexture->bind();
+				drawRect(glm::vec2(96, 416), glm::vec2(128, 416 + 32), glm::vec2(m.first.x, y), glm::vec2(m.first.x + width, y + 15));
+				flushVerts();
+			}
+
+			ToggleMenuItem* i = dynamic_cast<ToggleMenuItem*>(mm);
+			if (i)
+				drawText((i->getValue() ? "X " : "   ") + mm->name, glm::vec2(m.first.x + 5, y + 12), glm::vec4(1, 1, 1, 1), false);
+			else
+				drawText("   " + mm->name, glm::vec2(m.first.x + 5, y + 12), glm::vec4(1, 1, 1, 1), false);
+			y += menuItemHeight;
+		}
+
+	}
+	flushVerts();
 }
 
 
@@ -180,52 +218,19 @@ void MenuOverlay::drawRootMenu()
 	}
 
 
+
+	pos = 5;
 	for (int i = 0; i < 10; i++)
 	{
-		drawRect(glm::vec2(0, 416), glm::vec2(32, 416 + 32), glm::vec2(5 + i * 34, menuBarHeight + 3), glm::vec2(5 + i * 34 + 32, menuBarHeight + 32 + 3));
-		drawRect(glm::vec2(512-33, 1+33*i), glm::vec2(512-1, 1+33*i+32), glm::vec2(5 + i * 34, menuBarHeight + 3), glm::vec2(5 + i * 34+32, menuBarHeight + 3+32));
+		drawRect(glm::vec2(0, 416), glm::vec2(32, 416 + 32), glm::vec2(pos, menuBarHeight + 3), glm::vec2(pos + 32, menuBarHeight + 32 + 3));
+		drawRect(glm::vec2(512-33, 1+33*i), glm::vec2(512-1, 1+33*i+32), glm::vec2(pos, menuBarHeight + 3));
+
+		pos += 34;
+		if (i == 2 || i == 4 || i == 7)
+			pos += 16;
+
 	}
 	flushVerts();
-
-
-	for (auto m : popupMenus)
-	{
-		shader->setUniform(Uniforms::colorMult, glm::vec4(1, 1, 1, 1));
-		shader->setUniform(Uniforms::modelMatrix, glm::mat4());
-		skinTexture->bind();
-
-		float width = 0;
-		for (auto mm : m.second->menuItems)
-			width = glm::max(width, font->textlen(mm->name) + 40);
-
-		drawRect(glm::vec2(64, 416), glm::vec2(64+32, 416 + 32), m.first, m.first + glm::vec2(width, m.second->menuItems.size() * menuItemHeight + 10));
-		flushVerts();
-
-		float y = m.first.y + 5;
-		for (auto mm : m.second->menuItems)
-		{
-			if (isInRectangle(mousePos, glm::vec2(m.first.x, y), glm::vec2(m.first.x + width, y + 11)))
-			{
-				shader->setUniform(Uniforms::colorMult, glm::vec4(1, 1, 1, 1));
-				shader->setUniform(Uniforms::modelMatrix, glm::mat4());
-				skinTexture->bind();
-				drawRect(glm::vec2(96, 416), glm::vec2(128, 416 + 32), glm::vec2(m.first.x, y), glm::vec2(m.first.x + width, y + 15));
-				flushVerts();
-			}
-
-			ToggleMenuItem* i = dynamic_cast<ToggleMenuItem*>(mm);
-			if (i)
-				drawText((i->getValue() ? "X " : "   ") + mm->name, glm::vec2(m.first.x + 5, y+12), glm::vec4(1, 1, 1, 1), false);
-			else
-				drawText("   " + mm->name, glm::vec2(m.first.x + 5, y+12), glm::vec4(1, 1, 1, 1), false);
-			y += menuItemHeight;
-		}
-
-	}
-
-
-
-
 }
 
 
@@ -236,6 +241,8 @@ void MenuOverlay::drawRootMenu()
 
 void MenuOverlay::flushVerts()
 {
+	if (verts.empty())
+		return;
 	skinTexture->bind();
 	vrlib::gl::setAttributes<vrlib::gl::VertexP2T2>(&verts[0]);
 	glDrawArrays(GL_QUADS, 0, verts.size());
@@ -268,10 +275,10 @@ void MenuOverlay::drawRect(const glm::vec2 &_srcTl, const glm::vec2 &_srcBr, con
 	glm::vec2 srcSize = (srcBr - srcTl);
 	glm::vec2 _srcSize = (_srcBr - _srcTl);
 
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstTl.y), glm::vec2(srcTl.x, srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y), glm::vec2(srcTl.x + srcSize.x, srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y + _srcSize.y), glm::vec2(srcTl.x + srcSize.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstTl.y + _srcSize.y), glm::vec2(srcTl.x, srcTl.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x,				dstTl.y),				glm::vec2(srcTl.x,				1-srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x,	dstTl.y),				glm::vec2(srcTl.x + srcSize.x,	1-srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x,	dstTl.y + _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	1-srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x,				dstTl.y + _srcSize.y),	glm::vec2(srcTl.x,				1-srcTl.y - srcSize.y)));
 
 }
 
@@ -285,52 +292,50 @@ void MenuOverlay::drawRect(const glm::vec2 &_srcTl, const glm::vec2 &_srcBr, con
 	srcTl.y = 1 - srcTl.y;
 	srcBr.y = 1 - srcBr.y;
 
-	std::swap(srcTl.y, srcBr.y);
-
 	//top
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstTl.y), glm::vec2(srcTl.x, srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y), glm::vec2(srcTl.x + srcSize.x, srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y + _srcSize.y), glm::vec2(srcTl.x + srcSize.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstTl.y + _srcSize.y), glm::vec2(srcTl.x, srcTl.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstTl.y),								glm::vec2(srcTl.x,				srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y),					glm::vec2(srcTl.x + srcSize.x,	srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y + _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstTl.y + _srcSize.y),					glm::vec2(srcTl.x,				srcTl.y - srcSize.y)));
 
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y), glm::vec2(srcTl.x + srcSize.x, srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y), glm::vec2(srcBr.x - srcSize.x, srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y + _srcSize.y), glm::vec2(srcBr.x - srcSize.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y + _srcSize.y), glm::vec2(srcTl.x + srcSize.x, srcTl.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y),					glm::vec2(srcTl.x + srcSize.x,	srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y),					glm::vec2(srcBr.x - srcSize.x,	srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y + _srcSize.y),	glm::vec2(srcBr.x - srcSize.x,	srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y + _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	srcTl.y - srcSize.y)));
 
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y), glm::vec2(srcBr.x - srcSize.x, srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstTl.y), glm::vec2(srcBr.x, srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstTl.y + _srcSize.y), glm::vec2(srcBr.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y + _srcSize.y), glm::vec2(srcBr.x - srcSize.x, srcTl.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y),					glm::vec2(srcBr.x - srcSize.x,	srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstTl.y),								glm::vec2(srcBr.x,				srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstTl.y + _srcSize.y),					glm::vec2(srcBr.x,				srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y + _srcSize.y),	glm::vec2(srcBr.x - srcSize.x,	srcTl.y - srcSize.y)));
 	//middle
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstTl.y + _srcSize.y), glm::vec2(srcTl.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y + _srcSize.y), glm::vec2(srcTl.x + srcSize.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y - _srcSize.y), glm::vec2(srcTl.x + srcSize.x, srcBr.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstBr.y - _srcSize.y), glm::vec2(srcTl.x, srcBr.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstTl.y + _srcSize.y),					glm::vec2(srcTl.x,				srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y + _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y - _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	srcBr.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstBr.y - _srcSize.y),					glm::vec2(srcTl.x,				srcBr.y + srcSize.y)));
 
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y + _srcSize.y), glm::vec2(srcTl.x + srcSize.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y + _srcSize.y), glm::vec2(srcBr.x - srcSize.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y - _srcSize.y), glm::vec2(srcBr.x - srcSize.x, srcBr.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y - _srcSize.y), glm::vec2(srcTl.x + srcSize.x, srcBr.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstTl.y + _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y + _srcSize.y),	glm::vec2(srcBr.x - srcSize.x,	srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y - _srcSize.y),	glm::vec2(srcBr.x - srcSize.x,	srcBr.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y - _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	srcBr.y + srcSize.y)));
 
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y + _srcSize.y), glm::vec2(srcBr.x - srcSize.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstTl.y + _srcSize.y), glm::vec2(srcBr.x, srcTl.y + srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstBr.y - _srcSize.y), glm::vec2(srcBr.x, srcBr.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y - _srcSize.y), glm::vec2(srcBr.x - srcSize.x, srcBr.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstTl.y + _srcSize.y),	glm::vec2(srcBr.x - srcSize.x,	srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstTl.y + _srcSize.y),					glm::vec2(srcBr.x,				srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstBr.y - _srcSize.y),					glm::vec2(srcBr.x,				srcBr.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y - _srcSize.y),	glm::vec2(srcBr.x - srcSize.x,	srcBr.y + srcSize.y)));
 	//bottom
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstBr.y - _srcSize.y), glm::vec2(srcTl.x, srcBr.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y - _srcSize.y), glm::vec2(srcTl.x + srcSize.x, srcBr.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y), glm::vec2(srcTl.x + srcSize.x, srcBr.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstBr.y), glm::vec2(srcTl.x, srcBr.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstBr.y - _srcSize.y),					glm::vec2(srcTl.x,				srcBr.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y - _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	srcBr.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y),					glm::vec2(srcTl.x + srcSize.x,	srcBr.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x, dstBr.y),								glm::vec2(srcTl.x,				srcBr.y)));
 
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y - _srcSize.y), glm::vec2(srcTl.x + srcSize.x, srcBr.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y - _srcSize.y), glm::vec2(srcBr.x - srcSize.x, srcBr.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y), glm::vec2(srcBr.x - srcSize.x, srcBr.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y), glm::vec2(srcTl.x + srcSize.x, srcBr.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y - _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	srcBr.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y - _srcSize.y),	glm::vec2(srcBr.x - srcSize.x,	srcBr.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y),					glm::vec2(srcBr.x - srcSize.x,	srcBr.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x, dstBr.y),					glm::vec2(srcTl.x + srcSize.x,	srcBr.y)));
 
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y - _srcSize.y), glm::vec2(srcBr.x - srcSize.x, srcBr.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstBr.y - _srcSize.y), glm::vec2(srcBr.x, srcBr.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstBr.y), glm::vec2(srcBr.x, srcBr.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y), glm::vec2(srcBr.x - srcSize.x, srcBr.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y - _srcSize.y),	glm::vec2(srcBr.x - srcSize.x,	srcBr.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstBr.y - _srcSize.y),					glm::vec2(srcBr.x,				srcBr.y + srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x, dstBr.y),								glm::vec2(srcBr.x,				srcBr.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstBr.x - _srcSize.x, dstBr.y),					glm::vec2(srcBr.x -	srcSize.x,	srcBr.y)));
 
 }
