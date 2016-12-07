@@ -39,10 +39,12 @@
 
 
 #include "menu/MenuOverlay.h"
+#include "menu/Menu.h"
 #include "wm/SplitPanel.h"
 #include "wm/RenderComponent.h"
 #include "wm/Tree.h"
 #include "wm/Panel.h"
+#include "wm/Label.h"
 
 
 TienEdit::TienEdit(const std::string &fileName) : NormalApp("TiEn scene Editor")
@@ -127,11 +129,22 @@ void TienEdit::init()
 	mainPanel->addPanel(objectTree);
 	
 	mainPanel->addPanel(renderPanel = new RenderComponent());
+	Panel* propertiesPanel = new Panel();
+	mainPanel->addPanel(propertiesPanel);
 
-	mainPanel->addPanel(new Panel());
+	objectTree->rightClickItem = [this]()
+	{
+		vrlib::json::Value popupMenu = vrlib::json::readJson(std::ifstream("data/TiEnEdit/nodemenu.json"));
 
+		menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, new Menu(popupMenu)));
+	};
+	objectTree->selectItem = [this, propertiesPanel]()
+	{
+		//TODO: delete all components
+		propertiesPanel->components.clear();
+		propertiesPanel->components.push_back(new Label("Hello World", glm::vec2(0, 0)));
 
-
+	};
 
 	panel = mainPanel;
 	panel->position = glm::ivec2(0, 25+36);
@@ -187,7 +200,7 @@ void TienEdit::init()
 
 	{
 		vrlib::tien::Node* n = new vrlib::tien::Node("OtherPlane", parent);
-		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 1, 0)));
+		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 1, -1)));
 
 		vrlib::tien::components::MeshRenderer::Mesh* mesh = new vrlib::tien::components::MeshRenderer::Mesh();
 		mesh->material.texture = vrlib::Texture::loadCached("data/NetworkEngine/textures/grid.png");

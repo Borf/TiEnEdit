@@ -1,14 +1,13 @@
 #pragma once
 
-#include "Component.h"
+#include "Panel.h"
 #include <vector>
 
 
-class SplitPanel : public Component
+class SplitPanel : public Panel
 {
 public:
 	std::vector<int> sizes;
-	std::vector<Component*> panels;
 
 	SplitPanel();
 

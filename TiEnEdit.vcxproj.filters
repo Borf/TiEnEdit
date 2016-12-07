@@ -72,6 +72,12 @@
     <ClInclude Include="wm\Panel.h">
       <Filter>wm</Filter>
     </ClInclude>
+    <ClInclude Include="wm\Label.h">
+      <Filter>wm</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\TextField.h">
+      <Filter>wm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -110,6 +116,12 @@
     <ClCompile Include="wm\Panel.cpp">
       <Filter>wm</Filter>
     </ClCompile>
+    <ClCompile Include="wm\Label.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\TextField.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TiEnEdit.rc">
@@ -133,6 +145,9 @@
     </None>
     <None Include="data\TiEnEdit\shaders\overlay.vert">
       <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\TiEnEdit\nodemenu.json">
+      <Filter>data</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
 
 class Tree : public Component
 {
@@ -53,6 +54,9 @@ public:
 	};
 	void* selectedItem;
 
+
+	std::function<void()> selectItem;
+	std::function<void()> rightClickItem;
 
 
 	Tree();

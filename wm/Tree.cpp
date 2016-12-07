@@ -57,17 +57,27 @@ bool Tree::click(bool leftButton, const glm::ivec2 & clickPos)
 	if (index < 0 || index >= (int)flatList.size())
 		return true;
 	
-	if (selectedIndex == index)
+	if (leftButton)
 	{
+		if (selectedIndex == index)
+		{
+			selectedItem = flatList[index].item;
+			nodeInfo[selectedItem].opened = !nodeInfo[selectedItem].opened;
+			update();
+
+		}
+		selectedIndex = index;
 		selectedItem = flatList[index].item;
-		nodeInfo[selectedItem].opened = !nodeInfo[selectedItem].opened;
-		update();
-
+		if (selectItem)
+			selectItem();
 	}
-	selectedIndex = index;
-	selectedItem = flatList[index].item;
-
-
+	else
+	{
+		selectedIndex = index;
+		selectedItem = flatList[index].item;
+		if (rightClickItem)
+			rightClickItem();
+	}
 
 
 

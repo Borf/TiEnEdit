@@ -92,10 +92,12 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="TienEdit.h" />
     <ClInclude Include="wm\Component.h" />
+    <ClInclude Include="wm\Label.h" />
     <ClInclude Include="wm\Panel.h" />
     <ClInclude Include="wm\RenderComponent.h" />
     <ClInclude Include="wm\SplitPanel.h" />
     <ClInclude Include="wm\TabPanel.h" />
+    <ClInclude Include="wm\TextField.h" />
     <ClInclude Include="wm\Tree.h" />
   </ItemGroup>
   <ItemGroup>
@@ -106,10 +108,12 @@
     <ClCompile Include="menu\SubMenuMenuItem.cpp" />
     <ClCompile Include="TienEdit.cpp" />
     <ClCompile Include="wm\Component.cpp" />
+    <ClCompile Include="wm\Label.cpp" />
     <ClCompile Include="wm\Panel.cpp" />
     <ClCompile Include="wm\RenderComponent.cpp" />
     <ClCompile Include="wm\SplitPanel.cpp" />
     <ClCompile Include="wm\TabPanel.cpp" />
+    <ClCompile Include="wm\TextField.cpp" />
     <ClCompile Include="wm\Tree.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="data\TiEnEdit\menu.json" />
+    <None Include="data\TiEnEdit\nodemenu.json" />
     <None Include="data\TiEnEdit\shaders\overlay.frag" />
     <None Include="data\TiEnEdit\shaders\overlay.vert" />
   </ItemGroup>
