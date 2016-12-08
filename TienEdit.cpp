@@ -152,7 +152,7 @@ void TienEdit::init()
 	mainPanel->sizes[0] = 300;
 	mainPanel->sizes[2] = 300;
 	mainPanel->sizes[1] = mainPanel->size.x - 600;
-	panel->onReposition();
+	panel->onReposition(nullptr);
 
 	vrlib::tien::Node* sunlight;
 	{
@@ -231,7 +231,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 	menuOverlay.hover();
 
 	panel->size = glm::ivec2(kernel->getWindowWidth(), kernel->getWindowHeight() - 25 - 36);
-	panel->onReposition();
+	panel->onReposition(nullptr);
 
 
 

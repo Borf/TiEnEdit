@@ -16,3 +16,11 @@ bool Panel::click(bool leftButton, const glm::ivec2 & clickPos)
 {
 	return false;
 }
+
+void Panel::onReposition(Component* parent)
+{
+	for (auto c : components)
+	{
+		c->onReposition(this);
+	}
+}

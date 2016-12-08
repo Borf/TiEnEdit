@@ -12,7 +12,7 @@ void SplitPanel::addPanel(Component * panel)
 }
 
 
-void SplitPanel::onReposition()
+void SplitPanel::onReposition(Component* parent)
 {
 	glm::ivec2 pos = position;
 	for (size_t i = 0; i < components.size(); i++)
@@ -23,7 +23,7 @@ void SplitPanel::onReposition()
 	}
 	components[components.size() - 1]->size.x += (size.x - pos.x); //make last one as large as possible
 	for (auto p : components)
-		p->onReposition();
+		p->onReposition(this);
 }
 
 void SplitPanel::draw(MenuOverlay * overlay)
