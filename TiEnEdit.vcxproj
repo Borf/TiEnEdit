@@ -91,6 +91,8 @@
     <ClInclude Include="menu\ToggleMenuItem.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="TienEdit.h" />
+    <ClInclude Include="wm\CheckBox.h" />
+    <ClInclude Include="wm\ComboBox.h" />
     <ClInclude Include="wm\Component.h" />
     <ClInclude Include="wm\Label.h" />
     <ClInclude Include="wm\Panel.h" />
@@ -107,6 +109,8 @@
     <ClCompile Include="menu\MenuOverlay.cpp" />
     <ClCompile Include="menu\SubMenuMenuItem.cpp" />
     <ClCompile Include="TienEdit.cpp" />
+    <ClCompile Include="wm\CheckBox.cpp" />
+    <ClCompile Include="wm\ComboBox.cpp" />
     <ClCompile Include="wm\Component.cpp" />
     <ClCompile Include="wm\Label.cpp" />
     <ClCompile Include="wm\Panel.cpp" />

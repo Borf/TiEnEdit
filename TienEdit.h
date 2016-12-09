@@ -43,6 +43,8 @@ public:
 	glm::quat cameraRot;
 	glm::vec3 cameraPos;
 
+	Component* focussedComponent;
+
 
 
 	TienEdit(const std::string &filename);
@@ -57,6 +59,9 @@ public:
 	virtual void mouseScroll(int offset) override;
 	virtual void mouseUp(MouseButton button) override;
 	virtual void mouseDown(MouseButton button) override;
+	virtual void keyDown(int button) override;
+	virtual void keyUp(int button) override;
+	virtual void keyChar(char character) override;
 
 
 	MouseState mouseState;

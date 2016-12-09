@@ -6,32 +6,40 @@ class MenuOverlay;
 
 class Component
 {
-	struct Positioning
+public:
+	glm::ivec2 absPosition;
+
+	struct Alignment
 	{
-		glm::ivec2 absPosition;
 		enum HorAlignment
 		{
 			LEFT,
 			RIGHT
 		};
-		HorAlignment left;
-		HorAlignment right;
+		HorAlignment left = LEFT;
+		HorAlignment right = LEFT;
 		enum VerAlignment
 		{
 			TOP,
 			BOTTOM
 		};
-		HorAlignment top;
-		HorAlignment bottom;
-	} positioning;
+		VerAlignment top = TOP;
+		VerAlignment bottom = TOP;
+	} alignment;
 
-public:
+	bool focussed = false;
 	glm::ivec2 size;
 	glm::ivec2 position;
-	virtual void onReposition(Component* parent) {};
+	virtual void onReposition(Component* parent);
 	virtual void draw(MenuOverlay* overlay) {};
 	virtual bool click(bool leftButton, const glm::ivec2 &clickPos) = 0;
+	virtual Component* getComponentAt(const glm::ivec2 &pos) { return inComponent(pos) ? this : nullptr; }
 
-	inline bool inComponent(const glm::ivec2 &pos) { return pos.x > position.x && pos.x < position.x + size.x && pos.y > position.y && pos.y < position.y + size.y; }
+	virtual inline bool inComponent(const glm::ivec2 &pos) { return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y; }
+
+	virtual void focus() {};
+	virtual void unfocus() {};
+	virtual void keyChar(char character) {};
+	virtual void keyUp(int key) {};
 
 };

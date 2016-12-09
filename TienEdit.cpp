@@ -45,6 +45,9 @@
 #include "wm/Tree.h"
 #include "wm/Panel.h"
 #include "wm/Label.h"
+#include "wm/TextField.h"
+#include "wm/CheckBox.h"
+#include "wm/ComboBox.h"
 
 
 TienEdit::TienEdit(const std::string &fileName) : NormalApp("TiEn scene Editor")
@@ -55,6 +58,108 @@ TienEdit::TienEdit(const std::string &fileName) : NormalApp("TiEn scene Editor")
 TienEdit::~TienEdit()
 {
 }
+
+
+class GuiEditor : public vrlib::tien::EditorBuilder
+{
+public:
+	Panel* panel;
+	float line = 0;
+	std::vector<Component*> group;
+	bool vertical;
+
+
+	GuiEditor(Panel* panel)
+	{
+		this->panel = panel;
+	}
+
+	void reset()
+	{
+		line = 4;
+	}
+
+	virtual void addTitle(const std::string & name) override
+	{
+		Label* label = new Label(name, glm::ivec2(0, line));
+		label->scale = 1.5f;
+		label->size.y = 25;
+		panel->components.push_back(label);
+		line += 25;
+	}
+
+
+	virtual void addTextBox(const std::string & value, std::function<void(const std::string&)> onChange) override
+	{
+		TextField* field = new TextField(value, glm::ivec2(100, line));
+		field->size.x = 200;
+		field->size.y = 20;
+		field->onChange = [onChange, field]()
+		{
+			if (onChange)
+				onChange(field->value);
+		};
+		group.push_back(field);
+	}
+	virtual void addCheckbox(bool value, std::function<void(bool)> onChange) override
+	{
+		CheckBox* box = new CheckBox(value, glm::ivec2(100, line));
+		box->onChange = [onChange, box]() { if(onChange) onChange(box->value); };
+		group.push_back(box);
+	}
+
+	virtual void addButton(const std::string &value, std::function<void()> onClick) override
+	{
+	}
+
+	virtual void addComboBox(const std::string &value, const std::vector<std::string> &values, std::function<void(const std::string&)> onClick) override
+	{
+		ComboBox* box = new ComboBox(value, glm::ivec2(100, line));
+		box->values = values;
+		box->size.x = 200;
+		box->size.y = 20;
+		box->onChange = [onClick, box]()
+		{
+			if(onClick)
+				onClick(box->value);
+		};
+		group.push_back(box);
+	}
+
+	virtual void beginGroup(const std::string & name, bool verticalGroup = true) override
+	{
+		panel->components.push_back(new Label(name, glm::ivec2(0, line+2)));
+		vertical = verticalGroup;
+	}
+	virtual void endGroup() override
+	{
+		int i = 0;
+		for (auto c : group)
+		{
+			if (vertical)
+			{
+				c->position.y = line;
+				line += glm::max(c->size.y, 20);
+			}
+			else
+			{
+				c->position.y = line;
+				c->position.x += 200 / (group.size()) * i;
+				c->size.x = 200 / group.size();
+			}
+			panel->components.push_back(c);
+			i++;
+		}
+
+
+
+		if (!vertical)
+			line += 20;
+		line += 5;
+		group.clear();
+	}
+
+};
 
 
 
@@ -132,17 +237,47 @@ void TienEdit::init()
 	Panel* propertiesPanel = new Panel();
 	mainPanel->addPanel(propertiesPanel);
 
+
+	GuiEditor* editorBuilder = new GuiEditor(propertiesPanel);
+
 	objectTree->rightClickItem = [this]()
 	{
 		vrlib::json::Value popupMenu = vrlib::json::readJson(std::ifstream("data/TiEnEdit/nodemenu.json"));
 
 		menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, new Menu(popupMenu)));
 	};
-	objectTree->selectItem = [this, propertiesPanel]()
+	objectTree->selectItem = [this, mainPanel, propertiesPanel, objectTree, editorBuilder]()
 	{
-		//TODO: delete all components
+		vrlib::tien::Node* node = static_cast<vrlib::tien::Node*>(objectTree->selectedItem);
+
+		for (auto c : propertiesPanel->components)
+			delete c;
 		propertiesPanel->components.clear();
-		propertiesPanel->components.push_back(new Label("Hello World", glm::vec2(0, 0)));
+		editorBuilder->reset();
+
+		editorBuilder->addTitle("Node:");
+		
+		editorBuilder->beginGroup("Name");
+		editorBuilder->addTextBox(node->name, [node, objectTree](const std::string &newValue) { node->name = newValue; objectTree->update(); });
+		editorBuilder->endGroup();
+
+		editorBuilder->beginGroup("GUID");
+		editorBuilder->addTextBox(node->guid, [node](const std::string &newValue) { node->guid = newValue; });
+		editorBuilder->endGroup();
+
+		editorBuilder->beginGroup("Parent");
+		editorBuilder->addTextBox(node->parent ? node->parent->name : "-", [node](const std::string &newValue) {  });
+		editorBuilder->endGroup();
+
+		std::vector<vrlib::tien::Component*> components = node->getComponents();
+		for (auto c : components)
+			c->buildEditor(editorBuilder);
+		propertiesPanel->onReposition(mainPanel);
+
+		editorBuilder->addTitle("");
+		editorBuilder->beginGroup("Add Component");
+		editorBuilder->addButton("Add", [node]() {});
+		editorBuilder->endGroup();
 
 	};
 
@@ -176,7 +311,7 @@ void TienEdit::init()
 		tien.scene.cameraNode = n;
 	}
 
-	vrlib::tien::Node* parent;
+	/*vrlib::tien::Node* parent;
 	{
 		vrlib::tien::Node* n = new vrlib::tien::Node("GroundPlane", &tien.scene);
 		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, -0.01f, 0)));
@@ -216,7 +351,17 @@ void TienEdit::init()
 		vrlib::gl::setP3(v, glm::vec3(-1, 0, 1));		vrlib::gl::setT2(v, glm::vec2(-1, 1));		mesh->vertices.push_back(v);
 
 		n->addComponent(new vrlib::tien::components::MeshRenderer(mesh));
+	}*/
+	{
+		vrlib::tien::Node* n = new vrlib::tien::Node("Model", &tien.scene);
+		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, -8), glm::quat(), glm::vec3(1.0f, 1.0f, 1.0f)));
+		n->addComponent(new vrlib::tien::components::ModelRenderer("data/Models/vangogh/Enter a title.obj"));
+		n->getComponent<vrlib::tien::components::ModelRenderer>()->castShadow = false;
+		//n->addComponent(new vrlib::tien::components::ModelRenderer("data/Models/swamp/map_1.obj"));
+		
 	}
+
+	focussedComponent = renderPanel;
 
 	objectTree->update();
 
@@ -234,17 +379,20 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 	panel->onReposition(nullptr);
 
 
+	if (focussedComponent == renderPanel || mouseState.middle)
+	{
+		glm::vec3 cameraMovement(0, 0, 0);
+		if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_W))		cameraMovement.z = -1;
+		if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_S))		cameraMovement.z = 1;
+		if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_A))		cameraMovement.x = -1;
+		if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_D))		cameraMovement.x = 1;
+		if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_Q))		cameraMovement.y = 1;
+		if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_Z))		cameraMovement.y = -1;
 
-	glm::vec3 cameraMovement(0, 0, 0);
-	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_W))		cameraMovement.z = -1;
-	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_S))		cameraMovement.z = 1;
-	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_A))		cameraMovement.x = -1;
-	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_D))		cameraMovement.x = 1;
-	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_Q))		cameraMovement.y = 1;
-	if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_Z))		cameraMovement.y = -1;
+		cameraMovement *= frameTime / 100.0f;
+		cameraPos += cameraMovement * cameraRot;
+	}
 
-	cameraMovement *= frameTime / 100.0f;
-	cameraPos += cameraMovement * cameraRot;
 
 	if (mouseState.middle)
 	{
@@ -276,7 +424,7 @@ void TienEdit::draw()
 	glm::mat4 cameraMat = glm::translate(glm::toMat4(cameraRot), -cameraPos);
 
 
-	glm::mat4 projectionMatrix = glm::perspective(70.0f, (1920-200) / (1080.0f-20), 0.01f, 500.0f);
+	glm::mat4 projectionMatrix = glm::perspective(70.0f, renderPanel->size.x / (float)renderPanel->size.y, 0.01f, 500.0f);
 	glm::mat4 modelViewMatrix = cameraMat;
 
 
@@ -307,17 +455,57 @@ void TienEdit::mouseDown(MouseButton button)
 	mouseState.buttons[(int)button] = true;
 }
 
+void TienEdit::keyDown(int button)
+{
+	NormalApp::keyDown(button);
+}
+
+void TienEdit::keyUp(int button)
+{
+	NormalApp::keyUp(button);
+	if (focussedComponent)
+		focussedComponent->keyUp(button);
+}
+
+void TienEdit::keyChar(char character)
+{
+	NormalApp::keyChar(character);
+	if (focussedComponent)
+		focussedComponent->keyChar(character);
+}
+
 
 void TienEdit::mouseUp(MouseButton button)
 {
 	mouseState.buttons[(int)button] = false;
-	//if click
+	//TODO if click
+	if(button != vrlib::MouseButtonDeviceDriver::MouseButton::Middle)
 	{
 		if (menuOverlay.click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left))
 			return;
 
+		Component* clickedComponent = panel->getComponentAt(mouseState.pos);
+
+		if (focussedComponent != clickedComponent)
+		{
+			if (focussedComponent)
+			{
+				focussedComponent->focussed = false;
+				focussedComponent->unfocus();
+			}
+			focussedComponent = clickedComponent;
+			if (focussedComponent)
+			{
+				focussedComponent->focussed = true;
+				focussedComponent->focus();
+			}
+		}
+
+
 		if (panel->click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left, mouseState.pos))
 			return;
+
+
 
 
 	}

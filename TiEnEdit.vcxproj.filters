@@ -78,6 +78,12 @@
     <ClInclude Include="wm\TextField.h">
       <Filter>wm</Filter>
     </ClInclude>
+    <ClInclude Include="wm\CheckBox.h">
+      <Filter>wm</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\ComboBox.h">
+      <Filter>wm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -120,6 +126,12 @@
       <Filter>wm</Filter>
     </ClCompile>
     <ClCompile Include="wm\TextField.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\CheckBox.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\ComboBox.cpp">
       <Filter>wm</Filter>
     </ClCompile>
   </ItemGroup>

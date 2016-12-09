@@ -14,6 +14,10 @@ void SplitPanel::addPanel(Component * panel)
 
 void SplitPanel::onReposition(Component* parent)
 {
+	absPosition = glm::vec2(0, 0);
+	if (parent)
+		absPosition = parent->absPosition + position;
+
 	glm::ivec2 pos = position;
 	for (size_t i = 0; i < components.size(); i++)
 	{
