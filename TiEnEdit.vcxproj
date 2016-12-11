@@ -83,6 +83,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="EditorBuilderGui.h" />
     <ClInclude Include="menu\ActionMenuItem.h" />
     <ClInclude Include="menu\Menu.h" />
     <ClInclude Include="menu\MenuItem.h" />
@@ -91,9 +92,11 @@
     <ClInclude Include="menu\ToggleMenuItem.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="TienEdit.h" />
+    <ClInclude Include="wm\Button.h" />
     <ClInclude Include="wm\CheckBox.h" />
     <ClInclude Include="wm\ComboBox.h" />
     <ClInclude Include="wm\Component.h" />
+    <ClInclude Include="wm\Image.h" />
     <ClInclude Include="wm\Label.h" />
     <ClInclude Include="wm\Panel.h" />
     <ClInclude Include="wm\RenderComponent.h" />
@@ -103,15 +106,18 @@
     <ClInclude Include="wm\Tree.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="EditorBuilderGui.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu\Menu.cpp" />
     <ClCompile Include="menu\MenuItem.cpp" />
     <ClCompile Include="menu\MenuOverlay.cpp" />
     <ClCompile Include="menu\SubMenuMenuItem.cpp" />
     <ClCompile Include="TienEdit.cpp" />
+    <ClCompile Include="wm\Button.cpp" />
     <ClCompile Include="wm\CheckBox.cpp" />
     <ClCompile Include="wm\ComboBox.cpp" />
     <ClCompile Include="wm\Component.cpp" />
+    <ClCompile Include="wm\Image.cpp" />
     <ClCompile Include="wm\Label.cpp" />
     <ClCompile Include="wm\Panel.cpp" />
     <ClCompile Include="wm\RenderComponent.cpp" />
@@ -129,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="data\TiEnEdit\menu.json" />
+    <None Include="data\TiEnEdit\newnodemenu.json" />
     <None Include="data\TiEnEdit\nodemenu.json" />
     <None Include="data\TiEnEdit\shaders\overlay.frag" />
     <None Include="data\TiEnEdit\shaders\overlay.vert" />

@@ -3,8 +3,9 @@
 #include "Component.h"
 #include <string>
 #include <functional>
+#include <VrLib/tien/Component.h>
 
-class TextField : public Component
+class TextField : public Component, public vrlib::tien::EditorBuilder::TextBox
 {
 public:
 	std::string value;
@@ -22,4 +23,7 @@ public:
 
 
 	std::function<void()> onChange;
+
+	inline std::string getText() const override { return value; }
+	inline void setText(const std::string &text) override { value = text; }
 };

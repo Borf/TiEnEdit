@@ -55,7 +55,13 @@ bool Tree::click(bool leftButton, const glm::ivec2 & clickPos)
 {
 	int index = (clickPos.y - position.y - 5) / LINESIZE;
 	if (index < 0 || index >= (int)flatList.size())
+	{
+		selectedIndex = -1;
+		selectedItem = nullptr;
+		if (!leftButton)
+			rightClickItem();
 		return true;
+	}
 	
 	if (leftButton)
 	{

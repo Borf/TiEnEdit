@@ -2,12 +2,16 @@
 
 #include <vrlib/NormalApp.h>
 #include <vrlib/tien/Tien.h>
+#include <VrLib/math/Ray.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
 
 #include "menu/MenuOverlay.h"
 class Component;
+class Tree;
+class SplitPanel;
+class Panel;
 
 namespace vrlib
 {
@@ -36,15 +40,20 @@ public:
 	vrlib::Kernel* kernel;
 	vrlib::tien::Tien tien;
 	MenuOverlay menuOverlay;
-	Component* panel;
 
-	Component* renderPanel;
 
 	glm::quat cameraRot;
 	glm::vec3 cameraPos;
 
 	Component* focussedComponent;
+	
 
+	Component* renderPanel;
+	SplitPanel* mainPanel;
+	Tree* objectTree;
+	Panel* modelBrowsePanel;
+
+	vrlib::math::Ray ray;
 
 
 	TienEdit(const std::string &filename);
@@ -63,6 +72,10 @@ public:
 	virtual void keyUp(int button) override;
 	virtual void keyChar(char character) override;
 
+
+	void showBrowsePanel();
+	void buildBrowsePanel(const std::string &directory);
+	std::function<void(const std::string &)> browseCallback;
 
 	MouseState mouseState;
 	MouseState lastMouseState;

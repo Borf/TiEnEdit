@@ -84,6 +84,15 @@
     <ClInclude Include="wm\ComboBox.h">
       <Filter>wm</Filter>
     </ClInclude>
+    <ClInclude Include="EditorBuilderGui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\Button.h">
+      <Filter>wm</Filter>
+    </ClInclude>
+    <ClInclude Include="wm\Image.h">
+      <Filter>wm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -134,6 +143,15 @@
     <ClCompile Include="wm\ComboBox.cpp">
       <Filter>wm</Filter>
     </ClCompile>
+    <ClCompile Include="EditorBuilderGui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\Button.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\Image.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TiEnEdit.rc">
@@ -159,6 +177,9 @@
       <Filter>data\shaders</Filter>
     </None>
     <None Include="data\TiEnEdit\nodemenu.json">
+      <Filter>data</Filter>
+    </None>
+    <None Include="data\TiEnEdit\newnodemenu.json">
       <Filter>data</Filter>
     </None>
   </ItemGroup>
