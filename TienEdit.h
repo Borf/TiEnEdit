@@ -12,10 +12,15 @@ class Component;
 class Tree;
 class SplitPanel;
 class Panel;
+class Action;
 
 namespace vrlib
 {
 	class Kernel;
+	namespace tien
+	{
+		class Node;
+	}
 }
 
 struct MouseState
@@ -32,7 +37,6 @@ struct MouseState
 		bool buttons[3] = { false, false, false };
 	};
 };
-
 
 class TienEdit : public vrlib:: NormalApp
 {
@@ -79,4 +83,13 @@ public:
 
 	MouseState mouseState;
 	MouseState lastMouseState;
+
+	std::vector<vrlib::tien::Node*> selectedNodes;
+	bool cacheSelection = 0;
+	GLuint selectionCache = 0;
+
+	std::list<Action*> actions;
+	void perform(Action* action);
+	void undo();
+	void redo();
 };

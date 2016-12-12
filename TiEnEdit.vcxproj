@@ -83,6 +83,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="actions\Action.h" />
+    <ClInclude Include="actions\GroupAction.h" />
+    <ClInclude Include="actions\NewNodeAction.h" />
+    <ClInclude Include="actions\SelectionChangeAction.h" />
     <ClInclude Include="EditorBuilderGui.h" />
     <ClInclude Include="menu\ActionMenuItem.h" />
     <ClInclude Include="menu\Menu.h" />
@@ -106,6 +110,10 @@
     <ClInclude Include="wm\Tree.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="actions\Action.cpp" />
+    <ClCompile Include="actions\GroupAction.cpp" />
+    <ClCompile Include="actions\NewNodeAction.cpp" />
+    <ClCompile Include="actions\SelectionChangeAction.cpp" />
     <ClCompile Include="EditorBuilderGui.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu\Menu.cpp" />

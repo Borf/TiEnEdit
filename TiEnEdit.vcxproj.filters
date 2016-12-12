@@ -28,6 +28,9 @@
     <Filter Include="data\textures">
       <UniqueIdentifier>{772f6a1e-caa3-4b4a-81b1-eba6483452b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="actions">
+      <UniqueIdentifier>{18971a05-12ad-4770-82bf-3186b6575df2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TienEdit.h">
@@ -93,6 +96,18 @@
     <ClInclude Include="wm\Image.h">
       <Filter>wm</Filter>
     </ClInclude>
+    <ClInclude Include="actions\GroupAction.h">
+      <Filter>actions</Filter>
+    </ClInclude>
+    <ClInclude Include="actions\NewNodeAction.h">
+      <Filter>actions</Filter>
+    </ClInclude>
+    <ClInclude Include="actions\Action.h">
+      <Filter>actions</Filter>
+    </ClInclude>
+    <ClInclude Include="actions\SelectionChangeAction.h">
+      <Filter>actions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -151,6 +166,18 @@
     </ClCompile>
     <ClCompile Include="wm\Image.cpp">
       <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="actions\NewNodeAction.cpp">
+      <Filter>actions</Filter>
+    </ClCompile>
+    <ClCompile Include="actions\Action.cpp">
+      <Filter>actions</Filter>
+    </ClCompile>
+    <ClCompile Include="actions\GroupAction.cpp">
+      <Filter>actions</Filter>
+    </ClCompile>
+    <ClCompile Include="actions\SelectionChangeAction.cpp">
+      <Filter>actions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

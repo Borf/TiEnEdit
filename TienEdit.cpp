@@ -33,7 +33,7 @@
 #include <vrlib/tien/components/ModelRenderer.h>
 #include <vrlib/tien/components/MeshRenderer.h>
 
-
+#include "actions/Action.h"
 #include "menu/MenuOverlay.h"
 #include "menu/Menu.h"
 #include "wm/SplitPanel.h"
@@ -43,6 +43,7 @@
 #include "wm/Label.h"
 #include "wm/Image.h"
 
+#include "actions/SelectionChangeAction.h"
 
 #include "EditorBuilderGui.h"
 
@@ -326,6 +327,39 @@ void TienEdit::draw()
 		glEnd();
 
 
+		if(cacheSelection) //TODO: cache this differently, and draw this differently
+		{ 
+			if(selectionCache == 0)
+				selectionCache = glGenLists(1);
+			glNewList(selectionCache, GL_COMPILE);
+			glBegin(GL_LINES);
+			for (auto n : selectedNodes)
+			{
+				vrlib::tien::components::ModelRenderer* r = n->getComponent<vrlib::tien::components::ModelRenderer>();
+				if (r)
+				{
+					auto triangles = r->model->getIndexedTriangles(); //TODO: cache this !
+					for (size_t i = 0; i < triangles.first.size(); i += 3)
+					{
+						for (int ii = 0; ii < 3; ii++)
+						{
+							glVertex3fv(glm::value_ptr(triangles.second[triangles.first[i + ii]]));
+							glVertex3fv(glm::value_ptr(triangles.second[triangles.first[i + (ii + 1) % 3]]));
+						}
+					}
+				}
+			}
+			glEnd();
+			glEndList();
+			cacheSelection = false;
+		}
+		if(selectionCache > 0)
+			glCallList(selectionCache);
+
+
+
+
+
 
 	}
 
@@ -430,8 +464,11 @@ void TienEdit::mouseUp(MouseButton button)
 
 			if (closestClickedNode != nullptr)
 			{
-				vrlib::logger << "Clicked on " << closestClickedNode->name<<vrlib::Log::newline;
+				vrlib::logger << "Clicked on " << closestClickedNode->name << vrlib::Log::newline;
+				perform(new SelectionChangeAction(this, { closestClickedNode }));
 			}
+			else
+				perform(new SelectionChangeAction(this, {}));
 			
 
 
@@ -540,4 +577,11 @@ void TienEdit::buildBrowsePanel(const std::string & directory)
 		modelBrowsePanel->components.push_back(new Label(files[i], glm::ivec2(0,0)));
 	}
 	mainPanel->onReposition(nullptr);
+}
+
+
+void TienEdit::perform(Action* action)
+{
+	action->perform(this);
+	actions.push_back(action);
 }
