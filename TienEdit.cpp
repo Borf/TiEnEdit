@@ -377,6 +377,11 @@ void TienEdit::mouseMove(int x, int y)
 
 void TienEdit::mouseScroll(int offset)
 {
+	if (renderPanel->inComponent(menuOverlay.mousePos))
+	{
+		cameraPos += glm::vec3(0, 0, -offset / 120.0f) * cameraRot;
+
+	}
 }
 
 
