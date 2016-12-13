@@ -12,21 +12,17 @@ SelectionChangeAction::SelectionChangeAction(TienEdit * editor, std::vector<vrli
 void SelectionChangeAction::perform(TienEdit * editor)
 {
 	editor->selectedNodes = this->newSelection;
-	editor->objectTree->selectedItems.clear();
-	for(auto n : newSelection)
-		editor->objectTree->selectedItems.push_back(n);
+	editor->objectTree->selectedItems = newSelection;
 	editor->objectTree->update();
-	editor->objectTree->selectItem();
+	editor->updateComponentsPanel();
 	editor->cacheSelection = true;
 }
 
 void SelectionChangeAction::undo(TienEdit * editor)
 {
 	editor->selectedNodes = this->oldSelection;
-	editor->objectTree->selectedItems.clear();
-	for (auto n : oldSelection)
-		editor->objectTree->selectedItems.push_back(n);
+	editor->objectTree->selectedItems = newSelection;
 	editor->objectTree->update();
-	editor->objectTree->selectItem();
+	editor->updateComponentsPanel();
 	editor->cacheSelection = true;
 }

@@ -7,12 +7,13 @@
 const int LINESIZE = 16;
 const int TEXTOFFSET = 13;
 
-
-Tree::Tree()
+template<class T>
+Tree<T>::Tree()
 {
 }
 
-void Tree::draw(MenuOverlay * overlay)
+template<class T>
+void Tree<T>::draw(MenuOverlay * overlay)
 {
 	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), position, position + size); //background
 	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), glm::vec2(position) + glm::vec2(size.x-scrollBarWidth,0), position+size ); //background
@@ -49,7 +50,8 @@ void Tree::draw(MenuOverlay * overlay)
 
 }
 
-bool Tree::click(bool leftButton, const glm::ivec2 & clickPos)
+template<class T>
+bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos)
 {
 	int index = (clickPos.y - position.y - 5) / LINESIZE;
 	if (index < 0 || index >= (int)flatList.size())
@@ -94,13 +96,13 @@ bool Tree::click(bool leftButton, const glm::ivec2 & clickPos)
 
 
 
-
-void Tree::update()
+template<class T>
+void Tree<T>::update()
 {
 	selectedIndices.clear();
-	std::function<void(void*, int level)> buildTree;
+	std::function<void(vrlib::tien::Node*, int level)> buildTree;
 	flatList.clear();
-	buildTree = [&buildTree, this](void* data, int level)
+	buildTree = [&buildTree, this](vrlib::tien::Node* data, int level)
 	{
 		int childCount = loader->getChildCount(data);
 
@@ -124,3 +126,7 @@ void Tree::update()
 
 	buildTree(nullptr, -1);
 }
+
+//TODO: move this?
+#include <VrLib/tien/Node.h>
+template class Tree<vrlib::tien::Node*>;

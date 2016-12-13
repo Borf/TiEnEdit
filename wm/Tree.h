@@ -6,6 +6,7 @@
 #include <map>
 #include <functional>
 
+template<class T>
 class Tree : public Component
 {
 	const static int scrollBarWidth = 16;
@@ -15,7 +16,7 @@ class Tree : public Component
 	public:
 		bool opened = false;
 	};
-	std::map<void*, NodeInfo> nodeInfo;
+	std::map<T, NodeInfo> nodeInfo;
 
 
 	class FlatNode
@@ -24,11 +25,11 @@ class Tree : public Component
 		std::string text;
 		bool hasChildren;
 		bool opened;
-		void* item;
+		T item;
 		int level;
 		int icon;
 
-		FlatNode(const std::string &text, bool hasChildren, bool opened, int level, int icon, void* item)
+		FlatNode(const std::string &text, bool hasChildren, bool opened, int level, int icon, T item)
 		{
 			this->text = text;
 			this->hasChildren = hasChildren;
@@ -47,12 +48,12 @@ public:
 	class TreeLoader
 	{
 	public:
-		virtual std::string getName(void* data) = 0;
-		virtual int getChildCount(void* data) = 0;
-		virtual void* getChild(void* data, int index) = 0;
-		virtual int getIcon(void* data) = 0;
+		virtual std::string getName(T data) = 0;
+		virtual int getChildCount(T data) = 0;
+		virtual T getChild(T data, int index) = 0;
+		virtual int getIcon(T data) = 0;
 	};
-	std::vector<void*> selectedItems;
+	std::vector<T> selectedItems;
 
 
 	std::function<void()> selectItem;
