@@ -143,7 +143,7 @@ void TienEdit::init()
 
 	objectTree->rightClickItem = [this]()
 	{
-		if (objectTree->selectedItem)
+		if (!objectTree->selectedItems.empty())
 		{
 			vrlib::json::Value popupMenu = vrlib::json::readJson(std::ifstream("data/TiEnEdit/nodemenu.json"));
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, new Menu(popupMenu)));
@@ -169,7 +169,7 @@ void TienEdit::init()
 	};
 	objectTree->selectItem = [this, propertiesPanel, editorBuilder]()
 	{
-		vrlib::tien::Node* node = static_cast<vrlib::tien::Node*>(objectTree->selectedItem);
+		vrlib::tien::Node* node = static_cast<vrlib::tien::Node*>(objectTree->selectedItems[0]);
 
 		for (auto c : propertiesPanel->components)
 			delete c;

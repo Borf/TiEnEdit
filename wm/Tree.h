@@ -39,7 +39,7 @@ class Tree : public Component
 		}
 	};
 	std::vector<FlatNode> flatList;
-	int selectedIndex;
+	std::vector<int> selectedIndices;
 
 
 public:
@@ -52,7 +52,7 @@ public:
 		virtual void* getChild(void* data, int index) = 0;
 		virtual int getIcon(void* data) = 0;
 	};
-	void* selectedItem;
+	std::vector<void*> selectedItems;
 
 
 	std::function<void()> selectItem;

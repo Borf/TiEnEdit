@@ -1,7 +1,7 @@
 #include "Tree.h"
 #include "../menu/MenuOverlay.h"
 
-#include <stack>
+#include <algorithm>
 #include <functional>
 
 const int LINESIZE = 16;
@@ -10,8 +10,6 @@ const int TEXTOFFSET = 13;
 
 Tree::Tree()
 {
-	selectedItem = nullptr;
-	selectedIndex = -1;
 }
 
 void Tree::draw(MenuOverlay * overlay)
@@ -26,7 +24,7 @@ void Tree::draw(MenuOverlay * overlay)
 
 	for (size_t i = 0; i < flatList.size(); i++)
 	{
-		if (i == selectedIndex)
+		if (std::find(std::begin(selectedIndices), std::end(selectedIndices), i) != std::end(selectedIndices))
 			overlay->drawRect(glm::vec2(64, 416), glm::vec2(64 + 32, 416 + 32), position + glm::ivec2(0, 3 + LINESIZE * i), position + glm::ivec2(size.x - scrollBarWidth, 3 + LINESIZE * i + LINESIZE)); //selection background
 
 		overlay->flushVerts();
@@ -56,8 +54,8 @@ bool Tree::click(bool leftButton, const glm::ivec2 & clickPos)
 	int index = (clickPos.y - position.y - 5) / LINESIZE;
 	if (index < 0 || index >= (int)flatList.size())
 	{
-		selectedIndex = -1;
-		selectedItem = nullptr;
+		selectedIndices.clear();
+		selectedItems.clear();
 		if (!leftButton)
 			rightClickItem();
 		return true;
@@ -65,22 +63,26 @@ bool Tree::click(bool leftButton, const glm::ivec2 & clickPos)
 	
 	if (leftButton)
 	{
-		if (selectedIndex == index)
+		if (std::find(std::begin(selectedIndices), std::end(selectedIndices), index) != std::end(selectedIndices))
 		{
-			selectedItem = flatList[index].item;
+/*			selectedIndices.clear();
+			selectedItems.push_back(flatList[index].item);
 			nodeInfo[selectedItem].opened = !nodeInfo[selectedItem].opened;
-			update();
-
+			update();*/
 		}
-		selectedIndex = index;
-		selectedItem = flatList[index].item;
+		selectedItems.clear();
+		selectedIndices.clear();
+		selectedIndices.push_back(index);
+		selectedItems.push_back(flatList[index].item);
 		if (selectItem)
 			selectItem();
 	}
 	else
 	{
-		selectedIndex = index;
-		selectedItem = flatList[index].item;
+		selectedItems.clear();
+		selectedIndices.clear();
+		selectedIndices.push_back(index);
+		selectedItems.push_back(flatList[index].item);
 		if (rightClickItem)
 			rightClickItem();
 	}
@@ -95,7 +97,7 @@ bool Tree::click(bool leftButton, const glm::ivec2 & clickPos)
 
 void Tree::update()
 {
-	selectedIndex = -1;
+	selectedIndices.clear();
 	std::function<void(void*, int level)> buildTree;
 	flatList.clear();
 	buildTree = [&buildTree, this](void* data, int level)
@@ -110,8 +112,8 @@ void Tree::update()
 
 			title += loader->getName(data);
 
-			if (data == selectedItem)
-				selectedIndex = flatList.size();
+			if (std::find(std::begin(selectedItems), std::end(selectedItems), data) != std::end(selectedItems))
+				selectedIndices.push_back(flatList.size());
 
 			flatList.push_back(FlatNode(title, childCount > 0, true, level, loader->getIcon(data), data));
 		}
