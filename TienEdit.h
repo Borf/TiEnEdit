@@ -8,12 +8,11 @@
 #include <vector>
 
 #include "menu/MenuOverlay.h"
-#include "wm/Tree.h"
 class Component;
+class Tree;
 class SplitPanel;
 class Panel;
 class Action;
-class GuiEditor;
 
 namespace vrlib
 {
@@ -52,14 +51,24 @@ public:
 
 	Component* focussedComponent;
 	
-	GuiEditor* editorBuilder;
+
 	Component* renderPanel;
 	SplitPanel* mainPanel;
-	Tree<vrlib::tien::Node*>* objectTree;
+	Tree* objectTree;
 	Panel* modelBrowsePanel;
-	Panel* propertiesPanel;
 
 	vrlib::math::Ray ray;
+
+
+	enum class EditTool
+	{
+		NONE,
+		TRANSLATE,
+		SCALE,
+		ROTATE
+	} activeTool = EditTool::NONE;
+
+	glm::vec3 originalPosition;
 
 
 	TienEdit(const std::string &filename);
@@ -86,8 +95,6 @@ public:
 	MouseState mouseState;
 	MouseState lastMouseState;
 
-
-	void updateComponentsPanel();
 	std::vector<vrlib::tien::Node*> selectedNodes;
 	bool cacheSelection = 0;
 	GLuint selectionCache = 0;
@@ -96,8 +103,4 @@ public:
 	void perform(Action* action);
 	void undo();
 	void redo();
-
-
-	void save();
-	void load();
 };

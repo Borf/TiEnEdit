@@ -1,3 +1,4 @@
+KEY_G
 #define _CRT_SECURE_NO_WARNINGS
 #define _USE_MATH_DEFINES
 #include "TienEdit.h"
@@ -7,7 +8,6 @@
 #include <direct.h>
 #include <algorithm>
 #include <fstream>
-#include <functional>
 
 #include <VrLib/gl/shader.h>
 #include <vrlib/gl/FBO.h>
@@ -81,7 +81,7 @@ void TienEdit::init()
 	mainPanel = new SplitPanel();
 
 
-	class TienNodeTree : public Tree<vrlib::tien::Node*>::TreeLoader
+	class TienNodeTree : public Tree::TreeLoader
 	{
 		TienEdit* edit;
 	public:
@@ -89,27 +89,33 @@ void TienEdit::init()
 		{
 			this->edit = edit;
 		}
-		virtual std::string getName(vrlib::tien::Node* data)
+		virtual std::string getName(void* data)
 		{
 			if (data == nullptr)
 				return "root";
-			return data->name;
+			auto n = static_cast<vrlib::tien::Node*>(data);
+			return n->name;
 		}
-		virtual int getChildCount(vrlib::tien::Node* data)
+		virtual int getChildCount(void* data)
 		{
 			if (data == nullptr)
 				return edit->tien.scene.getChildren().size();
-			return data->getChildren().size();
+			auto n = static_cast<vrlib::tien::Node*>(data);
+			return n->getChildren().size();
 		}
-		virtual vrlib::tien::Node* getChild(vrlib::tien::Node* data, int index)
+		virtual void* getChild(void* data, int index)
 		{
 			if (data == nullptr)
 				return edit->tien.scene.getChild(index);
 			else
-				return data->getChild(index);
+			{
+				auto n = static_cast<vrlib::tien::Node*>(data);
+				return n->getChild(index);
+			}
 		}
-		virtual int getIcon(vrlib::tien::Node* n)
+		virtual int getIcon(void* data)
 		{
+			auto n = static_cast<vrlib::tien::Node*>(data);
 			if (n->getComponent<vrlib::tien::components::ModelRenderer>())
 				return 2;
 			if (n->getComponent<vrlib::tien::components::MeshRenderer>())
@@ -125,16 +131,16 @@ void TienEdit::init()
 
 	modelBrowsePanel = nullptr;
 
-	objectTree = new Tree<vrlib::tien::Node*>();
+	objectTree = new Tree();
 	objectTree->loader = new TienNodeTree(this);
 	mainPanel->addPanel(objectTree);
 	
 	mainPanel->addPanel(renderPanel = new RenderComponent());
-	propertiesPanel = new Panel();
+	Panel* propertiesPanel = new Panel();
 	mainPanel->addPanel(propertiesPanel);
 
-	editorBuilder = new GuiEditor(this, propertiesPanel);
 
+	GuiEditor* editorBuilder = new GuiEditor(this, propertiesPanel);
 
 	objectTree->rightClickItem = [this]()
 	{
@@ -152,24 +158,49 @@ void TienEdit::init()
 			{
 				browseCallback = [this](const std::string &fileName)
 				{
-					vrlib::tien::Node* n = new vrlib::tien::Node("new model", &tien.scene);
+					vrlib::tien::Node* n = new vrlib::tien::Node("new node", &tien.scene);
 					n->addComponent(new vrlib::tien::components::Transform());
 					n->addComponent(new vrlib::tien::components::ModelRenderer(fileName));
 					objectTree->update();
 				};
 				showBrowsePanel();
 			});
-			menu->setAction("new node", [this]()
-			{
-				vrlib::tien::Node* n = new vrlib::tien::Node("new node", &tien.scene);
-				n->addComponent(new vrlib::tien::components::Transform());
-				objectTree->update();
-			});
+			
 		}
 	};
-	objectTree->selectItem = [this]()
+	objectTree->selectItem = [this, propertiesPanel, editorBuilder]()
 	{
-		perform(new SelectionChangeAction(this, objectTree->selectedItems));
+		vrlib::tien::Node* node = static_cast<vrlib::tien::Node*>(objectTree->selectedItems[0]);
+
+		for (auto c : propertiesPanel->components)
+			delete c;
+		propertiesPanel->components.clear();
+		editorBuilder->reset();
+
+		editorBuilder->addTitle("Node:");
+		
+		editorBuilder->beginGroup("Name");
+		editorBuilder->addTextBox(node->name, [node, this](const std::string &newValue) { node->name = newValue; objectTree->update(); });
+		editorBuilder->endGroup();
+
+		editorBuilder->beginGroup("GUID");
+		editorBuilder->addTextBox(node->guid, [node](const std::string &newValue) { node->guid = newValue; });
+		editorBuilder->endGroup();
+
+		editorBuilder->beginGroup("Parent");
+		editorBuilder->addTextBox(node->parent ? node->parent->name : "-", [node](const std::string &newValue) {  });
+		editorBuilder->endGroup();
+
+		std::vector<vrlib::tien::Component*> components = node->getComponents();
+		for (auto c : components)
+			c->buildEditor(editorBuilder);
+		propertiesPanel->onReposition(mainPanel);
+
+		editorBuilder->addTitle("");
+		editorBuilder->beginGroup("Add Component");
+		editorBuilder->addButton("Add", [node]() {});
+		editorBuilder->endGroup();
+
 	};
 
 	mainPanel->position = glm::ivec2(0, 25+36);
@@ -203,20 +234,12 @@ void TienEdit::init()
 
 	{
 		vrlib::tien::Node* n = new vrlib::tien::Node("Model", &tien.scene);
-		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(1, 1, 1)));
-		//n->addComponent(new vrlib::tien::components::ModelRenderer("data/Models/vangogh/Enter a title.obj"));
-		n->addComponent(new vrlib::tien::components::ModelRenderer("data/tientest/models/WoodenBox02.obj"));
-		//		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(0.01f, 0.01f, 0.01f)));
-		//		n->addComponent(new vrlib::tien::components::ModelRenderer("data/tientest/models/crytek-sponza/sponza.obj"));
-		n->getComponent<vrlib::tien::components::ModelRenderer>()->castShadow = false;
-	}
-	{
-		vrlib::tien::Node* n = new vrlib::tien::Node("Model2", &tien.scene);
-		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(1, 1, 1)));
-		//n->addComponent(new vrlib::tien::components::ModelRenderer("data/Models/vangogh/Enter a title.obj"));
-		n->addComponent(new vrlib::tien::components::ModelRenderer("data/models/dungeon/floor_1.fbx"));
-		//		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(0.01f, 0.01f, 0.01f)));
-		//		n->addComponent(new vrlib::tien::components::ModelRenderer("data/tientest/models/crytek-sponza/sponza.obj"));
+		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(1,1,1)));
+		n->addComponent(new vrlib::tien::components::ModelRenderer("data/Models/vangogh/Enter a title.obj"));
+
+		//n->addComponent(new vrlib::tien::components::ModelRenderer("data/tientest/models/WoodenBox02.obj"));
+//		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(0.01f, 0.01f, 0.01f)));
+//		n->addComponent(new vrlib::tien::components::ModelRenderer("data/tientest/models/crytek-sponza/sponza.obj"));
 		n->getComponent<vrlib::tien::components::ModelRenderer>()->castShadow = false;
 	}
 
@@ -229,10 +252,6 @@ void TienEdit::init()
 
 	tien.start();
 
-
-
-	menuOverlay.rootMenu->setAction("file/save", std::bind(&TienEdit::save, this));
-	menuOverlay.rootMenu->setAction("file/open", std::bind(&TienEdit::load, this));
 }
 
 void TienEdit::preFrame(double frameTime, double totalTime)
@@ -256,8 +275,6 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_Z))		cameraMovement.y = -1;
 
 		cameraMovement *= frameTime / 100.0f;
-		if (KeyboardDeviceDriver::isModPressed(vrlib::KeyboardDeviceDriver::KeyboardModifiers::KEYMOD_SHIFT))
-			cameraMovement *= 10.0f;
 		cameraPos += cameraMovement * cameraRot;
 	}
 
@@ -267,6 +284,29 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		cameraRot = cameraRot * glm::quat(glm::vec3(0, .01f * (mouseState.pos.x - lastMouseState.pos.x), 0));
 		cameraRot = glm::quat(glm::vec3(.01f * (mouseState.pos.y - lastMouseState.pos.y), 0, 0)) * cameraRot;
 	}
+
+
+	if (focussedComponent == renderPanel)
+	{
+		if (KeyboardDeviceDriver::isPressed(KeyboardDeviceDriver::KEY_G) && activeTool != EditTool::TRANSLATE)
+		{
+			activeTool = EditTool::TRANSLATE;
+			originalPosition = selectedNodes[0]->transform->position;
+		}
+
+
+	}
+
+
+	if (activeTool == EditTool::TRANSLATE)
+	{
+		glm::vec3 pos;
+
+
+		selectedNodes[0]->transform->position = pos;
+	}
+
+
 
 
 	if (mainPanel->components[1] == renderPanel)
@@ -305,20 +345,23 @@ void TienEdit::draw()
 		glDisable(GL_TEXTURE_2D);
 		glColor4f(1, 0, 0, 1);
 		glDisable(GL_BLEND);
+		glBegin(GL_LINES);
+		glVertex3f(ray.mOrigin.x, ray.mOrigin.y, ray.mOrigin.z);
+		glVertex3f(ray.mOrigin.x + 50 * ray.mDir.x, ray.mOrigin.y + 50 * ray.mDir.y, ray.mOrigin.z + 50 * ray.mDir.z);
+		glEnd();
+
+
 		if(cacheSelection) //TODO: cache this differently, and draw this differently
 		{ 
 			if(selectionCache == 0)
 				selectionCache = glGenLists(1);
 			glNewList(selectionCache, GL_COMPILE);
+			glBegin(GL_LINES);
 			for (auto n : selectedNodes)
 			{
-				glPushMatrix();
-				glMultMatrixf(glm::value_ptr(n->transform->globalTransform));
-
 				vrlib::tien::components::ModelRenderer* r = n->getComponent<vrlib::tien::components::ModelRenderer>();
 				if (r)
 				{
-					glBegin(GL_LINES);
 					auto triangles = r->model->getIndexedTriangles(); //TODO: cache this !
 					for (size_t i = 0; i < triangles.first.size(); i += 3)
 					{
@@ -328,10 +371,7 @@ void TienEdit::draw()
 							glVertex3fv(glm::value_ptr(triangles.second[triangles.first[i + (ii + 1) % 3]]));
 						}
 					}
-					glEnd();
 				}
-
-				glPopMatrix();
 			}
 			glEnd();
 			glEndList();
@@ -425,20 +465,22 @@ void TienEdit::mouseUp(MouseButton button)
 			return;
 	}
 
+	if (renderPanel->inComponent(mouseState.pos))
+	{
+		glm::ivec2 mousePos = mouseState.pos;
+		mousePos.y = kernel->getWindowHeight() - mousePos.y;
+		glm::mat4 cameraMat = glm::translate(glm::toMat4(cameraRot), -cameraPos);
+		glm::mat4 projection = glm::perspective(70.0f, renderPanel->size.x / (float)renderPanel->size.y, 0.01f, 500.0f);
+		glm::vec4 Viewport(renderPanel->position.x, kernel->getWindowHeight() - renderPanel->position.y - renderPanel->size.y, renderPanel->size.x, renderPanel->size.y);
+		glm::vec3 retNear = glm::unProject(glm::vec3(mousePos, 0), cameraMat, projection, glm::vec4(Viewport[0], Viewport[1], Viewport[2], Viewport[3]));
+		glm::vec3 retFar = glm::unProject(glm::vec3(mousePos, 1), cameraMat, projection, glm::vec4(Viewport[0], Viewport[1], Viewport[2], Viewport[3]));
+		ray = vrlib::math::Ray(retNear, glm::normalize(retFar - retNear));
+	}
+
 	if (button == vrlib::MouseButtonDeviceDriver::MouseButton::Left)
 	{
 		if (renderPanel->inComponent(mouseState.pos))
 		{
-			glm::ivec2 mousePos = mouseState.pos;
-			mousePos.y = kernel->getWindowHeight() - mousePos.y;
-			glm::mat4 cameraMat = glm::translate(glm::toMat4(cameraRot), -cameraPos);
-			glm::mat4 projection = glm::perspective(70.0f, renderPanel->size.x / (float)renderPanel->size.y, 0.01f, 500.0f);
-			glm::vec4 Viewport(renderPanel->position.x, kernel->getWindowHeight() - renderPanel->position.y - renderPanel->size.y, renderPanel->size.x, renderPanel->size.y);
-			glm::vec3 retNear = glm::unProject(glm::vec3(mousePos, 0), cameraMat, projection, glm::vec4(Viewport[0], Viewport[1], Viewport[2], Viewport[3]));
-			glm::vec3 retFar = glm::unProject(glm::vec3(mousePos, 1), cameraMat, projection, glm::vec4(Viewport[0], Viewport[1], Viewport[2], Viewport[3]));
-			ray = vrlib::math::Ray(retNear, glm::normalize(retFar - retNear));
-
-
 			vrlib::tien::Node* closestClickedNode = nullptr;
 			float closest = 99999999.0f;
 			tien.scene.castRay(ray, [&, this](vrlib::tien::Node* node, float hitFraction, const glm::vec3 &hitPosition, const glm::vec3 &hitNormal)
@@ -458,9 +500,6 @@ void TienEdit::mouseUp(MouseButton button)
 			}
 			else
 				perform(new SelectionChangeAction(this, {}));
-			
-
-
 		}
 
 	}
@@ -569,74 +608,8 @@ void TienEdit::buildBrowsePanel(const std::string & directory)
 }
 
 
-void TienEdit::updateComponentsPanel()
-{
-	for (auto c : propertiesPanel->components)
-		delete c;
-	propertiesPanel->components.clear();
-	editorBuilder->reset();
-	if (objectTree->selectedItems.empty())
-		return;
-	vrlib::tien::Node* node = static_cast<vrlib::tien::Node*>(objectTree->selectedItems[0]);
-
-	editorBuilder->addTitle("Node:");
-
-	editorBuilder->beginGroup("Name");
-	editorBuilder->addTextBox(node->name, [node, this](const std::string &newValue) { node->name = newValue; objectTree->update(); });
-	editorBuilder->endGroup();
-
-	editorBuilder->beginGroup("GUID");
-	editorBuilder->addTextBox(node->guid, [node](const std::string &newValue) { node->guid = newValue; });
-	editorBuilder->endGroup();
-
-	editorBuilder->beginGroup("Parent");
-	editorBuilder->addTextBox(node->parent ? node->parent->name : "-", [node](const std::string &newValue) {});
-	editorBuilder->endGroup();
-
-	std::vector<vrlib::tien::Component*> components = node->getComponents();
-	for (auto c : components)
-		c->buildEditor(editorBuilder);
-	propertiesPanel->onReposition(mainPanel);
-
-	editorBuilder->addTitle("");
-	editorBuilder->beginGroup("Add Component");
-	editorBuilder->addButton("Add", [node]() {});
-	editorBuilder->endGroup();
-	focussedComponent = nullptr;
-}
-
 void TienEdit::perform(Action* action)
 {
 	action->perform(this);
 	actions.push_back(action);
-}
-
-
-
-void TienEdit::save()
-{
-	vrlib::json::Value saveData;
-	saveData["meshes"] = vrlib::json::Value(vrlib::json::Type::arrayValue);
-	saveData["scene"] = tien.scene.asJson(saveData["meshes"]);
-
-	std::ofstream out("scene.json");
-	out << saveData;
-	out.close();
-	vrlib::logger << "Saved" << Log::newline;
-}
-
-
-
-void TienEdit::load()
-{
-	std::ifstream("scene.json");
-	vrlib::json::Value saveData(vrlib::json::readJson(std::ifstream("scene.json")));
-	tien.scene.fromJson(saveData["scene"], saveData);
-
-	perform(new SelectionChangeAction(this, {}));
-	for (auto c : actions)
-		delete c;
-	actions.clear();
-	objectTree->update();
-	updateComponentsPanel();
 }
