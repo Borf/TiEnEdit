@@ -48,7 +48,7 @@ bool TextField::click(bool leftButton, const glm::ivec2 & clickPos)
 	return true;
 }
 
-void TextField::keyChar(char character)
+bool TextField::keyChar(char character)
 {
 	if (character > 31)
 	{
@@ -56,6 +56,7 @@ void TextField::keyChar(char character)
 		cursor++;
 		if (onChange)
 			onChange();
+		return true;
 	}
 	else if (character == 8)
 	{
@@ -66,25 +67,40 @@ void TextField::keyChar(char character)
 			if (onChange)
 				onChange();
 		}
+		return true;
 	}
+	return false;
 }
 
-void TextField::keyUp(int keyCode)
+bool TextField::keyUp(int keyCode)
 {
-	if (keyCode == VK_DELETE && cursor < value.size() - 1)
+	if (keyCode == VK_DELETE && cursor < (int)value.size() - 1)
 	{
 		value = value.substr(0, cursor) + value.substr(cursor + 1);
 		if (onChange)
 			onChange();
+		return true;
 	}
 
 	if (keyCode == VK_LEFT && cursor > 0)
+	{
 		cursor--;
-	if (keyCode == VK_RIGHT && cursor < value.size())
+		return true;
+	}
+	if (keyCode == VK_RIGHT && cursor < (int)value.size())
+	{
 		cursor++;
+		return true;
+	}
 	if (keyCode == VK_HOME)
+	{
 		cursor = 0;
+		return true;
+	}
 	if (keyCode == VK_END)
+	{
 		cursor = value.size();
-
+		return true;
+	}
+	return false;
 }

@@ -41,7 +41,7 @@ public:
 
 	virtual void focus() {};
 	virtual void unfocus() {};
-	virtual void keyChar(char character) {};
-	virtual void keyUp(int key) {};
+	virtual bool keyChar(char character) { return false; };
+	virtual bool keyUp(int key) { return false;  };
 
 };

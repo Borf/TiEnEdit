@@ -7,12 +7,13 @@
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
 
+#include "wm/Tree.h"
 #include "menu/MenuOverlay.h"
 class Component;
-class Tree;
 class SplitPanel;
 class Panel;
 class Action;
+class GuiEditor;
 
 namespace vrlib
 {
@@ -54,8 +55,10 @@ public:
 
 	Component* renderPanel;
 	SplitPanel* mainPanel;
-	Tree* objectTree;
+	Tree<vrlib::tien::Node*>* objectTree;
 	Panel* modelBrowsePanel;
+	Panel* propertiesPanel;
+	GuiEditor* editorBuilder;
 
 	vrlib::math::Ray ray;
 
@@ -67,6 +70,17 @@ public:
 		SCALE,
 		ROTATE
 	} activeTool = EditTool::NONE;
+
+	enum Axis
+	{
+		X = 1,
+		Y = 2,
+		Z = 4,
+		XY = X | Y,
+		XZ = X | Z,
+		YZ = Y | Z,
+		XYZ = X | Y | Z,
+	} axis;
 
 	glm::vec3 originalPosition;
 
@@ -98,9 +112,13 @@ public:
 	std::vector<vrlib::tien::Node*> selectedNodes;
 	bool cacheSelection = 0;
 	GLuint selectionCache = 0;
+	void updateComponentsPanel();
 
 	std::list<Action*> actions;
 	void perform(Action* action);
 	void undo();
 	void redo();
+
+	void save();
+	void load();
 };

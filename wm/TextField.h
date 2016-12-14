@@ -18,8 +18,8 @@ public:
 	virtual bool click(bool leftButton, const glm::ivec2 & clickPos) override;
 
 
-	virtual void keyChar(char character) override;
-	virtual void keyUp(int keyCode) override;
+	virtual bool keyChar(char character) override;
+	virtual bool keyUp(int keyCode) override;
 
 
 	std::function<void()> onChange;
