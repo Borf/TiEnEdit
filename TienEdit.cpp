@@ -683,6 +683,9 @@ void TienEdit::save()
 	saveFile["meshes"] = vrlib::json::Value(vrlib::json::Type::arrayValue);
 	saveFile["scene"] = tien.scene.asJson(saveFile["meshes"]);
 	std::ofstream("save.json")<<saveFile;
+	selectedNodes.clear();
+	objectTree->selectedItems = selectedNodes;
+	objectTree->update();
 }
 
 void TienEdit::load()
