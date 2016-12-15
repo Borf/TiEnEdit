@@ -99,13 +99,19 @@
     <ClInclude Include="actions\GroupAction.h">
       <Filter>actions</Filter>
     </ClInclude>
-    <ClInclude Include="actions\NewNodeAction.h">
-      <Filter>actions</Filter>
-    </ClInclude>
     <ClInclude Include="actions\Action.h">
       <Filter>actions</Filter>
     </ClInclude>
     <ClInclude Include="actions\SelectionChangeAction.h">
+      <Filter>actions</Filter>
+    </ClInclude>
+    <ClInclude Include="actions\NodeMoveAction.h">
+      <Filter>actions</Filter>
+    </ClInclude>
+    <ClInclude Include="actions\NodeNewAction.h">
+      <Filter>actions</Filter>
+    </ClInclude>
+    <ClInclude Include="actions\NodeDeleteAction.h">
       <Filter>actions</Filter>
     </ClInclude>
   </ItemGroup>
@@ -167,9 +173,6 @@
     <ClCompile Include="wm\Image.cpp">
       <Filter>wm</Filter>
     </ClCompile>
-    <ClCompile Include="actions\NewNodeAction.cpp">
-      <Filter>actions</Filter>
-    </ClCompile>
     <ClCompile Include="actions\Action.cpp">
       <Filter>actions</Filter>
     </ClCompile>
@@ -177,6 +180,15 @@
       <Filter>actions</Filter>
     </ClCompile>
     <ClCompile Include="actions\SelectionChangeAction.cpp">
+      <Filter>actions</Filter>
+    </ClCompile>
+    <ClCompile Include="actions\NodeMoveAction.cpp">
+      <Filter>actions</Filter>
+    </ClCompile>
+    <ClCompile Include="actions\NodeNewAction.cpp">
+      <Filter>actions</Filter>
+    </ClCompile>
+    <ClCompile Include="actions\NodeDeleteAction.cpp">
       <Filter>actions</Filter>
     </ClCompile>
   </ItemGroup>

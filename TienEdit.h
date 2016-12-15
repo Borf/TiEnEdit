@@ -85,6 +85,7 @@ public:
 	glm::vec3 originalPosition;
 
 
+
 	TienEdit(const std::string &filename);
 	~TienEdit();
 
@@ -117,6 +118,7 @@ public:
 	std::list<Action*> actions;
 	std::list<Action*> redoactions;
 	void perform(Action* action);
+	glm::vec3 getSelectionCenter() const;
 
 	
 	//file

@@ -46,6 +46,8 @@
 #include "wm/Image.h"
 
 #include "actions/SelectionChangeAction.h"
+#include "actions/GroupAction.h"
+#include "actions/NodeMoveAction.h"
 
 #include "EditorBuilderGui.h"
 
@@ -289,28 +291,46 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		if ((axis & Axis::Z) == 0)
 			pos.z = originalPosition.z;
 
-
-		glm::vec3 center(0, 0, 0);
-		for (auto n : selectedNodes)
-			center += n->transform->position / (float)selectedNodes.size();
-		glm::vec3 diff = pos - center;
-
+		glm::vec3 diff = pos - getSelectionCenter();
 		for(auto n : selectedNodes)
 			n->transform->position += diff;
 	}
 
 	if (activeTool == EditTool::ROTATE)
 	{
+		glm::vec3 center = getSelectionCenter();
+		float inc = 0.01f * glm::pi<float>() * (mouseState.pos.x - lastMouseState.pos.x);
 		for (auto n : selectedNodes)
 		{
 			if (axis == Axis::Y)
 			{
-				n->transform->rotation *= glm::quat(glm::vec3(0, 0.01f * glm::pi<float>() * (mouseState.pos.x - lastMouseState.pos.x), 0));
+				n->transform->rotation *= glm::quat(glm::vec3(0, inc, 0));
+				glm::vec3 diff = n->transform->position - center;
+				float len = glm::length(diff);
+				if (len > 0.01)
+				{
+					float angle = glm::atan(diff.z, diff.x);
+					angle -= inc;
+					n->transform->position = center + len * glm::vec3(glm::cos(angle), 0, glm::sin(angle));
+				}
+
 				if (isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
 				{
 					glm::vec3 euler = glm::degrees(glm::eulerAngles(n->transform->rotation));
+
+					float diff = glm::radians(glm::round(euler.y / 45.0f) * 45.0f - euler.y);
 					euler.y = glm::round(euler.y / 45.0f) * 45.0f;
 					n->transform->rotation = glm::quat(glm::radians(euler));
+					
+					glm::vec3 diff2 = n->transform->position - center;
+					float len = glm::length(diff2);
+					if (len > 0.01)
+					{ //wtf ok, this doesn't work?
+						float angle = glm::atan(diff2.z, diff2.x);
+						angle -= diff;
+						n->transform->position = center + len * glm::vec3(glm::cos(angle), 0, glm::sin(angle));
+					}
+
 				}
 			}
 		}
@@ -461,11 +481,7 @@ void TienEdit::keyUp(int button)
 		else if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool == EditTool::TRANSLATE)
 		{
 			activeTool = EditTool::NONE;
-			glm::vec3 center(0, 0, 0);
-			for (auto n : selectedNodes)
-				center += n->transform->position / (float)selectedNodes.size();
-			glm::vec3 diff = originalPosition - center;
-
+			glm::vec3 diff = originalPosition - getSelectionCenter();
 			for (auto n : selectedNodes)
 				n->transform->position += diff;
 		}
@@ -566,8 +582,6 @@ void TienEdit::mouseUp(MouseButton button)
 
 				if (closestClickedNode != nullptr)
 				{
-					vrlib::logger << "Clicked on " << closestClickedNode->name << vrlib::Log::newline;
-
 					if (isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
 					{
 						std::vector<vrlib::tien::Node*> newSelection = selectedNodes;
@@ -585,7 +599,11 @@ void TienEdit::mouseUp(MouseButton button)
 			}
 			else if (activeTool == EditTool::TRANSLATE)
 			{
-				//actions.push_back(new NodeTranslateAction(selectedNodes));
+				glm::vec3 diff = originalPosition - getSelectionCenter();
+				std::vector<Action*> group;
+				for (auto n : selectedNodes)
+					group.push_back(new NodeMoveAction(n, n->transform->position + diff, n->transform->position));
+				actions.push_back(new GroupAction(group));
 				activeTool = EditTool::NONE;
 				cacheSelection = true;
 				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
@@ -608,11 +626,7 @@ void TienEdit::mouseUp(MouseButton button)
 		else if (activeTool == EditTool::TRANSLATE)
 		{
 			activeTool = EditTool::NONE;
-			glm::vec3 center(0, 0, 0);
-			for (auto n : selectedNodes)
-				center += n->transform->position / (float)selectedNodes.size();
-			glm::vec3 diff = originalPosition - center;
-
+			glm::vec3 diff = originalPosition - getSelectionCenter();
 			for (auto n : selectedNodes)
 				n->transform->position += diff;
 		}
@@ -735,6 +749,14 @@ void TienEdit::perform(Action* action)
 	for (auto a : redoactions)
 		delete a;
 	redoactions.clear();
+}
+
+glm::vec3 TienEdit::getSelectionCenter() const
+{
+	glm::vec3 center(0, 0, 0);
+	for (auto n : selectedNodes)
+		center += n->transform->position / (float)selectedNodes.size();
+	return center;
 }
 
 void TienEdit::undo()

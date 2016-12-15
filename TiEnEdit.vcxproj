@@ -85,7 +85,9 @@
   <ItemGroup>
     <ClInclude Include="actions\Action.h" />
     <ClInclude Include="actions\GroupAction.h" />
-    <ClInclude Include="actions\NewNodeAction.h" />
+    <ClInclude Include="actions\NodeDeleteAction.h" />
+    <ClInclude Include="actions\NodeMoveAction.h" />
+    <ClInclude Include="actions\NodeNewAction.h" />
     <ClInclude Include="actions\SelectionChangeAction.h" />
     <ClInclude Include="EditorBuilderGui.h" />
     <ClInclude Include="menu\ActionMenuItem.h" />
@@ -112,7 +114,9 @@
   <ItemGroup>
     <ClCompile Include="actions\Action.cpp" />
     <ClCompile Include="actions\GroupAction.cpp" />
-    <ClCompile Include="actions\NewNodeAction.cpp" />
+    <ClCompile Include="actions\NodeDeleteAction.cpp" />
+    <ClCompile Include="actions\NodeMoveAction.cpp" />
+    <ClCompile Include="actions\NodeNewAction.cpp" />
     <ClCompile Include="actions\SelectionChangeAction.cpp" />
     <ClCompile Include="EditorBuilderGui.cpp" />
     <ClCompile Include="main.cpp" />
