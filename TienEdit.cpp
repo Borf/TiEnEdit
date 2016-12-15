@@ -7,6 +7,7 @@
 #include <direct.h>
 #include <algorithm>
 #include <fstream>
+#include <sstream>
 
 #include <VrLib/gl/shader.h>
 #include <vrlib/gl/FBO.h>
@@ -80,6 +81,13 @@ void TienEdit::init()
 	menuOverlay.rootMenu->setAction("file/open", std::bind(&TienEdit::load, this));
 	menuOverlay.rootMenu->setAction("file/save", std::bind(&TienEdit::save, this));
 
+	menuOverlay.rootMenu->setAction("edit/undo", std::bind(&TienEdit::undo, this));
+	menuOverlay.rootMenu->setAction("edit/redo", std::bind(&TienEdit::redo, this));
+
+	menuOverlay.rootMenu->setAction("object/copy", std::bind(&TienEdit::copy, this));
+	menuOverlay.rootMenu->setAction("object/paste", std::bind(&TienEdit::paste, this));
+	menuOverlay.rootMenu->setAction("object/delete", std::bind(&TienEdit::deleteSelection, this));
+
 	mainPanel = new SplitPanel();
 
 
@@ -142,8 +150,9 @@ void TienEdit::init()
 	{
 		if (!objectTree->selectedItems.empty())
 		{
-			vrlib::json::Value popupMenu = vrlib::json::readJson(std::ifstream("data/TiEnEdit/nodemenu.json"));
-			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, new Menu(popupMenu)));
+			Menu* menu = new Menu(vrlib::json::readJson(std::ifstream("data/TiEnEdit/nodemenu.json")));
+			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
+			menu->setAction("delete", std::bind(&TienEdit::deleteSelection, this));
 		}
 		else
 		{
@@ -215,7 +224,7 @@ void TienEdit::init()
 
 
 	cameraPos = glm::vec3(0, 1.8f, 8.0f);
-
+	load();
 	tien.start();
 
 }
@@ -254,15 +263,13 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		cameraRot = glm::quat(glm::vec3(.01f * (mouseState.pos.y - lastMouseState.pos.y), 0, 0)) * cameraRot;
 	}
 
-
-
-
-
 	if (activeTool == EditTool::TRANSLATE)
 	{
 		glm::vec3 pos;
 
-		auto targetPos = tien.scene.castRay(ray, false);
+		auto targetPos = tien.scene.castRay(ray, false, [this](vrlib::tien::Node* n) {
+			return std::find(std::begin(selectedNodes), std::end(selectedNodes), n) == std::end(selectedNodes);
+		});
 		if (targetPos.first)
 			pos = targetPos.second;
 		else
@@ -275,15 +282,38 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		{
 			pos = glm::round(pos*2.0f)/2.0f;
 		}
-
-
-		selectedNodes[0]->transform->position = pos;
 		if ((axis & Axis::X) == 0)
-			selectedNodes[0]->transform->position.x = originalPosition.x;
+			pos.x = originalPosition.x;
 		if ((axis & Axis::Y) == 0)
-			selectedNodes[0]->transform->position.y = originalPosition.y;
+			pos.y = originalPosition.y;
 		if ((axis & Axis::Z) == 0)
-			selectedNodes[0]->transform->position.z = originalPosition.z;
+			pos.z = originalPosition.z;
+
+
+		glm::vec3 center(0, 0, 0);
+		for (auto n : selectedNodes)
+			center += n->transform->position / (float)selectedNodes.size();
+		glm::vec3 diff = pos - center;
+
+		for(auto n : selectedNodes)
+			n->transform->position += diff;
+	}
+
+	if (activeTool == EditTool::ROTATE)
+	{
+		for (auto n : selectedNodes)
+		{
+			if (axis == Axis::Y)
+			{
+				n->transform->rotation *= glm::quat(glm::vec3(0, 0.01f * glm::pi<float>() * (mouseState.pos.x - lastMouseState.pos.x), 0));
+				if (isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
+				{
+					glm::vec3 euler = glm::degrees(glm::eulerAngles(n->transform->rotation));
+					euler.y = glm::round(euler.y / 45.0f) * 45.0f;
+					n->transform->rotation = glm::quat(glm::radians(euler));
+				}
+			}
+		}
 	}
 
 
@@ -354,6 +384,7 @@ void TienEdit::draw()
 			glEndList();
 			cacheSelection = false;
 		}
+		glDepthFunc(GL_LEQUAL);
 		if(selectionCache > 0)
 			glCallList(selectionCache);
 
@@ -430,7 +461,21 @@ void TienEdit::keyUp(int button)
 		else if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool == EditTool::TRANSLATE)
 		{
 			activeTool = EditTool::NONE;
-			selectedNodes[0]->transform->position = originalPosition;
+			glm::vec3 center(0, 0, 0);
+			for (auto n : selectedNodes)
+				center += n->transform->position / (float)selectedNodes.size();
+			glm::vec3 diff = originalPosition - center;
+
+			for (auto n : selectedNodes)
+				n->transform->position += diff;
+		}
+		if (buttonLookup[button] == KeyboardButton::KEY_R && activeTool != EditTool::ROTATE && !selectedNodes.empty())
+		{
+			activeTool = EditTool::ROTATE;
+			originalPosition = glm::vec3(0, 0, 0);
+			for (auto n : selectedNodes)
+				originalPosition += n->transform->position / (float)selectedNodes.size();
+			axis = Axis::Y;
 		}
 
 
@@ -441,6 +486,21 @@ void TienEdit::keyUp(int button)
 		if (buttonLookup[button] == KeyboardButton::KEY_Z && activeTool != EditTool::NONE)
 			axis = isModPressed(KeyboardModifiers::KEYMOD_SHIFT) ? XY : Z;
 
+
+		if (activeTool == EditTool::NONE)
+		{
+			if (buttonLookup[button] == KeyboardButton::KEY_Z && isModPressed(KeyboardModifiers::KEYMOD_CTRLSHIFT))
+				redo();
+			else if (buttonLookup[button] == KeyboardButton::KEY_Z && isModPressed(KeyboardModifiers::KEYMOD_CTRL))
+				undo();
+			else if (buttonLookup[button] == KeyboardButton::KEY_C && isModPressed(KeyboardModifiers::KEYMOD_CTRL))
+				copy();
+			else if (buttonLookup[button] == KeyboardButton::KEY_V && isModPressed(KeyboardModifiers::KEYMOD_CTRL))
+				paste();
+
+			if (buttonLookup[button] == KeyboardButton::KEY_DELETE)
+				deleteSelection();
+		}
 
 
 	}
@@ -530,6 +590,12 @@ void TienEdit::mouseUp(MouseButton button)
 				cacheSelection = true;
 				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
 			}
+			else if (activeTool == EditTool::ROTATE)
+			{
+				activeTool = EditTool::NONE;
+				cacheSelection = true;
+				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
+			}
 		}
 	}
 	if (button == vrlib::MouseButtonDeviceDriver::Right)
@@ -541,9 +607,19 @@ void TienEdit::mouseUp(MouseButton button)
 		}
 		else if (activeTool == EditTool::TRANSLATE)
 		{
-			//actions.push_back(new NodeTranslateAction(selectedNodes));
 			activeTool = EditTool::NONE;
-			selectedNodes[0]->transform->position = originalPosition;
+			glm::vec3 center(0, 0, 0);
+			for (auto n : selectedNodes)
+				center += n->transform->position / (float)selectedNodes.size();
+			glm::vec3 diff = originalPosition - center;
+
+			for (auto n : selectedNodes)
+				n->transform->position += diff;
+		}
+		else if (activeTool == EditTool::ROTATE)
+		{
+			activeTool = EditTool::NONE;
+
 		}
 	}
 
@@ -655,6 +731,30 @@ void TienEdit::perform(Action* action)
 {
 	action->perform(this);
 	actions.push_back(action);
+
+	for (auto a : redoactions)
+		delete a;
+	redoactions.clear();
+}
+
+void TienEdit::undo()
+{
+	if (actions.empty())
+		return;
+	Action* lastAction = actions.back();
+	actions.pop_back();
+	lastAction->undo(this);
+	redoactions.push_back(lastAction);
+}
+
+void TienEdit::redo()
+{
+	if (redoactions.empty())
+		return;
+	Action* action = redoactions.back();
+	redoactions.pop_back();
+	action->perform(this);
+	actions.push_back(action);
 }
 
 
@@ -699,17 +799,107 @@ void TienEdit::updateComponentsPanel()
 
 void TienEdit::save()
 {
+	vrlib::logger << "Save" << vrlib::Log::newline;
 	vrlib::json::Value saveFile;
 	saveFile["meshes"] = vrlib::json::Value(vrlib::json::Type::arrayValue);
 	saveFile["scene"] = tien.scene.asJson(saveFile["meshes"]);
 	std::ofstream("save.json")<<saveFile;
+}
+
+void TienEdit::load()
+{
+	vrlib::logger << "Open" << vrlib::Log::newline;
+	vrlib::json::Value saveFile = vrlib::json::readJson(std::ifstream("save.json"));
+	tien.scene.fromJson(saveFile["scene"], saveFile);
 	selectedNodes.clear();
 	objectTree->selectedItems = selectedNodes;
 	objectTree->update();
 }
 
-void TienEdit::load()
+
+void TienEdit::deleteSelection()
 {
-	vrlib::json::Value saveFile = vrlib::json::readJson(std::ifstream("save.json"));
-	tien.scene.fromJson(saveFile["scene"], saveFile);
+	vrlib::logger << "Delete" << vrlib::Log::newline;
+	for (auto c : selectedNodes)
+		delete c;
+	selectedNodes.clear();
+	objectTree->update();
+	updateComponentsPanel();
+	cacheSelection = true;
+}
+
+
+void toClipboard(const std::string &s) {
+	OpenClipboard(nullptr);
+	EmptyClipboard();
+	HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, s.size()+1);
+	if (!hg) {
+		CloseClipboard();
+		return;
+	}
+	memcpy(GlobalLock(hg), s.c_str(), s.size()+1);
+	GlobalUnlock(hg);
+	SetClipboardData(CF_TEXT, hg);
+	CloseClipboard();
+	GlobalFree(hg);
+}
+
+std::string fromClipboard()
+{
+	OpenClipboard(nullptr);
+	HANDLE hData = GetClipboardData(CF_TEXT);
+	assert(hData);
+	char* pszText = static_cast<char*>(GlobalLock(hData));
+	assert(pszText);
+	std::string text(pszText);
+	GlobalUnlock(hData);
+	CloseClipboard();
+	return text;
+}
+
+void TienEdit::copy()
+{
+	vrlib::logger << "Copy" << vrlib::Log::newline;
+
+	vrlib::json::Value clipboard;	
+	clipboard["nodes"] = vrlib::json::Value(vrlib::json::Type::arrayValue);
+	for (auto c : selectedNodes)
+	{
+		// TODO: only copy parents, not children of selected parents
+		clipboard["nodes"].push_back(c->asJson(clipboard["meshes"]));
+	}
+
+	std::string out;
+	out << clipboard;
+	toClipboard(out);
+}
+
+void TienEdit::paste()
+{
+	vrlib::logger << "Paste" << vrlib::Log::newline;
+
+	vrlib::json::Value clipboard = vrlib::json::readJson(std::stringstream(fromClipboard()));
+	if (clipboard.isNull())
+	{
+		vrlib::logger << "Invalid json on clipboard" << vrlib::Log::newline;
+		return;
+	}
+
+	selectedNodes.clear();
+	for (const vrlib::json::Value &n : clipboard["nodes"])
+	{
+		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
+		newNode->fromJson(n, clipboard);
+		selectedNodes.push_back(newNode);
+	}
+
+	objectTree->selectedItems = selectedNodes;
+	objectTree->update();
+
+	activeTool = EditTool::TRANSLATE;
+	originalPosition = glm::vec3(0, 0, 0);
+	for (auto n : selectedNodes)
+		originalPosition += n->transform->position / (float)selectedNodes.size();
+	axis = Axis::XYZ;
+
 }

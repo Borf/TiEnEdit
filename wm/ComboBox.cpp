@@ -21,7 +21,7 @@ void ComboBox::draw(MenuOverlay * overlay)
 		overlay->drawRect(glm::vec2(128, 328), glm::vec2(128 + 37, 328 + 33), absPosition + glm::ivec2(0, size.y), absPosition + glm::ivec2(size.x, size.y + 16 * values.size() + 5)); //dropdown
 		if (overlay->mousePos.y > absPosition.y + size.y && inComponent(overlay->mousePos))
 		{
-			int index = (overlay->mousePos.y - (absPosition.y + size.y)) / 16;
+			int index = (int)((overlay->mousePos.y - (absPosition.y + size.y)) / 16);
 			overlay->drawRect(glm::vec2(128, 328), glm::vec2(128 + 37, 328 + 33), absPosition + glm::ivec2(0, size.y + 16 * index), absPosition + glm::ivec2(size.x, size.y + 16 * index + 16)); //selection hover background
 		}
 	}

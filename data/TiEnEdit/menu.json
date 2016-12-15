@@ -31,6 +31,21 @@
 		]
 	},
 	{
+		"name" : "edit",
+		"type" : "menu",
+		"subitems": 
+		[
+			{
+				"name" : "undo",
+				"type" : "item"
+			},
+			{
+				"name" : "redo",
+				"type" : "item"
+			}
+		]
+	},
+	{
 		"name" :  "Scene",
 		"type" :  "menu",
 		"subitems" : 
@@ -46,7 +61,7 @@
 		]
 	},
 	{
-		"name" :  "Object",
+		"name" :  "object",
 		"type" :  "menu",
 		"subitems" : 
 		[

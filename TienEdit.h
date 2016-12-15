@@ -115,10 +115,18 @@ public:
 	void updateComponentsPanel();
 
 	std::list<Action*> actions;
+	std::list<Action*> redoactions;
 	void perform(Action* action);
-	void undo();
-	void redo();
 
+	
+	//file
 	void save();
 	void load();
+	//edit
+	void undo();
+	void redo();
+	//object
+	void copy();
+	void paste();
+	void deleteSelection();
 };
