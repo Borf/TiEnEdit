@@ -271,6 +271,12 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 			pos = plane.getCollisionPoint(ray);
 		}
 
+		if (isModPressed(KeyboardDeviceDriver::KEYMOD_SHIFT))
+		{
+			pos = glm::round(pos*2.0f)/2.0f;
+		}
+
+
 		selectedNodes[0]->transform->position = pos;
 		if ((axis & Axis::X) == 0)
 			selectedNodes[0]->transform->position.x = originalPosition.x;
@@ -416,7 +422,9 @@ void TienEdit::keyUp(int button)
 		if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool != EditTool::TRANSLATE && !selectedNodes.empty())
 		{
 			activeTool = EditTool::TRANSLATE;
-			originalPosition = selectedNodes[0]->transform->position;
+			originalPosition = glm::vec3(0, 0, 0);
+			for(auto n : selectedNodes)
+				originalPosition += n->transform->position / (float)selectedNodes.size();
 			axis = Axis::XYZ;
 		}
 		else if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool == EditTool::TRANSLATE)
@@ -499,7 +507,18 @@ void TienEdit::mouseUp(MouseButton button)
 				if (closestClickedNode != nullptr)
 				{
 					vrlib::logger << "Clicked on " << closestClickedNode->name << vrlib::Log::newline;
-					perform(new SelectionChangeAction(this, { closestClickedNode }));
+
+					if (isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
+					{
+						std::vector<vrlib::tien::Node*> newSelection = selectedNodes;
+						if (std::find(std::begin(newSelection), std::end(newSelection), closestClickedNode) == std::end(newSelection))
+							newSelection.push_back(closestClickedNode);
+						else
+							newSelection.erase(std::remove(newSelection.begin(), newSelection.end(), closestClickedNode), newSelection.end());
+						perform(new SelectionChangeAction(this, newSelection ));
+					}
+					else
+						perform(new SelectionChangeAction(this, { closestClickedNode }));
 				}
 				else
 					perform(new SelectionChangeAction(this, {}));
@@ -509,6 +528,7 @@ void TienEdit::mouseUp(MouseButton button)
 				//actions.push_back(new NodeTranslateAction(selectedNodes));
 				activeTool = EditTool::NONE;
 				cacheSelection = true;
+				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
 			}
 		}
 	}
