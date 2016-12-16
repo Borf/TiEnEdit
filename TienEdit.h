@@ -28,6 +28,7 @@ struct MouseState
 {
 	glm::ivec2 pos;
 	glm::ivec2 lastClickPos;
+	glm::ivec2 mouseDownPos;
 	int clickCount = 1;
 	DWORD lastClickTime;
 	union
@@ -131,6 +132,8 @@ public:
 	//edit
 	void undo();
 	void redo();
+	void sortScene();
+
 	//object
 	void copy();
 	void paste();

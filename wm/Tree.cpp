@@ -1,6 +1,8 @@
 #include "Tree.h"
 #include "../menu/MenuOverlay.h"
 
+#include <VrLib/Font.h>
+
 #include <algorithm>
 #include <functional>
 
@@ -11,6 +13,7 @@ template<class T>
 Tree<T>::Tree()
 {
 	scrollOffset = 0;
+	dragging = false;
 }
 
 template<class T>
@@ -47,6 +50,15 @@ void Tree<T>::draw(MenuOverlay * overlay)
 	}
 
 
+	if (dragging)
+	{
+		float textlen = overlay->font->textlen(flatList[dragIndex].text);
+		overlay->drawRect(glm::vec2(64, 416), glm::vec2(64 + 32, 416 + 32), dragPos, dragPos + glm::ivec2(textlen+10, LINESIZE)); //selection background
+		overlay->flushVerts();
+		overlay->drawText(flatList[dragIndex].text, dragPos + glm::ivec2(5, TEXTOFFSET), glm::vec4(1, 1, 1, 1));
+
+	}
+
 
 
 }
@@ -54,7 +66,7 @@ void Tree<T>::draw(MenuOverlay * overlay)
 template<class T>
 bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
-	int index = (clickPos.y - position.y - 5 + scrollOffset) / LINESIZE;
+	int index = (int)((clickPos.y - position.y - 5 + scrollOffset) / LINESIZE);
 	if (index < 0 || index >= (int)flatList.size())
 	{
 		selectedIndices.clear();
@@ -70,14 +82,15 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 		{
 			if (clickCount == 2)
 			{
-				if(doubleClickItem)
-					doubleClickItem();
+				if (flatList[index].hasChildren)
+				{
+					nodeInfo[flatList[index].item].opened = !nodeInfo[flatList[index].item].opened;
+					update();
+				}
+				else
+					if(doubleClickItem)
+						doubleClickItem();
 			}
-
-			/*selectedIndices.clear();
-			selectedItems.push_back(flatList[index].item);
-			nodeInfo[selectedItem].opened = !nodeInfo[selectedItem].opened;
-			update();*/
 		}
 		else
 		{
@@ -104,6 +117,52 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 	return true;
 }
 
+template<class T>
+bool Tree<T>::mouseDown(bool leftButton, const glm::ivec2 & mousePos)
+{
+	return false;
+}
+
+template<class T>
+bool Tree<T>::mouseUp(bool leftButton, const glm::ivec2 & mousePos)
+{
+	dragging = false;
+	return false;
+}
+
+template<class T>
+bool Tree<T>::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm::ivec2 & mousePos)
+{
+	if (!dragging)
+	{
+		dragIndex = (int)((startPos.y - position.y - 5 + scrollOffset) / LINESIZE);
+	}
+	dragging = true;
+	dragPos = mousePos;
+	return true;
+}
+
+template<class T>
+bool Tree<T>::mouseFinishDrag(bool leftButton, const glm::ivec2 & startPos, const glm::ivec2 & mousePos)
+{
+	dragging = false;
+	if (!inComponent(mousePos))
+		return false;
+	int indexFrom = dragIndex;
+	int indexTo = (int)((mousePos.y - position.y - 5 + scrollOffset) / LINESIZE);
+
+	T from = nullptr;
+	if(indexFrom >= 0 && indexFrom < (int)flatList.size())
+		from = flatList[indexFrom].item;
+	
+	T to = nullptr;
+	if (indexTo >= 0 && indexTo < (int)flatList.size())
+		to = flatList[indexTo].item;
+
+	if (dragItem)
+		dragItem(from, to);
+	return true;
+}
 
 
 template<class T>

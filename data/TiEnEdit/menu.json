@@ -42,6 +42,10 @@
 			{
 				"name" : "redo",
 				"type" : "item"
+			},
+			{
+				"name" : "sort",
+				"type" : "item"
 			}
 		]
 	},

@@ -35,6 +35,12 @@ public:
 	};
 	virtual void draw(MenuOverlay* overlay) {};
 	virtual bool click(bool leftButton, const glm::ivec2 &clickPos, int clickCount) = 0;
+
+	virtual bool mouseDown(bool leftButton, const glm::ivec2 &mousePos) { return false; }
+	virtual bool mouseUp(bool leftButton, const glm::ivec2 &mousePos) { return false; }
+	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) { return false; }
+	virtual bool mouseFinishDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) { return false; }
+
 	virtual bool scroll(float offset) { return false; };
 	virtual Component* getComponentAt(const glm::ivec2 &pos) { return inComponent(pos) ? this : nullptr; }
 

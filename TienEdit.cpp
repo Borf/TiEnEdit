@@ -85,6 +85,7 @@ void TienEdit::init()
 
 	menuOverlay.rootMenu->setAction("edit/undo", std::bind(&TienEdit::undo, this));
 	menuOverlay.rootMenu->setAction("edit/redo", std::bind(&TienEdit::redo, this));
+	menuOverlay.rootMenu->setAction("edit/sort", std::bind(&TienEdit::sortScene, this));
 
 	menuOverlay.rootMenu->setAction("object/copy", std::bind(&TienEdit::copy, this));
 	menuOverlay.rootMenu->setAction("object/paste", std::bind(&TienEdit::paste, this));
@@ -166,14 +167,25 @@ void TienEdit::init()
 			{
 				browseCallback = [this](const std::string &fileName)
 				{
-					vrlib::tien::Node* n = new vrlib::tien::Node("new node", &tien.scene);
+					std::string name = fileName;
+					if (name.find("/") != std::string::npos)
+						name = name.substr(name.rfind("/"));
+					if (name.find(".") != std::string::npos)
+						name = name.substr(0, name.find("."));
+
+					vrlib::tien::Node* n = new vrlib::tien::Node(name, &tien.scene);
 					n->addComponent(new vrlib::tien::components::Transform());
 					n->addComponent(new vrlib::tien::components::ModelRenderer(fileName));
 					perform(new SelectionChangeAction(this, { n }));
 				};
 				showBrowsePanel();
 			});
-			
+			menu->setAction("new node", [this]()
+			{
+				vrlib::tien::Node* n = new vrlib::tien::Node("new node", &tien.scene);
+				n->addComponent(new vrlib::tien::components::Transform());
+				perform(new SelectionChangeAction(this, { n }));
+			});
 		}
 	};
 	objectTree->selectItem = [this]()
@@ -181,6 +193,15 @@ void TienEdit::init()
 		perform(new SelectionChangeAction(this, objectTree->selectedItems));
 	};
 	objectTree->doubleClickItem = std::bind(&TienEdit::focusSelectedObject, this);
+	objectTree->dragItem = [this](vrlib::tien::Node* from, vrlib::tien::Node* to)
+	{//TODO: undo
+		if (!to)
+			to = &tien.scene;
+		from->setParent(to); //TODO: keep transforms
+		objectTree->update();
+	};
+
+
 
 	mainPanel->position = glm::ivec2(0, 25+36);
 	mainPanel->size = glm::ivec2(kernel->getWindowWidth(), kernel->getWindowHeight());
@@ -211,7 +232,7 @@ void TienEdit::init()
 		tien.scene.cameraNode = n;
 	}
 
-	{
+	/*{
 		vrlib::tien::Node* n = new vrlib::tien::Node("Model", &tien.scene);
 		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(1,1,1)));
 		n->addComponent(new vrlib::tien::components::ModelRenderer("data/Models/vangogh/Enter a title.obj"));
@@ -220,7 +241,33 @@ void TienEdit::init()
 //		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(0.01f, 0.01f, 0.01f)));
 //		n->addComponent(new vrlib::tien::components::ModelRenderer("data/tientest/models/crytek-sponza/sponza.obj"));
 		n->getComponent<vrlib::tien::components::ModelRenderer>()->castShadow = false;
-	}
+	}*/
+	/*vrlib::json::Value v = vrlib::json::readJson(std::ifstream("data/virtueelpd/scenes/Real PD1 v1-6.json"));
+	for (const auto &o : v["objects"])
+	{
+		if (o["model"].asString().find(".fbx") != std::string::npos)
+			o["model"] = o["model"].asString().substr(0, o["model"].asString().size() - 4);
+
+
+		std::string fileName = "data/virtueelpd/models/" + o["category"].asString() + "/" + o["model"].asString() + "/" + o["model"].asString() + ".fbx";
+		std::ifstream file(fileName);
+		if (file.is_open())
+		{
+			file.close();
+			vrlib::tien::Node* n = new vrlib::tien::Node(o["model"], &tien.scene);
+			n->addComponent(new vrlib::tien::components::Transform(
+				glm::vec3(o["x"], o["y"], -o["z"].asFloat() + 15),
+				glm::quat(o["rotationquat"]["w"], o["rotationquat"]["x"], o["rotationquat"]["y"], o["rotationquat"]["z"]),
+				glm::vec3(o["scale"], o["scale"], o["scale"]) * 40.0f));
+			n->addComponent(new vrlib::tien::components::ModelRenderer(fileName));
+
+			if (o["model"].asString().find("realPD1") != std::string::npos)
+				n->getComponent<vrlib::tien::components::ModelRenderer>()->castShadow = false;
+		}
+		else
+			vrlib::logger << "Could not find file " << fileName << vrlib::Log::newline;
+	}*/
+
 
 	focussedComponent = renderPanel;
 
@@ -268,7 +315,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		cameraRotTo = cameraRot;
 	}
 
-	cameraRot = glm::slerp(cameraRot, cameraRotTo, 0.01f);
+	cameraRot = glm::slerp(cameraRot, cameraRotTo, (float)frameTime/100.0f);
 
 
 	if (activeTool == EditTool::TRANSLATE)
@@ -443,22 +490,48 @@ void TienEdit::mouseMove(int x, int y)
 		glm::vec3 retFar = glm::unProject(glm::vec3(mousePos, 1), cameraMat, projection, glm::vec4(Viewport[0], Viewport[1], Viewport[2], Viewport[3]));
 		ray = vrlib::math::Ray(retNear, glm::normalize(retFar - retNear));
 	}
+
+	if(focussedComponent && focussedComponent->inComponent(mouseState.mouseDownPos) && mouseState.left)
+	{ 
+		focussedComponent->mouseDrag(mouseState.left, mouseState.mouseDownPos, mouseState.pos);
+	}
+
 }
 
 void TienEdit::mouseScroll(int offset)
 {
+	bool scrolled = false;
+	Component* c;
 	if (renderPanel->inComponent(menuOverlay.mousePos))
 	{
 		cameraPos += glm::vec3(0, 0, -offset / 120.0f) * cameraRot;
 	}
 	else if (focussedComponent) //TODO: find component under mouse to scroll
-		focussedComponent->scroll(offset / 10.0f);
+		scrolled |= focussedComponent->scroll(offset / 10.0f);
+	if (!scrolled && (c = mainPanel->getComponentAt(menuOverlay.mousePos)))
+	{
+		scrolled |= c->scroll(offset / 10.0f);
+		if (scrolled)
+		{
+			if (focussedComponent)
+			{
+				focussedComponent->unfocus();
+				focussedComponent->focussed = false;
+			}
+			focussedComponent = c;
+			c->focus();
+			c->focussed = true;
+		}
+	}
 }
 
 
 void TienEdit::mouseDown(MouseButton button)
 {
+	mouseState.mouseDownPos = mouseState.pos;
 	mouseState.buttons[(int)button] = true;
+	if (focussedComponent)
+		focussedComponent->mouseDown(button == MouseButton::Left, mouseState.pos);
 }
 
 void TienEdit::keyDown(int button)
@@ -542,7 +615,7 @@ void TienEdit::mouseUp(MouseButton button)
 {
 	mouseState.buttons[(int)button] = false;
 
-	if (button == vrlib::MouseButtonDeviceDriver::MouseButton::Left)
+	if (button == vrlib::MouseButtonDeviceDriver::MouseButton::Left && glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) < 3)
 	{		//GetDoubleClickTime();
 		DWORD time = GetTickCount();
 		if (time - mouseState.lastClickTime < 250)
@@ -552,9 +625,7 @@ void TienEdit::mouseUp(MouseButton button)
 		mouseState.lastClickTime = GetTickCount();
 	}
 
-
-	//TODO if click/mouse didn't move too much
-	if(button != vrlib::MouseButtonDeviceDriver::MouseButton::Middle)
+	if(button != vrlib::MouseButtonDeviceDriver::MouseButton::Middle && glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) < 3)
 	{
 		if (menuOverlay.click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left))
 			return;
@@ -581,7 +652,7 @@ void TienEdit::mouseUp(MouseButton button)
 			return;
 	}
 
-	if (button == vrlib::MouseButtonDeviceDriver::MouseButton::Left)
+	if (button == vrlib::MouseButtonDeviceDriver::MouseButton::Left && glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) < 3)
 	{
 		if (renderPanel->inComponent(mouseState.pos))
 		{
@@ -635,7 +706,7 @@ void TienEdit::mouseUp(MouseButton button)
 			}
 		}
 	}
-	if (button == vrlib::MouseButtonDeviceDriver::Right)
+	if (button == vrlib::MouseButtonDeviceDriver::Right && glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) < 3)
 	{
 		if (activeTool == EditTool::NONE)
 		{
@@ -656,6 +727,15 @@ void TienEdit::mouseUp(MouseButton button)
 		}
 	}
 
+
+
+	if (glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) >= 3)
+	{
+		if (focussedComponent && focussedComponent->inComponent(mouseState.mouseDownPos))
+		{
+			focussedComponent->mouseFinishDrag(button == MouseButton::Left, mouseState.mouseDownPos, mouseState.pos);
+		}
+	}
 
 }
 
@@ -952,4 +1032,14 @@ void TienEdit::focusSelectedObject()
 
 	glm::mat4 mat = glm::lookAt(cameraPos, lookat, glm::vec3(0, 1, 0));
 	cameraRotTo = glm::quat(mat);
+}
+
+
+void TienEdit::sortScene()
+{
+	tien.scene.fortree([](vrlib::tien::Node* node)
+	{
+		node->sortChildren();
+	});
+	objectTree->update();
 }

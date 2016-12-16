@@ -42,9 +42,12 @@ class Tree : public Component
 	std::vector<FlatNode> flatList;
 	std::vector<int> selectedIndices;
 	float scrollOffset;
+	bool dragging;
+	glm::ivec2 dragPos;
+	int dragIndex;
+
 
 public:
-
 	class TreeLoader
 	{
 	public:
@@ -59,11 +62,16 @@ public:
 	std::function<void()> selectItem;
 	std::function<void()> doubleClickItem;
 	std::function<void()> rightClickItem;
+	std::function<void(T from, T to)> dragItem;
 
 
 	Tree();
 	void draw(MenuOverlay* overlay) override;
 	virtual bool click(bool leftButton, const glm::ivec2 &clickPos, int clickCount) override;
+	virtual bool mouseDown(bool leftButton, const glm::ivec2 &mousePos)  override;
+	virtual bool mouseUp(bool leftButton, const glm::ivec2 &mousePos)  override;
+	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) override;
+	virtual bool mouseFinishDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) override;
 	virtual bool scroll(float offset) override;
 	void update();
 
