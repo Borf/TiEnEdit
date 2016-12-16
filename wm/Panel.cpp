@@ -16,11 +16,11 @@ void Panel::draw(MenuOverlay * overlay)
 
 }
 
-bool Panel::click(bool leftButton, const glm::ivec2 & clickPos)
+bool Panel::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
 	for (auto c : components)
 		if (c->inComponent(clickPos))
-			return c->click(leftButton, clickPos);
+			return c->click(leftButton, clickPos, clickCount);
 	return false;
 }
 

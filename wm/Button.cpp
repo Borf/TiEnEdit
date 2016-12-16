@@ -19,7 +19,7 @@ void Button::draw(MenuOverlay * overlay)
 
 }
 
-bool Button::click(bool leftButton, const glm::ivec2 & clickPos)
+bool Button::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
 	if(onClick)
 		onClick();

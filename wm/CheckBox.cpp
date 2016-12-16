@@ -22,7 +22,7 @@ void CheckBox::draw(MenuOverlay * overlay)
 	overlay->flushVerts();
 }
 
-bool CheckBox::click(bool leftButton, const glm::ivec2 & clickPos)
+bool CheckBox::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
 	this->value = !this->value;
 	if(onChange)

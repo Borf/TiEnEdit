@@ -15,7 +15,7 @@ public:
 	Button(const std::string &text, glm::ivec2 position);
 
 	void draw(MenuOverlay * overlay);
-	virtual bool click(bool leftButton, const glm::ivec2 & clickPos) override;
+	virtual bool click(bool leftButton, const glm::ivec2 & clickPos, int clickCount) override;
 
 
 };

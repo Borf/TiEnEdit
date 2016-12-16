@@ -15,7 +15,7 @@ public:
 	ComboBox(const std::string &value, glm::ivec2 position);
 
 	void draw(MenuOverlay * overlay);
-	virtual bool click(bool leftButton, const glm::ivec2 & clickPos) override;
+	virtual bool click(bool leftButton, const glm::ivec2 & clickPos, int clickCount) override;
 	inline bool inComponent(const glm::ivec2 &pos) override;
 
 	virtual void focus() override { focussed = !focussed; }; // this is because focussed is also toggled in click

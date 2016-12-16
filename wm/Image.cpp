@@ -47,7 +47,7 @@ void Image::draw(MenuOverlay* overlay)
 	overlay->shader->setUniform(MenuOverlay::Uniforms::colorMult, glm::vec4(1, 1, 1, 1));
 }
 
-inline bool Image::click(bool, const glm::ivec2 &) {
+inline bool Image::click(bool, const glm::ivec2 &, int clickCount) {
 	if (onClick) 
 	{ 
 		onClick(); 

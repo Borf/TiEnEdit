@@ -155,6 +155,7 @@ void TienEdit::init()
 			Menu* menu = new Menu(vrlib::json::readJson(std::ifstream("data/TiEnEdit/nodemenu.json")));
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
 			menu->setAction("delete", std::bind(&TienEdit::deleteSelection, this));
+			menu->setAction("focus with camera", std::bind(&TienEdit::focusSelectedObject, this));
 		}
 		else
 		{
@@ -179,6 +180,7 @@ void TienEdit::init()
 	{
 		perform(new SelectionChangeAction(this, objectTree->selectedItems));
 	};
+	objectTree->doubleClickItem = std::bind(&TienEdit::focusSelectedObject, this);
 
 	mainPanel->position = glm::ivec2(0, 25+36);
 	mainPanel->size = glm::ivec2(kernel->getWindowWidth(), kernel->getWindowHeight());
@@ -263,7 +265,11 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 	{
 		cameraRot = cameraRot * glm::quat(glm::vec3(0, .01f * (mouseState.pos.x - lastMouseState.pos.x), 0));
 		cameraRot = glm::quat(glm::vec3(.01f * (mouseState.pos.y - lastMouseState.pos.y), 0, 0)) * cameraRot;
+		cameraRotTo = cameraRot;
 	}
+
+	cameraRot = glm::slerp(cameraRot, cameraRotTo, 0.01f);
+
 
 	if (activeTool == EditTool::TRANSLATE)
 	{
@@ -444,8 +450,9 @@ void TienEdit::mouseScroll(int offset)
 	if (renderPanel->inComponent(menuOverlay.mousePos))
 	{
 		cameraPos += glm::vec3(0, 0, -offset / 120.0f) * cameraRot;
-
 	}
+	else if (focussedComponent) //TODO: find component under mouse to scroll
+		focussedComponent->scroll(offset / 10.0f);
 }
 
 
@@ -534,6 +541,18 @@ void TienEdit::keyChar(char character)
 void TienEdit::mouseUp(MouseButton button)
 {
 	mouseState.buttons[(int)button] = false;
+
+	if (button == vrlib::MouseButtonDeviceDriver::MouseButton::Left)
+	{		//GetDoubleClickTime();
+		DWORD time = GetTickCount();
+		if (time - mouseState.lastClickTime < 250)
+			mouseState.clickCount++;
+		else
+			mouseState.clickCount = 1;
+		mouseState.lastClickTime = GetTickCount();
+	}
+
+
 	//TODO if click/mouse didn't move too much
 	if(button != vrlib::MouseButtonDeviceDriver::MouseButton::Middle)
 	{
@@ -558,7 +577,7 @@ void TienEdit::mouseUp(MouseButton button)
 		}
 
 
-		if (mainPanel->click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left, mouseState.pos))
+		if (mainPanel->click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left, mouseState.pos, mouseState.clickCount))
 			return;
 	}
 
@@ -572,9 +591,9 @@ void TienEdit::mouseUp(MouseButton button)
 				float closest = 99999999.0f;
 				tien.scene.castRay(ray, [&, this](vrlib::tien::Node* node, float hitFraction, const glm::vec3 &hitPosition, const glm::vec3 &hitNormal)
 				{
-					if (hitFraction < closest)
+					if (hitFraction < closest && hitFraction > 0)
 					{
-						hitFraction = closest;
+						closest = hitFraction;
 						closestClickedNode = node;
 					}
 					return true;
@@ -924,4 +943,13 @@ void TienEdit::paste()
 		originalPosition += n->transform->position / (float)selectedNodes.size();
 	axis = Axis::XYZ;
 
+}
+
+
+void TienEdit::focusSelectedObject()
+{
+	glm::vec3 lookat = getSelectionCenter();
+
+	glm::mat4 mat = glm::lookAt(cameraPos, lookat, glm::vec3(0, 1, 0));
+	cameraRotTo = glm::quat(mat);
 }

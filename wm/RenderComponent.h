@@ -4,7 +4,7 @@
 
 class RenderComponent : public Component
 {
-	virtual bool click(bool leftButton, const glm::ivec2 &clickPos) {
+	virtual bool click(bool leftButton, const glm::ivec2 &clickPos, int clickCount) {
 		return false;
 	}
 

@@ -13,7 +13,7 @@ public:
 
 
 	void draw(MenuOverlay* overlay) override;
-	virtual bool click(bool leftButton, const glm::ivec2 &clickPos) override;
+	virtual bool click(bool leftButton, const glm::ivec2 &clickPos, int clickCount) override;
 	virtual void onReposition(Component* parent) override;
 	virtual Component* getComponentAt(const glm::ivec2 &pos) override;
 

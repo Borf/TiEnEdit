@@ -27,6 +27,9 @@ namespace vrlib
 struct MouseState
 {
 	glm::ivec2 pos;
+	glm::ivec2 lastClickPos;
+	int clickCount = 1;
+	DWORD lastClickTime;
 	union
 	{
 		struct
@@ -48,6 +51,7 @@ public:
 
 
 	glm::quat cameraRot;
+	glm::quat cameraRotTo;
 	glm::vec3 cameraPos;
 
 	Component* focussedComponent;
@@ -131,4 +135,5 @@ public:
 	void copy();
 	void paste();
 	void deleteSelection();
+	void focusSelectedObject();
 };

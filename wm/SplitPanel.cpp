@@ -36,13 +36,14 @@ void SplitPanel::draw(MenuOverlay * overlay)
 		p->draw(overlay);
 }
 
-bool SplitPanel::click(bool leftButton, const glm::ivec2 & clickPos)
+bool SplitPanel::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
 	if (!inComponent(clickPos))
 		return false;
 
 	for (auto p : components)
 		if (p->inComponent(clickPos))
-			return p->click(leftButton, clickPos);
+			return p->click(leftButton, clickPos, clickCount);
 	return false;
 }
+

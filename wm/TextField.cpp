@@ -34,7 +34,7 @@ void TextField::draw(MenuOverlay * overlay)
 
 	if (focussed && (GetTickCount() / 250) % 2 == 0)
 	{
-		int offset = overlay->font->textlen(value.substr(0, cursor));
+		float offset = overlay->font->textlen(value.substr(0, cursor));
 		overlay->drawText("|", absPosition + glm::ivec2(5 + offset-3, 13));
 	}
 
@@ -42,7 +42,7 @@ void TextField::draw(MenuOverlay * overlay)
 	glDisable(GL_SCISSOR_TEST);
 }
 
-bool TextField::click(bool leftButton, const glm::ivec2 & clickPos)
+bool TextField::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
 	cursor = value.size();
 	return true;

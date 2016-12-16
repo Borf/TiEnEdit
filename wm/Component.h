@@ -34,7 +34,8 @@ public:
 		this->absPosition = parent->absPosition + position;
 	};
 	virtual void draw(MenuOverlay* overlay) {};
-	virtual bool click(bool leftButton, const glm::ivec2 &clickPos) = 0;
+	virtual bool click(bool leftButton, const glm::ivec2 &clickPos, int clickCount) = 0;
+	virtual bool scroll(float offset) { return false; };
 	virtual Component* getComponentAt(const glm::ivec2 &pos) { return inComponent(pos) ? this : nullptr; }
 
 	virtual inline bool inComponent(const glm::ivec2 &pos) { return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y; }

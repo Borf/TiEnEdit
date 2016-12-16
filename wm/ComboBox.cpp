@@ -44,7 +44,7 @@ void ComboBox::draw(MenuOverlay * overlay)
 
 }
 
-bool ComboBox::click(bool leftButton, const glm::ivec2 & clickPos)
+bool ComboBox::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
 	if (clickPos.y > absPosition.y + size.y && inComponent(clickPos))
 	{
@@ -64,5 +64,5 @@ inline bool ComboBox::inComponent(const glm::ivec2 & pos)
 	if(!focussed)
 		return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y; 
 	else
-		return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y+16*values.size();
+		return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y+16*(int)values.size();
 }
