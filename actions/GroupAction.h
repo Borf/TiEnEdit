@@ -5,8 +5,10 @@
 
 class GroupAction : public Action
 {
-	std::vector<Action*> actions;
 public:
+	std::vector<Action*> actions;
+
+
 	GroupAction(const std::vector<Action*> &actions);
 
 	virtual void perform(TienEdit * editor) override;

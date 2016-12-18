@@ -48,6 +48,9 @@
 #include "actions/SelectionChangeAction.h"
 #include "actions/GroupAction.h"
 #include "actions/NodeMoveAction.h"
+#include "actions/NodeScaleAction.h"
+#include "actions/NodeRotateAction.h"
+
 
 #include "EditorBuilderGui.h"
 
@@ -290,7 +293,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 	mainPanel->onReposition(nullptr); //TODO: don't do this every frame ._.;
 
 
-	if (focussedComponent == renderPanel || mouseState.middle)
+	if (mouseState.middle)
 	{
 		glm::vec3 cameraMovement(0, 0, 0);
 		if (KeyboardDeviceDriver::isPressed(KeyboardButton::KEY_W))		cameraMovement.z = -1;
@@ -298,24 +301,21 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		if (KeyboardDeviceDriver::isPressed(KeyboardButton::KEY_A))		cameraMovement.x = -1;
 		if (KeyboardDeviceDriver::isPressed(KeyboardButton::KEY_D))		cameraMovement.x = 1;
 		if (KeyboardDeviceDriver::isPressed(KeyboardButton::KEY_Q))		cameraMovement.y = 1;
-		if (KeyboardDeviceDriver::isPressed(KeyboardButton::KEY_E))		cameraMovement.y = -1;
+		if (KeyboardDeviceDriver::isPressed(KeyboardButton::KEY_Z))		cameraMovement.y = -1;
 
 
 		cameraMovement *= frameTime / 100.0f;
 		if (KeyboardDeviceDriver::isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
 			cameraMovement *= 10.0f;
 		cameraPos += cameraMovement * cameraRot;
-	}
 
-
-	if (mouseState.middle)
-	{
 		cameraRot = cameraRot * glm::quat(glm::vec3(0, .01f * (mouseState.pos.x - lastMouseState.pos.x), 0));
 		cameraRot = glm::quat(glm::vec3(.01f * (mouseState.pos.y - lastMouseState.pos.y), 0, 0)) * cameraRot;
 		cameraRotTo = cameraRot;
 	}
+	cameraRot = glm::slerp(cameraRot, cameraRotTo, (float)frameTime / 100.0f);
 
-	cameraRot = glm::slerp(cameraRot, cameraRotTo, (float)frameTime/100.0f);
+
 
 
 	if (activeTool == EditTool::TRANSLATE)
@@ -349,43 +349,69 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 			n->transform->position += diff;
 	}
 
-	if (activeTool == EditTool::ROTATE)
+	if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
 	{
 		glm::vec3 center = getSelectionCenter();
 		float inc = 0.01f * glm::pi<float>() * (mouseState.pos.x - lastMouseState.pos.x);
 		for (auto n : selectedNodes)
 		{
-			if (axis == Axis::Y)
+			int axisIndex = axis == Axis::Z ? 2 : ((int)axis - 1);
+			glm::vec3 rotationIncEuler;
+			rotationIncEuler[axisIndex] = inc;
+
+
+			if(activeTool == EditTool::ROTATELOCAL)
+				n->transform->rotation = n->transform->rotation * glm::quat(rotationIncEuler);
+			else
+				n->transform->rotation = glm::quat(rotationIncEuler) * n->transform->rotation;
+
+
+			glm::vec3 diff = n->transform->position - center;
+			float len = glm::length(diff);
+			if (len > 0.01)
 			{
-				n->transform->rotation *= glm::quat(glm::vec3(0, inc, 0));
-				glm::vec3 diff = n->transform->position - center;
-				float len = glm::length(diff);
+				float angle = glm::atan(axis == Axis::Z ? diff.y : diff.z, axis == Axis::X ? diff.y : diff.x);
+				angle -= inc;
+				if(axis == Axis::X)
+					n->transform->position = center + len * glm::vec3(0, glm::sin(angle), glm::cos(angle));
+				if (axis == Axis::Y)
+					n->transform->position = center + len * glm::vec3(glm::cos(angle), 0, glm::sin(angle));
+				if (axis == Axis::Z)
+					n->transform->position = center + len * glm::vec3(glm::cos(angle), glm::sin(angle), 0);
+			}
+
+			if (isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
+			{
+				glm::vec3 euler = glm::degrees(glm::eulerAngles(n->transform->rotation));
+
+				float diff = glm::radians(glm::round(euler[axisIndex] / 45.0f) * 45.0f - euler[axisIndex]);
+				euler[axisIndex] = glm::round(euler[axisIndex] / 45.0f) * 45.0f;
+				n->transform->rotation = glm::quat(glm::radians(euler));
+					
+				glm::vec3 diff2 = n->transform->position - center;
+				float len = glm::length(diff2);
 				if (len > 0.01)
-				{
-					float angle = glm::atan(diff.z, diff.x);
-					angle -= inc;
+				{ //wtf ok, this doesn't work?
+					float angle = glm::atan(diff2.z, diff2.x);
+					angle -= diff;
 					n->transform->position = center + len * glm::vec3(glm::cos(angle), 0, glm::sin(angle));
 				}
 
-				if (isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
-				{
-					glm::vec3 euler = glm::degrees(glm::eulerAngles(n->transform->rotation));
-
-					float diff = glm::radians(glm::round(euler.y / 45.0f) * 45.0f - euler.y);
-					euler.y = glm::round(euler.y / 45.0f) * 45.0f;
-					n->transform->rotation = glm::quat(glm::radians(euler));
-					
-					glm::vec3 diff2 = n->transform->position - center;
-					float len = glm::length(diff2);
-					if (len > 0.01)
-					{ //wtf ok, this doesn't work?
-						float angle = glm::atan(diff2.z, diff2.x);
-						angle -= diff;
-						n->transform->position = center + len * glm::vec3(glm::cos(angle), 0, glm::sin(angle));
-					}
-
-				}
 			}
+		}
+	}
+
+	if (activeTool == EditTool::SCALE)
+	{
+		editorScale += mouseState.pos.x - lastMouseState.pos.x;
+		glm::vec3 scale((axis & Axis::X) != 0 ? -1+glm::pow(2, 1 + editorScale / 100.0f) : 1,
+						(axis & Axis::Y) != 0 ? -1 + glm::pow(2, 1 + editorScale / 100.0f) : 1,
+						(axis & Axis::Z) != 0 ? -1 + glm::pow(2, 1 + editorScale / 100.0f) : 1);
+
+		for (auto n : activeEditAction->actions)
+		{
+			auto a = dynamic_cast<NodeScaleAction*>(n);
+			a->node->transform->scale = a->originalScale * scale;
 		}
 	}
 
@@ -461,12 +487,17 @@ void TienEdit::draw()
 		if(selectionCache > 0)
 			glCallList(selectionCache);
 
-
-
-
-
-
 	}
+
+
+
+	glViewport(0, 0, menuOverlay.windowSize.x, menuOverlay.windowSize.y);
+	if (activeTool == EditTool::SCALE)
+	{
+		menuOverlay.drawInit();
+		menuOverlay.drawText("Scale: " + std::to_string(-1+glm::pow(2, 1+editorScale/100.0f)), glm::vec2(renderPanel->position.x + 10, menuOverlay.windowSize.y - 12), glm::vec4(1, 1, 1, 1), true);
+	}
+
 
 
 
@@ -530,6 +561,8 @@ void TienEdit::mouseDown(MouseButton button)
 {
 	mouseState.mouseDownPos = mouseState.pos;
 	mouseState.buttons[(int)button] = true;
+	if (mouseState.middle)
+		return;
 	if (focussedComponent)
 		focussedComponent->mouseDown(button == MouseButton::Left, mouseState.pos);
 }
@@ -542,7 +575,11 @@ void TienEdit::keyDown(int button)
 void TienEdit::keyUp(int button)
 {
 	NormalApp::keyUp(button);
-	if (focussedComponent && !mouseState.middle)
+	if (mouseState.middle)
+		return;
+
+
+	if (focussedComponent)
 	{
 		if (focussedComponent->keyUp(button))
 			return;
@@ -553,9 +590,7 @@ void TienEdit::keyUp(int button)
 		if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool != EditTool::TRANSLATE && !selectedNodes.empty())
 		{
 			activeTool = EditTool::TRANSLATE;
-			originalPosition = glm::vec3(0, 0, 0);
-			for(auto n : selectedNodes)
-				originalPosition += n->transform->position / (float)selectedNodes.size();
+			originalPosition = getSelectionCenter();
 			axis = Axis::XYZ;
 		}
 		else if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool == EditTool::TRANSLATE)
@@ -565,22 +600,66 @@ void TienEdit::keyUp(int button)
 			for (auto n : selectedNodes)
 				n->transform->position += diff;
 		}
-		if (buttonLookup[button] == KeyboardButton::KEY_R && activeTool != EditTool::ROTATE && !selectedNodes.empty())
+		if (buttonLookup[button] == KeyboardButton::KEY_R && activeTool != EditTool::ROTATE && activeTool != EditTool::ROTATELOCAL && !selectedNodes.empty())
 		{
 			activeTool = EditTool::ROTATE;
-			originalPosition = glm::vec3(0, 0, 0);
-			for (auto n : selectedNodes)
-				originalPosition += n->transform->position / (float)selectedNodes.size();
+			originalPosition = getSelectionCenter();
 			axis = Axis::Y;
+			std::vector<Action*> actions;
+			for (auto n : selectedNodes)
+				actions.push_back(new NodeRotateAction(n));
+			activeEditAction = new GroupAction(actions);
+		}
+		else if (buttonLookup[button] == KeyboardButton::KEY_R && activeTool == EditTool::ROTATE)
+		{
+			activeTool = EditTool::ROTATELOCAL;
+			activeEditAction->undo(this);
+		}
+		else if(buttonLookup[button] == KeyboardButton::KEY_R && activeTool == EditTool::ROTATELOCAL)
+		{
+			activeTool = EditTool::NONE;
+			activeEditAction->undo(this);
+			delete activeEditAction;
+			activeEditAction = nullptr;
 		}
 
+		if (buttonLookup[button] == KeyboardButton::KEY_S && activeTool != EditTool::SCALE && !selectedNodes.empty())
+		{
+			activeTool = EditTool::SCALE;
+			originalPosition = getSelectionCenter();
+			axis = Axis::XYZ;
+			std::vector<Action*> actions;
+			for (auto n : selectedNodes)
+				actions.push_back(new NodeScaleAction(n));
+			editorScale = 0;
+			activeEditAction = new GroupAction(actions);
+		}
+		else if (buttonLookup[button] == KeyboardButton::KEY_S && activeTool == EditTool::SCALE)
+		{
+			activeTool = EditTool::NONE;
+			activeEditAction->undo(this);
+			delete activeEditAction;
+			activeEditAction = nullptr;
+		}
 
 		if (buttonLookup[button] == KeyboardButton::KEY_X && activeTool != EditTool::NONE)
+		{
 			axis = isModPressed(KeyboardModifiers::KEYMOD_SHIFT) ? YZ : X;
+			if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL || activeTool == EditTool::SCALE)
+				activeEditAction->undo(this);
+		}
 		if (buttonLookup[button] == KeyboardButton::KEY_Y && activeTool != EditTool::NONE)
+		{
 			axis = isModPressed(KeyboardModifiers::KEYMOD_SHIFT) ? XZ : Y;
+			if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL || activeTool == EditTool::SCALE)
+				activeEditAction->undo(this);
+		}
 		if (buttonLookup[button] == KeyboardButton::KEY_Z && activeTool != EditTool::NONE)
+		{
 			axis = isModPressed(KeyboardModifiers::KEYMOD_SHIFT) ? XY : Z;
+			if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL || activeTool == EditTool::SCALE)
+				activeEditAction->undo(this);
+		}
 
 
 		if (activeTool == EditTool::NONE)
@@ -606,6 +685,8 @@ void TienEdit::keyUp(int button)
 void TienEdit::keyChar(char character)
 {
 	NormalApp::keyChar(character);
+	if (mouseState.middle)
+		return;
 	if (focussedComponent && !mouseState.middle)
 		focussedComponent->keyChar(character);
 }
@@ -614,6 +695,8 @@ void TienEdit::keyChar(char character)
 void TienEdit::mouseUp(MouseButton button)
 {
 	mouseState.buttons[(int)button] = false;
+	if (mouseState.middle)
+		return;
 
 	if (button == vrlib::MouseButtonDeviceDriver::MouseButton::Left && glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) < 3)
 	{		//GetDoubleClickTime();
@@ -698,11 +781,31 @@ void TienEdit::mouseUp(MouseButton button)
 				cacheSelection = true;
 				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
 			}
-			else if (activeTool == EditTool::ROTATE)
+			else if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
 			{
 				activeTool = EditTool::NONE;
-				cacheSelection = true;
+				for (Action* a : activeEditAction->actions)
+				{
+					auto sa = dynamic_cast<NodeRotateAction*>(a);
+					sa->newRotation = sa->node->transform->rotation;
+				}
+				actions.push_back(activeEditAction);
+				activeEditAction = nullptr;
 				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
+				cacheSelection = true;
+			}
+			else if (activeTool == EditTool::SCALE)
+			{
+				activeTool = EditTool::NONE;
+				for (Action* a : activeEditAction->actions)
+				{
+					auto sa = dynamic_cast<NodeScaleAction*>(a);
+					sa->newScale = sa->node->transform->scale;
+				}
+				actions.push_back(activeEditAction);
+				activeEditAction = nullptr;
+				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
+				cacheSelection = true;
 			}
 		}
 	}
@@ -720,10 +823,19 @@ void TienEdit::mouseUp(MouseButton button)
 			for (auto n : selectedNodes)
 				n->transform->position += diff;
 		}
-		else if (activeTool == EditTool::ROTATE)
+		else if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
 		{
 			activeTool = EditTool::NONE;
-
+			activeEditAction->undo(this);
+			delete activeEditAction;
+			activeEditAction = nullptr;
+		}
+		else if (activeTool == EditTool::SCALE)
+		{
+			activeTool = EditTool::NONE;
+			activeEditAction->undo(this);
+			delete activeEditAction;
+			activeEditAction = nullptr;
 		}
 	}
 

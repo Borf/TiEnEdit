@@ -14,6 +14,7 @@ class SplitPanel;
 class Panel;
 class Action;
 class GuiEditor;
+class GroupAction;
 
 namespace vrlib
 {
@@ -73,7 +74,8 @@ public:
 		NONE,
 		TRANSLATE,
 		SCALE,
-		ROTATE
+		ROTATE,
+		ROTATELOCAL,
 	} activeTool = EditTool::NONE;
 
 	enum Axis
@@ -88,6 +90,9 @@ public:
 	} axis;
 
 	glm::vec3 originalPosition;
+	
+	int editorScale;
+	GroupAction* activeEditAction;
 
 
 
