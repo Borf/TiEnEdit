@@ -66,3 +66,13 @@ inline bool ComboBox::inComponent(const glm::ivec2 & pos)
 	else
 		return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y+16*(int)values.size();
 }
+
+std::string ComboBox::getText() const
+{
+	return value;
+}
+
+void ComboBox::setText(const std::string & text)
+{
+	value = text;
+}

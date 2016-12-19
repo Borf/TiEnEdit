@@ -23,16 +23,17 @@ inline void GuiEditor::reset()
 	line = 4;
 }
 
-inline void GuiEditor::addTitle(const std::string & name)
+inline GuiEditor::TextComponent* GuiEditor::addTitle(const std::string & name)
 {
 	Label* label = new Label(name, glm::ivec2(0, line));
 	label->scale = 1.5f;
 	label->size.y = 25;
 	panel->components.push_back(label);
 	line += 25;
+	return label;
 }
 
-inline GuiEditor::TextBox* GuiEditor::addTextBox(const std::string & value, std::function<void(const std::string&)> onChange)
+inline GuiEditor::TextComponent* GuiEditor::addTextBox(const std::string & value, std::function<void(const std::string&)> onChange)
 {
 	TextField* field = new TextField(value, glm::ivec2(100, line));
 	field->size.x = 200;
@@ -63,7 +64,7 @@ inline void GuiEditor::addButton(const std::string & value, std::function<void()
 
 }
 
-inline void GuiEditor::addComboBox(const std::string & value, const std::vector<std::string>& values, std::function<void(const std::string&)> onClick)
+inline GuiEditor::TextComponent* GuiEditor::addComboBox(const std::string & value, const std::vector<std::string>& values, std::function<void(const std::string&)> onClick)
 {
 	ComboBox* box = new ComboBox(value, glm::ivec2(100, line));
 	box->values = values;
@@ -75,6 +76,7 @@ inline void GuiEditor::addComboBox(const std::string & value, const std::vector<
 			onClick(box->value);
 	};
 	group.push_back(box);
+	return box;
 }
 
 void GuiEditor::addBrowseButton(BrowseType type, std::function<void(const std::string &)> onClick)

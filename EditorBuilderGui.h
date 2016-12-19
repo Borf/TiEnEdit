@@ -21,11 +21,11 @@ public:
 
 	virtual void reset();
 
-	virtual void addTitle(const std::string & name) override;
-	virtual TextBox* addTextBox(const std::string & value, std::function<void(const std::string&)> onChange) override;
+	virtual TextComponent* addTitle(const std::string & name) override;
+	virtual TextComponent* addTextBox(const std::string & value, std::function<void(const std::string&)> onChange) override;
 	virtual void addCheckbox(bool value, std::function<void(bool)> onChange) override;
 	virtual void addButton(const std::string &value, std::function<void()> onClick) override;
-	virtual void addComboBox(const std::string &value, const std::vector<std::string> &values, std::function<void(const std::string&)> onClick) override;
+	virtual TextComponent* addComboBox(const std::string &value, const std::vector<std::string> &values, std::function<void(const std::string&)> onClick) override;
 	virtual void addBrowseButton(BrowseType type, std::function<void(const std::string &)> onClick) override;
 
 	virtual void beginGroup(const std::string & name, bool verticalGroup = true) override;

@@ -5,7 +5,7 @@
 #include <functional>
 #include <VrLib/tien/Component.h>
 
-class TextField : public Component, public vrlib::tien::EditorBuilder::TextBox
+class TextField : public Component, public vrlib::tien::EditorBuilder::TextComponent
 {
 public:
 	std::string value;

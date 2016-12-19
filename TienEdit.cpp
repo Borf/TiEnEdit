@@ -31,9 +31,11 @@
 #include <vrlib/tien/components/Camera.h>
 #include <vrlib/tien/components/Transform.h>
 #include <vrlib/tien/components/Light.h>
+#include <vrlib/tien/components/StaticSkyBox.h>
 #include <vrlib/tien/components/DynamicSkyBox.h>
 #include <vrlib/tien/components/ModelRenderer.h>
 #include <vrlib/tien/components/MeshRenderer.h>
+#include <vrlib/tien/components/TerrainRenderer.h>
 
 #include "actions/Action.h"
 #include "menu/MenuOverlay.h"
@@ -53,6 +55,19 @@
 
 
 #include "EditorBuilderGui.h"
+
+
+
+std::map<std::string, std::function<vrlib::tien::Component*()>> componentFactory =
+{
+	{ "Mesh Renderer", []() { return new vrlib::tien::components::MeshRenderer(); } },
+	{ "Model Renderer", []() { return new vrlib::tien::components::ModelRenderer(""); } },
+	{ "Terrain Renderer", []() { return new vrlib::tien::components::TerrainRenderer(nullptr); } },
+	{ "Light", []() { return new vrlib::tien::components::Light(); } },
+	{ "Static Skybox", []() { return new vrlib::tien::components::StaticSkyBox(); } },
+	{ "Dynamic Skybox", []() { return new vrlib::tien::components::DynamicSkyBox(); } },
+	{ "Camera", []() { return new vrlib::tien::components::Camera(); } },
+};
 
 
 TienEdit::TienEdit(const std::string &fileName) : NormalApp("TiEn scene Editor")
@@ -1024,6 +1039,11 @@ void TienEdit::updateComponentsPanel()
 
 	editorBuilder->addTitle("");
 	editorBuilder->beginGroup("Add Component");
+	std::vector<std::string> keys;
+	for (auto kv : componentFactory)
+		keys.push_back(kv.first);
+	editorBuilder->addComboBox("-", keys, [](const std::string &newValue) {});
+
 	editorBuilder->addButton("Add", [node]() {});
 	editorBuilder->endGroup();
 }

@@ -24,3 +24,13 @@ void Label::draw(MenuOverlay* overlay)
 
 
 }
+
+std::string Label::getText() const
+{
+	return text;
+}
+
+void Label::setText(const std::string & text)
+{
+	this->text = text;
+}
