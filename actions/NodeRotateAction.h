@@ -17,8 +17,9 @@ class NodeRotateAction : public Action
 public:
 	vrlib::tien::Node* node;
 	glm::quat originalRotation;
+	glm::vec3 originalPosition;
 	glm::quat newRotation;
-
+	glm::vec3 newPosition;
 
 	NodeRotateAction(vrlib::tien::Node* node);
 

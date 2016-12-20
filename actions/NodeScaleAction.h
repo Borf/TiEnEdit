@@ -16,7 +16,9 @@ class NodeScaleAction : public Action
 public:
 	vrlib::tien::Node* node;
 	glm::vec3 originalScale;
+	glm::vec3 originalPosition;
 	glm::vec3 newScale;
+	glm::vec3 newPosition;
 
 
 	NodeScaleAction(vrlib::tien::Node* node);

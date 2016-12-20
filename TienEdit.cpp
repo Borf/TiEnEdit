@@ -95,6 +95,9 @@ void TienEdit::init()
 	kernel = vrlib::Kernel::getInstance();
 
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+	ruler = vrlib::Model::getModel<vrlib::gl::VertexP3>("data/TiEnEdit/models/ruler1/ruler1.fbx");
+
 	tien.init();
 	menuOverlay.init();
 	menuOverlay.loadMenu("data/TiEnEdit/menu.json");
@@ -502,6 +505,14 @@ void TienEdit::draw()
 		if(selectionCache > 0)
 			glCallList(selectionCache);
 
+
+		ruler->draw([](const glm::mat4 &modelMatrix) {
+
+		}, [](const vrlib::Material& material)
+		{
+
+		});
+
 	}
 
 
@@ -803,6 +814,7 @@ void TienEdit::mouseUp(MouseButton button)
 				{
 					auto sa = dynamic_cast<NodeRotateAction*>(a);
 					sa->newRotation = sa->node->transform->rotation;
+					sa->newPosition = sa->node->transform->position;
 				}
 				actions.push_back(activeEditAction);
 				activeEditAction = nullptr;
@@ -816,6 +828,7 @@ void TienEdit::mouseUp(MouseButton button)
 				{
 					auto sa = dynamic_cast<NodeScaleAction*>(a);
 					sa->newScale = sa->node->transform->scale;
+					sa->newPosition = sa->node->transform->position;
 				}
 				actions.push_back(activeEditAction);
 				activeEditAction = nullptr;

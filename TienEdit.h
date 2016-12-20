@@ -58,6 +58,7 @@ public:
 
 	Component* focussedComponent;
 	
+	vrlib::Model* ruler;
 
 	Component* renderPanel;
 	SplitPanel* mainPanel;
