@@ -4,7 +4,7 @@
 
 void Panel::draw(MenuOverlay * overlay)
 {
-	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), position, position+size); //menubar
+	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), absPosition, absPosition +size); //menubar
 	overlay->flushVerts();
 
 	for (auto c : components)

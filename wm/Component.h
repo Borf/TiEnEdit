@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/vec2.hpp>
+#include <list>
 
 class MenuOverlay;
 
@@ -50,5 +51,12 @@ public:
 	virtual void unfocus() {};
 	virtual bool keyChar(char character) { return false; };
 	virtual bool keyUp(int key) { return false;  };
+	virtual bool keyDown(int key) { return false; };
+
+
+
+	static std::list<int*> scissorStack;
+	static void scissorPush(int x, int y, int width, int height);
+	static void scissorPop();
 
 };

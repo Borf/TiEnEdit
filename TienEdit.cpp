@@ -46,6 +46,7 @@
 #include "wm/Panel.h"
 #include "wm/Label.h"
 #include "wm/Image.h"
+#include "wm/ScrollPanel.h"
 
 #include "actions/SelectionChangeAction.h"
 #include "actions/GroupAction.h"
@@ -162,7 +163,9 @@ void TienEdit::init()
 	
 	mainPanel->addPanel(renderPanel = new RenderComponent());
 	propertiesPanel = new Panel();
-	mainPanel->addPanel(propertiesPanel);
+	propertiesPanel->size.x = 300;
+	propertiesPanel->size.y = 100000;
+	mainPanel->addPanel(new ScrollPanel( propertiesPanel ));
 
 
 	editorBuilder = new GuiEditor(this, propertiesPanel);
@@ -585,6 +588,10 @@ void TienEdit::mouseDown(MouseButton button)
 void TienEdit::keyDown(int button)
 {
 	NormalApp::keyDown(button);
+
+	if (focussedComponent)
+		if (focussedComponent->keyDown(button))
+			return;
 }
 
 void TienEdit::keyUp(int button)
