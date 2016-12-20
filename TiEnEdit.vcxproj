@@ -155,6 +155,8 @@
     <None Include="data\TiEnEdit\menu.json" />
     <None Include="data\TiEnEdit\newnodemenu.json" />
     <None Include="data\TiEnEdit\nodemenu.json" />
+    <None Include="data\TiEnEdit\shaders\editor.frag" />
+    <None Include="data\TiEnEdit\shaders\editor.vert" />
     <None Include="data\TiEnEdit\shaders\overlay.frag" />
     <None Include="data\TiEnEdit\shaders\overlay.vert" />
   </ItemGroup>

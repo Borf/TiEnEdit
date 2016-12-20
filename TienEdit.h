@@ -52,6 +52,17 @@ public:
 	MenuOverlay menuOverlay;
 
 
+	enum class EditorShaderUniforms
+	{
+		projectionMatrix,
+		modelViewMatrix,
+		s_texture,
+		textureFactor,
+		color
+	};
+	vrlib::gl::Shader<EditorShaderUniforms>* shader;
+
+
 	glm::quat cameraRot;
 	glm::quat cameraRotTo;
 	glm::vec3 cameraPos;

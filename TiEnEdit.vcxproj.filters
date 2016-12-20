@@ -239,5 +239,11 @@
     <None Include="data\TiEnEdit\newnodemenu.json">
       <Filter>data</Filter>
     </None>
+    <None Include="data\TiEnEdit\shaders\editor.vert">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\TiEnEdit\shaders\editor.frag">
+      <Filter>data\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -17,6 +17,7 @@
 #include <VrLib/math/aabb.h>
 #include <VrLib/math/Plane.h>
 #include <VrLib/util.h>
+#include <VrLib/Texture.h>
 
 #include <math.h>
 #include <glm/glm.hpp>
@@ -97,7 +98,20 @@ void TienEdit::init()
 
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
-	ruler = vrlib::Model::getModel<vrlib::gl::VertexP3>("data/TiEnEdit/models/ruler1/ruler1.fbx");
+	ruler = vrlib::Model::getModel<vrlib::gl::VertexP3T2>("data/TiEnEdit/models/ruler1/ruler1.fbx");
+
+	shader = new vrlib::gl::Shader<EditorShaderUniforms>("data/TiEnEdit/shaders/editor.vert", "data/TiEnEdit/shaders/editor.frag");
+	shader->bindAttributeLocation("a_position", 0);
+	shader->bindAttributeLocation("a_texcoord", 1);
+	shader->link();
+	shader->bindFragLocation("fragColor", 0);
+	shader->registerUniform(EditorShaderUniforms::projectionMatrix, "projectionMatrix");
+	shader->registerUniform(EditorShaderUniforms::modelViewMatrix, "modelViewMatrix");
+	shader->registerUniform(EditorShaderUniforms::s_texture, "s_texture");
+	shader->registerUniform(EditorShaderUniforms::textureFactor, "textureFactor");
+	shader->registerUniform(EditorShaderUniforms::color, "color");
+	shader->use();
+	shader->setUniform(EditorShaderUniforms::s_texture, 0);
 
 	tien.init();
 	menuOverlay.init();
@@ -508,14 +522,20 @@ void TienEdit::draw()
 		if(selectionCache > 0)
 			glCallList(selectionCache);
 
-
-		ruler->draw([](const glm::mat4 &modelMatrix) {
-
-		}, [](const vrlib::Material& material)
+		if (activeTool == EditTool::SCALE)
 		{
+			shader->use();
+			shader->setUniform(EditorShaderUniforms::projectionMatrix, projectionMatrix);
+			shader->setUniform(EditorShaderUniforms::textureFactor, 1.0f);
+			shader->setUniform(EditorShaderUniforms::color, glm::vec4(1, 1, 1, 1));
+			ruler->draw([&modelViewMatrix, this](const glm::mat4 &modelMatrix) {
+				shader->setUniform(EditorShaderUniforms::modelViewMatrix, glm::translate(modelViewMatrix, getSelectionCenter()) * modelMatrix);
 
-		});
-
+			}, [](const vrlib::Material& material)
+			{
+				material.texture->bind();
+			});
+		}
 	}
 
 
