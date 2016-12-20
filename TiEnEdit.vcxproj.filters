@@ -120,6 +120,9 @@
     <ClInclude Include="actions\NodeRotateAction.h">
       <Filter>actions</Filter>
     </ClInclude>
+    <ClInclude Include="wm\ScrollPanel.h">
+      <Filter>wm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -202,6 +205,9 @@
     </ClCompile>
     <ClCompile Include="actions\NodeRotateAction.cpp">
       <Filter>actions</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\ScrollPanel.cpp">
+      <Filter>wm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

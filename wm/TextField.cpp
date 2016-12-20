@@ -28,9 +28,9 @@ void TextField::draw(MenuOverlay * overlay)
 
 	glm::ivec2 windowSize = vrlib::Kernel::getInstance()->getWindowSize();
 
-	glEnable(GL_SCISSOR_TEST);
-	glScissor(absPosition.x+5, 0, size.x-15, 10000);
+	scissorPush(absPosition.x + 5, absPosition.y, size.x - 15, size.y);
 	overlay->drawText(value, absPosition + glm::ivec2(5, 14));
+	scissorPop();
 
 	if (focussed && (GetTickCount() / 250) % 2 == 0)
 	{
@@ -73,6 +73,11 @@ bool TextField::keyChar(char character)
 }
 
 bool TextField::keyUp(int keyCode)
+{
+	return false;
+}
+
+bool TextField::keyDown(int keyCode)
 {
 	if (keyCode == VK_DELETE && cursor < (int)value.size() - 1)
 	{

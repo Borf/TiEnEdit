@@ -108,6 +108,7 @@
     <ClInclude Include="wm\Label.h" />
     <ClInclude Include="wm\Panel.h" />
     <ClInclude Include="wm\RenderComponent.h" />
+    <ClInclude Include="wm\ScrollPanel.h" />
     <ClInclude Include="wm\SplitPanel.h" />
     <ClInclude Include="wm\TabPanel.h" />
     <ClInclude Include="wm\TextField.h" />
@@ -137,6 +138,7 @@
     <ClCompile Include="wm\Label.cpp" />
     <ClCompile Include="wm\Panel.cpp" />
     <ClCompile Include="wm\RenderComponent.cpp" />
+    <ClCompile Include="wm\ScrollPanel.cpp" />
     <ClCompile Include="wm\SplitPanel.cpp" />
     <ClCompile Include="wm\TabPanel.cpp" />
     <ClCompile Include="wm\TextField.cpp" />

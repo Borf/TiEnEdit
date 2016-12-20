@@ -12,6 +12,8 @@ public:
 	int cursor;
 	int selectionEnd;
 
+	float offsetX = 0;
+
 	TextField(const std::string &value, glm::ivec2 position);
 
 	void draw(MenuOverlay * overlay);
@@ -20,7 +22,7 @@ public:
 
 	virtual bool keyChar(char character) override;
 	virtual bool keyUp(int keyCode) override;
-
+	virtual bool keyDown(int keyCode) override;
 
 	std::function<void()> onChange;
 
