@@ -30,16 +30,13 @@ void TextField::draw(MenuOverlay * overlay)
 
 	scissorPush(absPosition.x + 5, absPosition.y, size.x - 15, size.y);
 	overlay->drawText(value, absPosition + glm::ivec2(5, 14));
-	scissorPop();
 
 	if (focussed && (GetTickCount() / 250) % 2 == 0)
 	{
 		float offset = overlay->font->textlen(value.substr(0, cursor));
 		overlay->drawText("|", absPosition + glm::ivec2(5 + offset-3, 13));
 	}
-
-
-	glDisable(GL_SCISSOR_TEST);
+	scissorPop();
 }
 
 bool TextField::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
@@ -58,7 +55,7 @@ bool TextField::keyChar(char character)
 			onChange();
 		return true;
 	}
-	else if (character == 8)
+	else if (character == 8) //backspace
 	{
 		if (cursor > 0)
 		{

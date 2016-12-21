@@ -22,7 +22,7 @@ void ScrollPanel::draw(MenuOverlay * overlay)
 
 bool ScrollPanel::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
-	return false;
+	return component->click(leftButton, clickPos, clickCount);
 }
 
 void ScrollPanel::onReposition(Component* parent)

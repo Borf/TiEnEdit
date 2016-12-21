@@ -34,6 +34,7 @@
 #include <vrlib/tien/components/Light.h>
 #include <vrlib/tien/components/StaticSkyBox.h>
 #include <vrlib/tien/components/DynamicSkyBox.h>
+#include <vrlib/tien/components/AnimatedModelRenderer.h>
 #include <vrlib/tien/components/ModelRenderer.h>
 #include <vrlib/tien/components/MeshRenderer.h>
 #include <vrlib/tien/components/TerrainRenderer.h>
@@ -64,6 +65,7 @@ std::map<std::string, std::function<vrlib::tien::Component*()>> componentFactory
 {
 	{ "Mesh Renderer", []() { return new vrlib::tien::components::MeshRenderer(); } },
 	{ "Model Renderer", []() { return new vrlib::tien::components::ModelRenderer(""); } },
+	{ "Animated Model Renderer", []() { return new vrlib::tien::components::AnimatedModelRenderer(""); } },
 	{ "Terrain Renderer", []() { return new vrlib::tien::components::TerrainRenderer(nullptr); } },
 	{ "Light", []() { return new vrlib::tien::components::Light(); } },
 	{ "Static Skybox", []() { return new vrlib::tien::components::StaticSkyBox(); } },
@@ -159,7 +161,7 @@ void TienEdit::init()
 		}
 		virtual int getIcon(vrlib::tien::Node* n)
 		{
-			if (n->getComponent<vrlib::tien::components::ModelRenderer>())
+			if (n->getComponent<vrlib::tien::components::ModelRenderer>() || n->getComponent<vrlib::tien::components::AnimatedModelRenderer>())
 				return 2;
 			if (n->getComponent<vrlib::tien::components::MeshRenderer>())
 				return 2;
@@ -498,20 +500,39 @@ void TienEdit::draw()
 			{
 				glPushMatrix();
 				glMultMatrixf(glm::value_ptr(n->transform->globalTransform));
-				vrlib::tien::components::ModelRenderer* r = n->getComponent<vrlib::tien::components::ModelRenderer>();
-				if (r)
 				{
-					glBegin(GL_LINES);
-					auto triangles = r->model->getIndexedTriangles(); //TODO: cache this !
-					for (size_t i = 0; i < triangles.first.size(); i += 3)
+					vrlib::tien::components::ModelRenderer* r = n->getComponent<vrlib::tien::components::ModelRenderer>();
+					if (r)
 					{
-						for (int ii = 0; ii < 3; ii++)
+						glBegin(GL_LINES);
+						auto triangles = r->model->getIndexedTriangles(); //TODO: cache this !
+						for (size_t i = 0; i < triangles.first.size(); i += 3)
 						{
-							glVertex3fv(glm::value_ptr(triangles.second[triangles.first[i + ii]]));
-							glVertex3fv(glm::value_ptr(triangles.second[triangles.first[i + (ii + 1) % 3]]));
+							for (int ii = 0; ii < 3; ii++)
+							{
+								glVertex3fv(glm::value_ptr(triangles.second[triangles.first[i + ii]]));
+								glVertex3fv(glm::value_ptr(triangles.second[triangles.first[i + (ii + 1) % 3]]));
+							}
 						}
+						glEnd();
 					}
-					glEnd();
+				}
+				{
+					vrlib::tien::components::AnimatedModelRenderer* r = n->getComponent<vrlib::tien::components::AnimatedModelRenderer>();
+					if (r)
+					{
+						glBegin(GL_LINES);
+						auto triangles = r->model->getIndexedTriangles(); //TODO: cache this !
+						for (size_t i = 0; i < triangles.first.size(); i += 3)
+						{
+							for (int ii = 0; ii < 3; ii++)
+							{
+								glVertex3fv(glm::value_ptr(triangles.second[triangles.first[i + ii]]));
+								glVertex3fv(glm::value_ptr(triangles.second[triangles.first[i + (ii + 1) % 3]]));
+							}
+						}
+						glEnd();
+					}
 				}
 				glPopMatrix();
 			}
@@ -632,7 +653,7 @@ void TienEdit::keyUp(int button)
 		return;
 
 
-	if (focussedComponent)
+	if (focussedComponent && focussedComponent != renderPanel)
 	{
 		if (focussedComponent->keyUp(button))
 			return;
