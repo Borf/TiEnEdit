@@ -383,9 +383,46 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 
 		glm::vec3 diff = pos - getSelectionCenter();
 		for(auto n : selectedNodes)
-			n->transform->position += diff;
+			n->transform->setGlobalPosition(n->transform->getGlobalPosition() + diff);
 	}
+	if (activeTool == EditTool::TRANSLATEWITHOUTCHILDREN)
+	{
+		glm::vec3 pos;
 
+		auto targetPos = tien.scene.castRay(ray, false, [this](vrlib::tien::Node* n) {
+			return std::find(std::begin(selectedNodes), std::end(selectedNodes), n) == std::end(selectedNodes);
+		});
+		if (targetPos.first)
+			pos = targetPos.second;
+		else
+		{
+			vrlib::math::Plane plane(glm::vec3(0, 1, 0), 0);
+			pos = plane.getCollisionPoint(ray);
+		}
+
+		if (isModPressed(KeyboardDeviceDriver::KEYMOD_SHIFT))
+		{
+			pos = glm::round(pos*2.0f) / 2.0f;
+		}
+		if ((axis & Axis::X) == 0)
+			pos.x = originalPosition.x;
+		if ((axis & Axis::Y) == 0)
+			pos.y = originalPosition.y;
+		if ((axis & Axis::Z) == 0)
+			pos.z = originalPosition.z;
+
+		glm::vec3 diff = pos - getSelectionCenter();
+		for (auto n : selectedNodes)
+		{
+			n->transform->position += diff;
+			n->fortree([this, &n, &diff](const vrlib::tien::Node* nn)
+			{
+				if (nn->parent != n)
+					return;
+				nn->transform->position -= diff;
+			});
+		}
+	}
 	if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
 	{
 		glm::vec3 center = getSelectionCenter();
@@ -403,18 +440,18 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 				n->transform->rotation = glm::quat(rotationIncEuler) * n->transform->rotation;
 
 
-			glm::vec3 diff = n->transform->position - center;
+			glm::vec3 diff = n->transform->getGlobalPosition() - center;
 			float len = glm::length(diff);
 			if (len > 0.01)
 			{
 				float angle = glm::atan(axis == Axis::Z ? diff.y : diff.z, axis == Axis::X ? diff.y : diff.x);
 				angle -= inc;
 				if(axis == Axis::X)
-					n->transform->position = center + len * glm::vec3(0, glm::sin(angle), glm::cos(angle));
+					n->transform->setGlobalPosition(center + len * glm::vec3(0, glm::sin(angle), glm::cos(angle)));
 				if (axis == Axis::Y)
-					n->transform->position = center + len * glm::vec3(glm::cos(angle), 0, glm::sin(angle));
+					n->transform->setGlobalPosition(center + len * glm::vec3(glm::cos(angle), 0, glm::sin(angle)));
 				if (axis == Axis::Z)
-					n->transform->position = center + len * glm::vec3(glm::cos(angle), glm::sin(angle), 0);
+					n->transform->setGlobalPosition(center + len * glm::vec3(glm::cos(angle), glm::sin(angle), 0));
 			}
 
 			if (isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
@@ -491,6 +528,34 @@ void TienEdit::draw()
 		glDisable(GL_TEXTURE_2D);
 		glColor4f(1, 0, 0, 1);
 		glDisable(GL_BLEND);
+
+
+		tien.scene.fortree([this](vrlib::tien::Node* n)
+		{
+			if (!n->transform)
+				return;
+			if (n->getComponent<vrlib::tien::components::Renderable>())
+				return;
+
+			float length = glm::pow(glm::distance(cameraPos, n->transform->getGlobalPosition()), 0.1f) / 3.0f;
+			glPushMatrix();
+			glMultMatrixf(glm::value_ptr(n->transform->globalTransform));
+			glBegin(GL_LINES);
+			glColor3f(1, 0, 0);
+			glVertex3f(0, 0, 0);
+			glVertex3f(length, 0, 0);
+			glColor3f(0, 1, 0);
+			glVertex3f(0, 0, 0);
+			glVertex3f(0, length, 0);
+			glColor3f(0, 0, 1);
+			glVertex3f(0, 0, 0);
+			glVertex3f(0, 0, length);
+			glEnd();
+			glPopMatrix();
+		});
+
+
+
 		if(cacheSelection) //TODO: cache this differently, and draw this differently
 		{ 
 			if(selectionCache == 0)
@@ -661,13 +726,20 @@ void TienEdit::keyUp(int button)
 
 	//if (focussedComponent == renderPanel)
 	{
-		if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool != EditTool::TRANSLATE && !selectedNodes.empty())
+		if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool != EditTool::TRANSLATE && activeTool != EditTool::TRANSLATEWITHOUTCHILDREN && !selectedNodes.empty())
 		{
 			activeTool = EditTool::TRANSLATE;
 			originalPosition = getSelectionCenter();
 			axis = Axis::XYZ;
 		}
 		else if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool == EditTool::TRANSLATE)
+		{
+			activeTool = EditTool::TRANSLATEWITHOUTCHILDREN;
+			glm::vec3 diff = originalPosition - getSelectionCenter();
+			for (auto n : selectedNodes)
+				n->transform->position += diff;
+		}
+		else if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool == EditTool::TRANSLATEWITHOUTCHILDREN)
 		{
 			activeTool = EditTool::NONE;
 			glm::vec3 diff = originalPosition - getSelectionCenter();
@@ -855,6 +927,17 @@ void TienEdit::mouseUp(MouseButton button)
 				cacheSelection = true;
 				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
 			}
+			else if (activeTool == EditTool::TRANSLATEWITHOUTCHILDREN)
+			{ 
+				glm::vec3 diff = originalPosition - getSelectionCenter();
+				std::vector<Action*> group;
+				for (auto n : selectedNodes)
+					group.push_back(new NodeMoveAction(n, n->transform->position + diff, n->transform->position));
+				actions.push_back(new GroupAction(group));
+				activeTool = EditTool::NONE;
+				cacheSelection = true;
+				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
+			}
 			else if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
 			{
 				activeTool = EditTool::NONE;
@@ -897,7 +980,7 @@ void TienEdit::mouseUp(MouseButton button)
 			activeTool = EditTool::NONE;
 			glm::vec3 diff = originalPosition - getSelectionCenter();
 			for (auto n : selectedNodes)
-				n->transform->position += diff;
+				n->transform->setGlobalPosition(n->transform->getGlobalPosition() + diff);
 		}
 		else if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
 		{
@@ -1042,7 +1125,7 @@ glm::vec3 TienEdit::getSelectionCenter() const
 {
 	glm::vec3 center(0, 0, 0);
 	for (auto n : selectedNodes)
-		center += n->transform->position / (float)selectedNodes.size();
+		center += n->transform->getGlobalPosition() / (float)selectedNodes.size();
 	return center;
 }
 
@@ -1211,9 +1294,7 @@ void TienEdit::paste()
 	objectTree->update();
 
 	activeTool = EditTool::TRANSLATE;
-	originalPosition = glm::vec3(0, 0, 0);
-	for (auto n : selectedNodes)
-		originalPosition += n->transform->position / (float)selectedNodes.size();
+	originalPosition = getSelectionCenter();
 	axis = Axis::XYZ;
 
 }
