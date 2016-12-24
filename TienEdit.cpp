@@ -60,7 +60,19 @@
 #include "EditorBuilderGui.h"
 
 
-
+class Rotator : public vrlib::tien::Component
+{
+	virtual void update(float elapsedTime, vrlib::tien::Scene& scene)
+	{
+		node->transform->rotate(glm::vec3(0, elapsedTime, 0));
+	}
+	virtual vrlib::json::Value toJson(vrlib::json::Value & meshes) const override
+	{
+		vrlib::json::Value ret;
+		ret["type"] = "rotate";
+		return ret;
+	}
+};
 std::map<std::string, std::function<vrlib::tien::Component*()>> componentFactory =
 {
 	{ "Mesh Renderer", []() { return new vrlib::tien::components::MeshRenderer(); } },
@@ -71,7 +83,10 @@ std::map<std::string, std::function<vrlib::tien::Component*()>> componentFactory
 	{ "Static Skybox", []() { return new vrlib::tien::components::StaticSkyBox(); } },
 	{ "Dynamic Skybox", []() { return new vrlib::tien::components::DynamicSkyBox(); } },
 	{ "Camera", []() { return new vrlib::tien::components::Camera(); } },
+	{ "rotator", []() { return new Rotator(); }},
 };
+
+
 
 
 TienEdit::TienEdit(const std::string &fileName) : NormalApp("TiEn scene Editor")
@@ -620,6 +635,7 @@ void TienEdit::draw()
 			}, [](const vrlib::Material& material)
 			{
 				material.texture->bind();
+				return true;
 			});
 		}
 	}
@@ -1186,9 +1202,12 @@ void TienEdit::updateComponentsPanel()
 	std::vector<std::string> keys;
 	for (auto kv : componentFactory)
 		keys.push_back(kv.first);
-	editorBuilder->addComboBox("-", keys, [](const std::string &newValue) {});
+	vrlib::tien::EditorBuilder::TextComponent* comboBox = editorBuilder->addComboBox("-", keys, [](const std::string &newValue) {});
 
-	editorBuilder->addButton("Add", [node]() {});
+	editorBuilder->addButton("Add", [node, this, comboBox]() 
+	{
+		selectedNodes[0]->addComponent(componentFactory[comboBox->getText()]());
+	});
 	editorBuilder->endGroup();
 }
 

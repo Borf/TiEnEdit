@@ -100,15 +100,22 @@ bool TextField::keyChar(char character)
 {
 	if (character > 31)
 	{
+		if (cursor != selectionEnd && !value.empty())
+		{
+			value = value.substr(0, glm::min(cursor, selectionEnd)) + value.substr(glm::max(cursor, selectionEnd));
+			cursor = glm::min(cursor, selectionEnd);
+			selectionEnd = cursor;
+		}
 		value = value.substr(0, cursor) + character + value.substr(cursor);
 		cursor++;
+		selectionEnd = cursor;
 		if (onChange)
 			onChange();
 		return true;
 	}
 	else if (character == 8) //backspace
 	{
-		if (cursor != selectionEnd)
+		if (cursor != selectionEnd && !value.empty())
 		{
 			value = value.substr(0, glm::min(cursor, selectionEnd)) + value.substr(glm::max(cursor, selectionEnd));
 			cursor = glm::min(cursor, selectionEnd);
@@ -119,7 +126,7 @@ bool TextField::keyChar(char character)
 		}
 
 
-		if (cursor > 0)
+		if (cursor > 0 && !value.empty())
 		{
 			value = value.substr(0, cursor - 1) + value.substr(cursor);
 			cursor--;
@@ -150,7 +157,7 @@ bool TextField::keyDown(int keyCode)
 		return true;
 	}
 
-	if (keyCode == VK_DELETE && cursor < (int)value.size() - 1)
+	if (keyCode == VK_DELETE && cursor < (int)value.size())
 	{
 		value = value.substr(0, cursor) + value.substr(cursor + 1);
 		if (onChange)
