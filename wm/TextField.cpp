@@ -75,6 +75,7 @@ bool TextField::click(bool leftButton, const glm::ivec2 & clickPos, int clickCou
 		selectionEnd = 0;
 		return true;
 	}
+	return false;
 }
 
 bool TextField::mouseDown(bool leftButton, const glm::ivec2 & clickPos)
@@ -130,6 +131,7 @@ bool TextField::keyChar(char character)
 		{
 			value = value.substr(0, cursor - 1) + value.substr(cursor);
 			cursor--;
+			selectionEnd = cursor;
 			if (onChange)
 				onChange();
 		}
@@ -142,6 +144,9 @@ bool TextField::keyUp(int keyCode)
 {
 	if (keyCode == VK_DELETE || keyCode == VK_LEFT || keyCode == VK_RIGHT || keyCode == VK_HOME || keyCode == VK_END)
 		return true;
+	if ((keyCode >= 'a' && keyCode <= 'z') || (keyCode >= 'A' && keyCode <= 'Z') || (keyCode >= '0' && keyCode <= '9'))
+		return true;
+
 	return false;
 }
 
@@ -160,6 +165,7 @@ bool TextField::keyDown(int keyCode)
 	if (keyCode == VK_DELETE && cursor < (int)value.size())
 	{
 		value = value.substr(0, cursor) + value.substr(cursor + 1);
+		selectionEnd = cursor;
 		if (onChange)
 			onChange();
 		return true;

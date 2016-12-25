@@ -38,6 +38,11 @@
 #include <vrlib/tien/components/ModelRenderer.h>
 #include <vrlib/tien/components/MeshRenderer.h>
 #include <vrlib/tien/components/TerrainRenderer.h>
+#include <VrLib/tien/components/RigidBody.h>
+#include <VrLib/tien/components/BoxCollider.h>
+#include <VrLib/tien/components/MeshCollider.h>
+#include <VrLib/tien/components/SphereCollider.h>
+#include <VrLib/tien/components/TerrainCollider.h>
 
 #include "actions/Action.h"
 #include "menu/MenuOverlay.h"
@@ -73,17 +78,23 @@ class Rotator : public vrlib::tien::Component
 		return ret;
 	}
 };
-std::map<std::string, std::function<vrlib::tien::Component*()>> componentFactory =
+std::map<std::string, std::function<vrlib::tien::Component*(vrlib::tien::Node*)>> componentFactory =
 {
-	{ "Mesh Renderer", []() { return new vrlib::tien::components::MeshRenderer(); } },
-	{ "Model Renderer", []() { return new vrlib::tien::components::ModelRenderer(""); } },
-	{ "Animated Model Renderer", []() { return new vrlib::tien::components::AnimatedModelRenderer(""); } },
-	{ "Terrain Renderer", []() { return new vrlib::tien::components::TerrainRenderer(nullptr); } },
-	{ "Light", []() { return new vrlib::tien::components::Light(); } },
-	{ "Static Skybox", []() { return new vrlib::tien::components::StaticSkyBox(); } },
-	{ "Dynamic Skybox", []() { return new vrlib::tien::components::DynamicSkyBox(); } },
-	{ "Camera", []() { return new vrlib::tien::components::Camera(); } },
-	{ "rotator", []() { return new Rotator(); }},
+	{ "Mesh Renderer", [](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshRenderer(); } },
+	{ "Model Renderer", [](vrlib::tien::Node* n) { return new vrlib::tien::components::ModelRenderer(""); } },
+	{ "Animated Model Renderer", [](vrlib::tien::Node* n) { return new vrlib::tien::components::AnimatedModelRenderer(""); } },
+	{ "Terrain Renderer", [](vrlib::tien::Node* n) { return new vrlib::tien::components::TerrainRenderer(nullptr); } },
+	{ "Light", [](vrlib::tien::Node* n) { return new vrlib::tien::components::Light(); } },
+	{ "Static Skybox", [](vrlib::tien::Node* n) { return new vrlib::tien::components::StaticSkyBox(); } },
+	{ "Dynamic Skybox", [](vrlib::tien::Node* n) { return new vrlib::tien::components::DynamicSkyBox(); } },
+	{ "Camera", [](vrlib::tien::Node* n) { return new vrlib::tien::components::Camera(); } },
+	{ "RigidBody", [](vrlib::tien::Node* n) { return new vrlib::tien::components::RigidBody(0.0f, vrlib::tien::components::RigidBody::Type::Static); } },
+	{ "BoxCollider", [](vrlib::tien::Node* n) { return new vrlib::tien::components::BoxCollider(n); } },
+	{ "MeshCollider", [](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshCollider(); } },
+	{ "SphereCollider", [](vrlib::tien::Node* n) { return new vrlib::tien::components::SphereCollider(); } },
+	{ "TerrainCollider", [](vrlib::tien::Node* n) { return new vrlib::tien::components::TerrainCollider(n); } },
+
+	{ "rotator", [](vrlib::tien::Node* n) { return new Rotator(); }},
 };
 
 
@@ -1206,7 +1217,7 @@ void TienEdit::updateComponentsPanel()
 
 	editorBuilder->addButton("Add", [node, this, comboBox]() 
 	{
-		selectedNodes[0]->addComponent(componentFactory[comboBox->getText()]());
+		node->addComponent(componentFactory[comboBox->getText()](node));
 	});
 	editorBuilder->endGroup();
 }
