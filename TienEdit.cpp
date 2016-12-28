@@ -102,6 +102,7 @@ std::map<std::string, std::function<vrlib::tien::Component*(vrlib::tien::Node*)>
 
 TienEdit::TienEdit(const std::string &fileName) : NormalApp("TiEn scene Editor")
 {
+	this->fileName = fileName;
 }
 
 
@@ -343,6 +344,7 @@ void TienEdit::init()
 	cameraPos = glm::vec3(0, 1.8f, 8.0f);
 	load();
 	tien.start();
+	tien.pause();
 
 }
 
@@ -1226,21 +1228,92 @@ void TienEdit::updateComponentsPanel()
 
 void TienEdit::save()
 {
-	vrlib::logger << "Save" << vrlib::Log::newline;
-	vrlib::json::Value saveFile;
-	saveFile["meshes"] = vrlib::json::Value(vrlib::json::Type::arrayValue);
-	saveFile["scene"] = tien.scene.asJson(saveFile["meshes"]);
-	std::ofstream("save.json")<<saveFile;
+	char* filter = "All\0 * .*\0Scenes\0 * .json\0";
+	char curdir[512];
+	_getcwd(curdir, 512);
+
+	std::string target = std::string(curdir) + "\\data\\virtueelpd\\scenes";
+
+	HWND hWnd = GetActiveWindow();
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = hWnd;
+
+	char buf[256];
+	ZeroMemory(buf, 256);
+	strcpy(buf, fileName.c_str());
+	ofn.lpstrFile = buf;
+	ofn.nMaxFile = 256;
+	ofn.lpstrFilter = filter;
+	ofn.nFilterIndex = 2;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = target.c_str();
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
+	if (GetSaveFileName(&ofn))
+	{
+		_chdir(curdir);
+		fileName = buf;
+		std::replace(fileName.begin(), fileName.end(), '\\', '/');
+		if (fileName.find(".") == std::string::npos)
+			fileName += ".json";		
+
+		vrlib::logger << "Save" << vrlib::Log::newline;
+		vrlib::logger << "Saving to " << fileName;
+		vrlib::json::Value saveFile;
+		saveFile["meshes"] = vrlib::json::Value(vrlib::json::Type::arrayValue);
+		saveFile["scene"] = tien.scene.asJson(saveFile["meshes"]);
+		std::ofstream(fileName) << saveFile;
+	}
+	_chdir(curdir);
+
 }
 
 void TienEdit::load()
 {
-	vrlib::logger << "Open" << vrlib::Log::newline;
-	vrlib::json::Value saveFile = vrlib::json::readJson(std::ifstream("save.json"));
-	tien.scene.fromJson(saveFile["scene"], saveFile);
-	selectedNodes.clear();
-	objectTree->selectedItems = selectedNodes;
-	objectTree->update();
+	char* filter = "All\0 * .*\0Scenes\0 * .json\0";
+	char curdir[512];
+	_getcwd(curdir, 512);
+
+	std::string target = std::string(curdir) + "\\data\\virtueelpd\\scenes";
+
+	HWND hWnd = GetActiveWindow();
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = hWnd;
+
+	char buf[256];
+	ZeroMemory(buf, 256);
+	strcpy(buf, fileName.c_str());
+	ofn.lpstrFile = buf;
+	ofn.nMaxFile = 256;
+	ofn.lpstrFilter = filter;
+	ofn.nFilterIndex = 2;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = target.c_str();
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
+	if (GetOpenFileName(&ofn))
+	{
+		_chdir(curdir);
+		fileName = buf;
+		std::replace(fileName.begin(), fileName.end(), '\\', '/');
+		if (fileName.find(".") == std::string::npos)
+			fileName += ".json";
+
+		vrlib::logger << "Open" << vrlib::Log::newline;
+		vrlib::json::Value saveFile = vrlib::json::readJson(std::ifstream("save.json"));
+		tien.scene.fromJson(saveFile["scene"], saveFile);
+		selectedNodes.clear();
+		objectTree->selectedItems = selectedNodes;
+		objectTree->update();
+	}
+	_chdir(curdir);
+
+
+
 }
 
 

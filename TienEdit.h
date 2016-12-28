@@ -51,6 +51,8 @@ public:
 	vrlib::tien::Tien tien;
 	MenuOverlay menuOverlay;
 
+	std::string fileName;
+
 
 	enum class EditorShaderUniforms
 	{
