@@ -159,6 +159,7 @@
     <None Include="data\TiEnEdit\shaders\editor.vert" />
     <None Include="data\TiEnEdit\shaders\overlay.frag" />
     <None Include="data\TiEnEdit\shaders\overlay.vert" />
+    <None Include="data\TiEnEdit\stubs.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

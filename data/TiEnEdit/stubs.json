@@ -1,0 +1,10 @@
+[
+	{
+		"name" : "Grabbable",
+		"type" : "grabbable",
+		"categories" : [ "virtueelpd", "physics" ],
+		"properties" :
+		[
+		]
+	}
+]

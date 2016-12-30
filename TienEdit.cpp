@@ -78,6 +78,22 @@ class Rotator : public vrlib::tien::Component
 		return ret;
 	}
 };
+
+
+class StubComponent : public vrlib::tien::Component
+{
+public:
+	vrlib::json::Value stub;
+	virtual vrlib::json::Value toJson(vrlib::json::Value & meshes) const override
+	{
+		vrlib::json::Value ret;
+		ret["type"] = stub["type"];
+		return ret;
+	}
+};
+
+
+
 std::map<std::string, std::function<vrlib::tien::Component*(vrlib::tien::Node*)>> componentFactory =
 {
 	{ "Mesh Renderer", [](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshRenderer(); } },
@@ -93,7 +109,6 @@ std::map<std::string, std::function<vrlib::tien::Component*(vrlib::tien::Node*)>
 	{ "MeshCollider", [](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshCollider(); } },
 	{ "SphereCollider", [](vrlib::tien::Node* n) { return new vrlib::tien::components::SphereCollider(); } },
 	{ "TerrainCollider", [](vrlib::tien::Node* n) { return new vrlib::tien::components::TerrainCollider(n); } },
-
 	{ "rotator", [](vrlib::tien::Node* n) { return new Rotator(); }},
 };
 
@@ -127,6 +142,21 @@ void TienEdit::init()
 
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
+
+	vrlib::json::Value stubs = vrlib::json::readJson(std::ifstream("data/TiEnEdit/stubs.json"));
+	for (const vrlib::json::Value &stub : stubs)
+	{
+		componentFactory[stub["name"]] = [stub](vrlib::tien::Node* n)
+		{
+			StubComponent* c = new StubComponent();
+			c->stub = stub;
+			return c;
+		};
+	}
+
+
+
+
 	ruler = vrlib::Model::getModel<vrlib::gl::VertexP3T2>("data/TiEnEdit/models/ruler1/ruler1.fbx");
 
 	shader = new vrlib::gl::Shader<EditorShaderUniforms>("data/TiEnEdit/shaders/editor.vert", "data/TiEnEdit/shaders/editor.frag");
@@ -145,6 +175,7 @@ void TienEdit::init()
 	tien.init();
 	menuOverlay.init();
 	menuOverlay.loadMenu("data/TiEnEdit/menu.json");
+	menuOverlay.rootMenu->setAction("file/new", [this]() {tien.scene.reset(); {		vrlib::tien::Node* n = new vrlib::tien::Node("Camera", &tien.scene);		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0)));		n->addComponent(new vrlib::tien::components::Camera());		n->addComponent(new vrlib::tien::components::DynamicSkyBox());		tien.scene.cameraNode = n;	} });
 	menuOverlay.rootMenu->setAction("file/open", std::bind(&TienEdit::load, this));
 	menuOverlay.rootMenu->setAction("file/save", std::bind(&TienEdit::save, this));
 
@@ -1242,7 +1273,7 @@ void TienEdit::save()
 
 	char buf[256];
 	ZeroMemory(buf, 256);
-	strcpy(buf, fileName.c_str());
+	strcpy(buf, "");
 	ofn.lpstrFile = buf;
 	ofn.nMaxFile = 256;
 	ofn.lpstrFilter = filter;
@@ -1303,8 +1334,9 @@ void TienEdit::load()
 		if (fileName.find(".") == std::string::npos)
 			fileName += ".json";
 
-		vrlib::logger << "Open" << vrlib::Log::newline;
-		vrlib::json::Value saveFile = vrlib::json::readJson(std::ifstream("save.json"));
+		vrlib::logger << "Opening " << fileName << Log::newline;
+		vrlib::json::Value saveFile = vrlib::json::readJson(std::ifstream(fileName));
+		tien.scene.reset();
 		tien.scene.fromJson(saveFile["scene"], saveFile);
 		selectedNodes.clear();
 		objectTree->selectedItems = selectedNodes;
@@ -1323,6 +1355,7 @@ void TienEdit::deleteSelection()
 	for (auto c : selectedNodes)
 		delete c;
 	selectedNodes.clear();
+	objectTree->selectedItems.clear();
 	objectTree->update();
 	updateComponentsPanel();
 	cacheSelection = true;
