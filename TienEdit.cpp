@@ -327,7 +327,6 @@ void TienEdit::init()
 		n->addComponent(new vrlib::tien::components::Camera());
 		n->addComponent(new vrlib::tien::components::DynamicSkyBox());
 		n->getComponent<vrlib::tien::components::DynamicSkyBox>()->light = sunlight;
-		tien.scene.cameraNode = n;
 	}
 
 	/*{
