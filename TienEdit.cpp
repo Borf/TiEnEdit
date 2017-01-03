@@ -609,6 +609,38 @@ void TienEdit::draw()
 			glVertex3f(0, 0, 0);
 			glVertex3f(0, 0, length);
 			glEnd();
+
+			if (n->light)
+			{
+				if (n->light->type == vrlib::tien::components::Light::Type::directional)
+				{
+					glColor3f(1, 1, 0);
+					glBegin(GL_LINES);
+					for (float f = 0; f < glm::two_pi<float>(); f += glm::pi<float>() / 10)
+					{
+						glVertex3f(0, 0.25f*glm::cos(f), 0.25f*glm::sin(f));
+						glVertex3f(1, 0.25f*glm::cos(f), 0.25f*glm::sin(f));
+					}
+					glEnd();
+				}	
+				else if (n->light->type == vrlib::tien::components::Light::Type::spot)
+				{
+					float dist = tan(glm::radians(n->light->spotlightAngle)/2.0f);
+					glColor3f(1, 1, 0);
+					glBegin(GL_LINES);
+					for (float f = 0; f < glm::two_pi<float>(); f += glm::pi<float>() / 10)
+					{
+						glVertex3f(0, 0, 0);
+						glVertex3f(1, dist*glm::cos(f), dist*glm::sin(f));
+					}
+					glEnd();
+				}
+
+			}
+
+
+
+
 			glPopMatrix();
 		});
 
