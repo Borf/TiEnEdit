@@ -128,8 +128,8 @@ std::map<std::string, ComponentPair> componentFactory =
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::BoxCollider(n); },
 		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::BoxCollider(json); }) },
 	{ "MeshCollider", ComponentPair(
-		[](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshCollider(); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::MeshCollider(); }) },
+		[](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshCollider(n, true); },
+		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { throw "ugh";  return new vrlib::tien::components::MeshCollider(nullptr, true); }) },
 	{ "SphereCollider", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::SphereCollider(); },
 		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::SphereCollider(); }) },
