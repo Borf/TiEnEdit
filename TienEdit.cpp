@@ -674,7 +674,7 @@ void TienEdit::draw()
 				}
 				{
 					vrlib::tien::components::AnimatedModelRenderer* r = n->getComponent<vrlib::tien::components::AnimatedModelRenderer>();
-					if (r)
+					if (r && r->model)
 					{
 						glBegin(GL_LINES);
 						auto triangles = r->model->getIndexedTriangles(); //TODO: cache this !
@@ -1159,6 +1159,7 @@ void TienEdit::buildBrowsePanel(const std::string & directory)
 		if (s.find("."))
 		{
 			std::string extension = s.substr(s.rfind("."));
+			std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
 			if (extension == ".fbx" || extension == ".obj" || extension == ".ma" || extension == ".lwo" || extension == ".stl" || extension == ".dae")
 				return false;
 			else 
