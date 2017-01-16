@@ -31,4 +31,6 @@ public:
 	virtual void beginGroup(const std::string & name, bool verticalGroup = true) override;
 	virtual void endGroup() override;
 
+	virtual void addDivider() override;
+	virtual void updateComponentsPanel() override;
 };

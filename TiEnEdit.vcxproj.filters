@@ -123,6 +123,9 @@
     <ClInclude Include="wm\ScrollPanel.h">
       <Filter>wm</Filter>
     </ClInclude>
+    <ClInclude Include="wm\Divider.h">
+      <Filter>wm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -207,6 +210,9 @@
       <Filter>actions</Filter>
     </ClCompile>
     <ClCompile Include="wm\ScrollPanel.cpp">
+      <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="wm\Divider.cpp">
       <Filter>wm</Filter>
     </ClCompile>
   </ItemGroup>

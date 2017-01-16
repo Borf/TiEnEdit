@@ -145,6 +145,8 @@ bool Tree<T>::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm:
 template<class T>
 bool Tree<T>::mouseFinishDrag(bool leftButton, const glm::ivec2 & startPos, const glm::ivec2 & mousePos)
 {
+	if (!dragging)
+		return false;
 	dragging = false;
 	if (!inComponent(mousePos))
 		return false;
