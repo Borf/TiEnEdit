@@ -1501,6 +1501,11 @@ void TienEdit::paste()
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
 		newNode->fromJson(n, clipboard);
+
+		newNode->fortree([](vrlib::tien::Node* n) {
+			n->guid = vrlib::util::getGuid();
+		});
+
 		selectedNodes.push_back(newNode);
 	}
 
@@ -1529,5 +1534,18 @@ void TienEdit::sortScene()
 	{
 		node->sortChildren();
 	});
+
+	std::set<std::string> ids;
+	tien.scene.fortree([&ids](vrlib::tien::Node* node)
+	{
+		if (ids.find(node->guid) != ids.end())
+			node->guid = vrlib::util::getGuid();
+		ids.insert(node->guid);
+	});
+
+
+
+
+
 	objectTree->update();
 }
