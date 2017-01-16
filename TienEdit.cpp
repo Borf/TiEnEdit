@@ -53,6 +53,7 @@
 #include "wm/Panel.h"
 #include "wm/Label.h"
 #include "wm/Image.h"
+#include "wm/Button.h"
 #include "wm/ScrollPanel.h"
 
 #include "actions/SelectionChangeAction.h"
@@ -455,7 +456,11 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		glm::vec3 pos;
 
 		auto targetPos = tien.scene.castRay(ray, false, [this](vrlib::tien::Node* n) {
-			return std::find(std::begin(selectedNodes), std::end(selectedNodes), n) == std::end(selectedNodes);
+			for (auto s : selectedNodes)
+				if (n->isChildOf(s))
+					return false;
+			
+			return true;// std::find(std::begin(selectedNodes), std::end(selectedNodes), n) == std::end(selectedNodes);
 		});
 		if (targetPos.first)
 			pos = targetPos.second;
@@ -800,8 +805,8 @@ void TienEdit::mouseScroll(int offset)
 	{
 		cameraPos += glm::vec3(0, 0, -offset / 120.0f) * cameraRot;
 	}
-	else if (focussedComponent) //TODO: find component under mouse to scroll
-		scrolled |= focussedComponent->scroll(offset / 10.0f);
+	//else if (focussedComponent) //TODO: find component under mouse to scroll
+	//	scrolled |= focussedComponent->scroll(offset / 10.0f);
 	if (!scrolled && (c = mainPanel->getComponentAt(menuOverlay.mousePos)))
 	{
 		scrolled |= c->scroll(offset / 10.0f);
@@ -1128,7 +1133,7 @@ void TienEdit::mouseUp(MouseButton button)
 
 
 
-	if (glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) >= 3)
+//	if (glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) >= 3)
 	{
 		if (focussedComponent && focussedComponent->inComponent(mouseState.mouseDownPos))
 		{
@@ -1278,6 +1283,13 @@ void TienEdit::redo()
 	actions.push_back(action);
 }
 
+class ComponentRenderProps
+{
+public:
+	bool folded = false;
+};
+
+std::map<vrlib::tien::Component*, ComponentRenderProps> renderProps;
 
 void TienEdit::updateComponentsPanel()
 {
@@ -1307,8 +1319,36 @@ void TienEdit::updateComponentsPanel()
 
 	std::vector<vrlib::tien::Component*> components = node->getComponents();
 	for (auto c : components)
-		c->buildEditor(editorBuilder);
+	{
+		auto &props = renderProps[c];
+
+		editorBuilder->addDivider();
+		{
+			Button* button = new Button("X", glm::ivec2(275, editorBuilder->line-5));
+			button->size.x = 25;
+			button->size.y = 20;
+			button->onClick = [this,c, node]() {
+				node->removeComponent(c);
+				focussedComponent = nullptr;
+				updateComponentsPanel();
+			};
+			propertiesPanel->components.push_back(button);
+		}
+		{
+			Button* button = new Button(props.folded ? "\\\\/" : "/\\\\", glm::ivec2(250, editorBuilder->line-5));
+			button->size.x = 25;
+			button->size.y = 20;
+			button->onClick = [&props, this]() { 
+				props.folded = !props.folded; 
+				focussedComponent = nullptr;
+				updateComponentsPanel(); 
+			};
+			propertiesPanel->components.push_back(button);
+		}
+		c->buildEditor(editorBuilder, props.folded);
+	}
 	propertiesPanel->onReposition(mainPanel);
+	editorBuilder->addDivider();
 
 	editorBuilder->addTitle("");
 	editorBuilder->beginGroup("Add Component");
@@ -1319,7 +1359,10 @@ void TienEdit::updateComponentsPanel()
 
 	editorBuilder->addButton("Add", [node, this, comboBox]() 
 	{
-		node->addComponent(componentFactory[comboBox->getText()].first(node));
+		if (componentFactory.find(comboBox->getText()) == componentFactory.end())
+			return;
+		node->addComponent(componentFactory[comboBox->getText()].first(node)); //TODO: undo
+		updateComponentsPanel();
 	});
 	editorBuilder->endGroup();
 }

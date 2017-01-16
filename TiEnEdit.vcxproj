@@ -104,6 +104,7 @@
     <ClInclude Include="wm\CheckBox.h" />
     <ClInclude Include="wm\ComboBox.h" />
     <ClInclude Include="wm\Component.h" />
+    <ClInclude Include="wm\Divider.h" />
     <ClInclude Include="wm\Image.h" />
     <ClInclude Include="wm\Label.h" />
     <ClInclude Include="wm\Panel.h" />
@@ -134,6 +135,7 @@
     <ClCompile Include="wm\CheckBox.cpp" />
     <ClCompile Include="wm\ComboBox.cpp" />
     <ClCompile Include="wm\Component.cpp" />
+    <ClCompile Include="wm\Divider.cpp" />
     <ClCompile Include="wm\Image.cpp" />
     <ClCompile Include="wm\Label.cpp" />
     <ClCompile Include="wm\Panel.cpp" />

@@ -7,6 +7,7 @@
 #include "wm/TextField.h"
 #include "wm/Button.h"
 #include "wm/Panel.h"
+#include "wm/Divider.h"
 
 #include "TienEdit.h"
 
@@ -62,6 +63,15 @@ inline void GuiEditor::addButton(const std::string & value, std::function<void()
 	button->onClick = onClick;
 	group.push_back(button);
 
+}
+
+inline void GuiEditor::addDivider()
+{
+	Divider* c = new Divider(glm::ivec2(0, line + 3));
+	c->size = glm::ivec2(300, 2);
+	line += 20;
+
+	panel->components.push_back(c);
 }
 
 inline GuiEditor::TextComponent* GuiEditor::addComboBox(const std::string & value, const std::vector<std::string>& values, std::function<void(const std::string&)> onClick)
@@ -124,4 +134,9 @@ inline void GuiEditor::endGroup()
 		line += 20;
 	line += 5;
 	group.clear();
+}
+
+void GuiEditor::updateComponentsPanel()
+{
+	editor->updateComponentsPanel();
 }
