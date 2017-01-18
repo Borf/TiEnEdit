@@ -14,5 +14,9 @@
 	{
 		"name" : "align with camera",
 		"type" : "item"
+	},
+	{
+		"name" : "add debug",
+		"type" : "item"
 	}
 ]

@@ -293,6 +293,7 @@ void TienEdit::init()
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
 			menu->setAction("delete", std::bind(&TienEdit::deleteSelection, this));
 			menu->setAction("focus with camera", std::bind(&TienEdit::focusSelectedObject, this));
+			menu->setAction("add debug", [this]() { for (auto i : objectTree->selectedItems) { i->addDebugChildSphere(); } });
 		}
 		else
 		{
