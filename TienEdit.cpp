@@ -1294,7 +1294,7 @@ std::map<vrlib::tien::Component*, ComponentRenderProps> renderProps;
 
 void TienEdit::updateComponentsPanel()
 {
-
+	focussedComponent = nullptr;
 	for (auto c : propertiesPanel->components)
 		delete c;
 	propertiesPanel->components.clear();
