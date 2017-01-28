@@ -19,34 +19,34 @@ Tree<T>::Tree()
 template<class T>
 void Tree<T>::draw(MenuOverlay * overlay)
 {
-	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), position, position + size); //background
-	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), glm::vec2(position) + glm::vec2(size.x-scrollBarWidth,0), position+size ); //background
+	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), absPosition, absPosition + size); //background
+	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), glm::vec2(absPosition) + glm::vec2(size.x-scrollBarWidth,0), position+size ); //background
 	overlay->flushVerts();
 
-	//TODO: clip
+	scissorPush(absPosition.x + 5, absPosition.y, size.x - 15, size.y);
 
 
 
 	for (size_t i = 0; i < flatList.size(); i++)
 	{
 		if (std::find(std::begin(selectedIndices), std::end(selectedIndices), i) != std::end(selectedIndices))
-			overlay->drawRect(glm::vec2(64, 416), glm::vec2(64 + 32, 416 + 32), position + glm::ivec2(0, -scrollOffset + 3 + LINESIZE * i), position + glm::ivec2(size.x - scrollBarWidth, -scrollOffset + 3 + LINESIZE * i + LINESIZE)); //selection background
+			overlay->drawRect(glm::vec2(64, 416), glm::vec2(64 + 32, 416 + 32), absPosition + glm::ivec2(0, -scrollOffset + 3 + LINESIZE * i), absPosition + glm::ivec2(size.x - scrollBarWidth, -scrollOffset + 3 + LINESIZE * i + LINESIZE)); //selection background
 
 		overlay->flushVerts();
 		
 		if (flatList[i].hasChildren)
 			if (flatList[i].opened)
-				overlay->drawRect(glm::vec2(462, 1 + 17 * 1), glm::vec2(462 + 16, 1 + 16 + 17 * 1), position + glm::ivec2(5 + 8 * flatList[i].level, -scrollOffset + 3 + LINESIZE * i)); // folder opened
+				overlay->drawRect(glm::vec2(462, 1 + 17 * 1), glm::vec2(462 + 16, 1 + 16 + 17 * 1), absPosition + glm::ivec2(5 + 8 * flatList[i].level, -scrollOffset + 3 + LINESIZE * i)); // folder opened
 			else
-				overlay->drawRect(glm::vec2(462, 1 + 17 * 0), glm::vec2(462 + 16, 1 + 16 + 17 * 0), position + glm::ivec2(5 + 8 * flatList[i].level, -scrollOffset + 3 + LINESIZE * i)); // folder opened
+				overlay->drawRect(glm::vec2(462, 1 + 17 * 0), glm::vec2(462 + 16, 1 + 16 + 17 * 0), absPosition + glm::ivec2(5 + 8 * flatList[i].level, -scrollOffset + 3 + LINESIZE * i)); // folder opened
 
 		
 		if(flatList[i].icon >= 0)
-			overlay->drawRect(glm::vec2(462, 1 + 17* flatList[i].icon), glm::vec2(462 + 16, 1 + 16 + 17* flatList[i].icon), position + glm::ivec2(5 + 8 * flatList[i].level+16, -scrollOffset + 3 + LINESIZE * i)); // folder opened
+			overlay->drawRect(glm::vec2(462, 1 + 17* flatList[i].icon), glm::vec2(462 + 16, 1 + 16 + 17* flatList[i].icon), absPosition + glm::ivec2(5 + 8 * flatList[i].level+16, -scrollOffset + 3 + LINESIZE * i)); // folder opened
 
 
 		overlay->flushVerts();
-		overlay->drawText(flatList[i].text, position + glm::ivec2(5+18+16, -scrollOffset + 3+ TEXTOFFSET + LINESIZE * i), glm::vec4(1, 1, 1, 1));
+		overlay->drawText(flatList[i].text, absPosition + glm::ivec2(5+18+16, -scrollOffset + 3+ TEXTOFFSET + LINESIZE * i), glm::vec4(1, 1, 1, 1));
 	}
 
 
@@ -59,6 +59,7 @@ void Tree<T>::draw(MenuOverlay * overlay)
 
 	}
 
+	scissorPop();
 
 
 }
@@ -66,7 +67,7 @@ void Tree<T>::draw(MenuOverlay * overlay)
 template<class T>
 bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
-	int index = (int)((clickPos.y - position.y - 5 + scrollOffset) / LINESIZE);
+	int index = (int)((clickPos.y - absPosition.y - 5 + scrollOffset) / LINESIZE);
 	if (index < 0 || index >= (int)flatList.size())
 	{
 		selectedIndices.clear();
@@ -135,7 +136,7 @@ bool Tree<T>::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm:
 {
 	if (!dragging)
 	{
-		dragIndex = (int)((startPos.y - position.y - 5 + scrollOffset) / LINESIZE);
+		dragIndex = (int)((startPos.y - absPosition.y - 5 + scrollOffset) / LINESIZE);
 	}
 	dragging = true;
 	dragPos = mousePos;
@@ -151,7 +152,7 @@ bool Tree<T>::mouseFinishDrag(bool leftButton, const glm::ivec2 & startPos, cons
 	if (!inComponent(mousePos))
 		return false;
 	int indexFrom = dragIndex;
-	int indexTo = (int)((mousePos.y - position.y - 5 + scrollOffset) / LINESIZE);
+	int indexTo = (int)((mousePos.y - absPosition.y - 5 + scrollOffset) / LINESIZE);
 
 	T from = nullptr;
 	if(indexFrom >= 0 && indexFrom < (int)flatList.size())

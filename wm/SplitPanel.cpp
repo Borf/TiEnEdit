@@ -1,8 +1,9 @@
 #include "SplitPanel.h"
 
 
-SplitPanel::SplitPanel()
+SplitPanel::SplitPanel(Alignment alignment)
 {
+	this->alignment = alignment;
 }
 
 void SplitPanel::addPanel(Component * panel)
@@ -14,18 +15,30 @@ void SplitPanel::addPanel(Component * panel)
 
 void SplitPanel::onReposition(Component* parent)
 {
-	absPosition = glm::vec2(0, 0);
+	absPosition = position;
 	if (parent)
 		absPosition = parent->absPosition + position;
 
-	glm::ivec2 pos = position;
+	glm::ivec2 pos = glm::vec2(0,0);
 	for (size_t i = 0; i < components.size(); i++)
 	{
 		components[i]->position = pos;
-		components[i]->size = glm::ivec2(sizes[i], size.y);
-		pos.x += sizes[i];
+		if (alignment == Alignment::HORIZONTAL)
+		{
+			components[i]->size = glm::ivec2(sizes[i], size.y);
+			pos.x += sizes[i];
+		}
+		else
+		{
+			components[i]->size = glm::ivec2(size.x, sizes[i]);
+			pos.y += sizes[i];
+		}
 	}
-	components[components.size() - 1]->size.x += (size.x - pos.x); //make last one as large as possible
+	if(alignment == Alignment::HORIZONTAL)
+		components[components.size() - 1]->size.x += (size.x - pos.x); //make last one as large as possible
+	else
+		components[components.size() - 1]->size.y += (size.y - pos.y); //make last one as large as possible
+
 	for (auto p : components)
 		p->onReposition(this);
 }

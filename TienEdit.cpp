@@ -225,7 +225,7 @@ void TienEdit::init()
 	menuOverlay.rootMenu->setAction("object/paste", std::bind(&TienEdit::paste, this));
 	menuOverlay.rootMenu->setAction("object/delete", std::bind(&TienEdit::deleteSelection, this));
 
-	mainPanel = new SplitPanel();
+	mainPanel = new SplitPanel(SplitPanel::Alignment::HORIZONTAL);
 
 
 	class TienNodeTree : public Tree<vrlib::tien::Node*>::TreeLoader
@@ -276,7 +276,13 @@ void TienEdit::init()
 	objectTree->loader = new TienNodeTree(this);
 	mainPanel->addPanel(objectTree);
 	
-	mainPanel->addPanel(renderPanel = new RenderComponent());
+	SplitPanel* subPanel = new SplitPanel(SplitPanel::Alignment::VERTICAL);
+	subPanel->addPanel(renderPanel = new RenderComponent());
+	subPanel->addPanel(new Panel());
+	subPanel->sizes[1] = 200;
+	subPanel->sizes[0] = mainPanel->size.y - 200;
+
+	mainPanel->addPanel(subPanel);
 	propertiesPanel = new Panel();
 	propertiesPanel->size.x = 300;
 	propertiesPanel->size.y = 100000;
@@ -345,6 +351,7 @@ void TienEdit::init()
 	mainPanel->sizes[0] = 300;
 	mainPanel->sizes[2] = 300;
 	mainPanel->sizes[1] = mainPanel->size.x - 600;
+	dynamic_cast<SplitPanel*>(mainPanel->components[1])->sizes[0] = mainPanel->size.y - 200;
 	mainPanel->onReposition(nullptr);
 
 	vrlib::tien::Node* sunlight;
@@ -436,11 +443,18 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		if (KeyboardDeviceDriver::isPressed(KeyboardButton::KEY_D))		cameraMovement.x = 1;
 		if (KeyboardDeviceDriver::isPressed(KeyboardButton::KEY_Q))		cameraMovement.y = 1;
 		if (KeyboardDeviceDriver::isPressed(KeyboardButton::KEY_Z))		cameraMovement.y = -1;
+		if (glm::length(cameraMovement) < 0.00001f)
+			cameraSpeed = 0;
 
-
-		cameraMovement *= frameTime / 100.0f;
+		cameraMovement *= frameTime / 200.0f;
 		if (KeyboardDeviceDriver::isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
 			cameraMovement *= 10.0f;
+
+		cameraMovement *= cameraSpeed;
+		cameraSpeed += frameTime / 1000.0f;
+		if (cameraSpeed > 4)
+			cameraSpeed = 4;
+
 		cameraPos += cameraMovement * cameraRot;
 
 		cameraRot = cameraRot * glm::quat(glm::vec3(0, .01f * (mouseState.pos.x - lastMouseState.pos.x), 0));
@@ -593,7 +607,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 
 
 
-	if (mainPanel->components[1] == renderPanel)
+	//if (mainPanel->components[1] == renderPanel)
 		tien.update((float)(frameTime / 1000.0f));
 
 
@@ -613,12 +627,12 @@ void TienEdit::draw()
 	menuOverlay.drawPopups();
 
 	
-	if (mainPanel->components[1] == renderPanel)
+	//if (mainPanel->components[1] == renderPanel)
 	{
 		glm::mat4 cameraMat = glm::translate(glm::toMat4(cameraRot), -cameraPos);
 		glm::mat4 projectionMatrix = glm::perspective(70.0f, renderPanel->size.x / (float)renderPanel->size.y, 0.01f, 500.0f);
 		glm::mat4 modelViewMatrix = cameraMat;
-		glViewport(renderPanel->position.x, kernel->getWindowHeight() - renderPanel->position.y - renderPanel->size.y, renderPanel->size.x, renderPanel->size.y);
+		glViewport(renderPanel->absPosition.x, kernel->getWindowHeight() - renderPanel->absPosition.y - renderPanel->size.y, renderPanel->size.x, renderPanel->size.y);
 		tien.render(projectionMatrix, modelViewMatrix);
 
 		glMatrixMode(GL_PROJECTION);
@@ -764,7 +778,7 @@ void TienEdit::draw()
 	if (activeTool == EditTool::SCALE)
 	{
 		menuOverlay.drawInit();
-		menuOverlay.drawText("Scale: " + std::to_string(-1+glm::pow(2, 1+editorScale/100.0f)), glm::vec2(renderPanel->position.x + 10, menuOverlay.windowSize.y - 12), glm::vec4(1, 1, 1, 1), true);
+		menuOverlay.drawText("Scale: " + std::to_string(-1+glm::pow(2, 1+editorScale/100.0f)), glm::vec2(renderPanel->absPosition.x + 10, menuOverlay.windowSize.y - 12), glm::vec4(1, 1, 1, 1), true);
 	}
 
 
@@ -785,7 +799,7 @@ void TienEdit::mouseMove(int x, int y)
 		mousePos.y = kernel->getWindowHeight() - mousePos.y;
 		glm::mat4 cameraMat = glm::translate(glm::toMat4(cameraRot), -cameraPos);
 		glm::mat4 projection = glm::perspective(70.0f, renderPanel->size.x / (float)renderPanel->size.y, 0.01f, 500.0f);
-		glm::vec4 Viewport(renderPanel->position.x, kernel->getWindowHeight() - renderPanel->position.y - renderPanel->size.y, renderPanel->size.x, renderPanel->size.y);
+		glm::vec4 Viewport(renderPanel->absPosition.x, kernel->getWindowHeight() - renderPanel->absPosition.y - renderPanel->size.y, renderPanel->size.x, renderPanel->size.y);
 		glm::vec3 retNear = glm::unProject(glm::vec3(mousePos, 0), cameraMat, projection, glm::vec4(Viewport[0], Viewport[1], Viewport[2], Viewport[3]));
 		glm::vec3 retFar = glm::unProject(glm::vec3(mousePos, 1), cameraMat, projection, glm::vec4(Viewport[0], Viewport[1], Viewport[2], Viewport[3]));
 		ray = vrlib::math::Ray(retNear, glm::normalize(retFar - retNear));

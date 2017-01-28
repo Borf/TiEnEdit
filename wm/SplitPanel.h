@@ -8,8 +8,13 @@ class SplitPanel : public Panel
 {
 public:
 	std::vector<int> sizes;
+	enum class Alignment
+	{
+		HORIZONTAL,
+		VERTICAL,
+	} alignment = Alignment::HORIZONTAL;
 
-	SplitPanel();
+	SplitPanel(Alignment alignment);
 
 	void addPanel(Component* panel);
 

@@ -109,6 +109,7 @@ public:
 	int editorScale;
 	GroupAction* activeEditAction;
 
+	float cameraSpeed = 0;
 
 
 	TienEdit(const std::string &filename);
