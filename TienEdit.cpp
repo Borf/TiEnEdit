@@ -171,6 +171,7 @@ TienEdit::~TienEdit()
 
 void TienEdit::init()
 {
+	//set icon
 	HWND hWnd = GetActiveWindow();
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 	HICON icon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
@@ -178,10 +179,10 @@ void TienEdit::init()
 	SendMessage(hWnd, WM_SETICON, ICON_BIG,		(LPARAM)icon);
 
 	kernel = vrlib::Kernel::getInstance();
-
+	//initialize Open dialog
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
-
+	//load stubs for different applications
 	vrlib::json::Value stubs = vrlib::json::readJson(std::ifstream("data/TiEnEdit/stubs.json"));
 	for (const vrlib::json::Value &stub : stubs)
 	{
@@ -201,7 +202,7 @@ void TienEdit::init()
 
 
 
-
+	//scaling ruler model
 	ruler = vrlib::Model::getModel<vrlib::gl::VertexP3T2>("data/TiEnEdit/models/ruler1/ruler1.fbx");
 
 	shader = new vrlib::gl::Shader<EditorShaderUniforms>("data/TiEnEdit/shaders/editor.vert", "data/TiEnEdit/shaders/editor.frag");
@@ -218,6 +219,8 @@ void TienEdit::init()
 	shader->setUniform(EditorShaderUniforms::s_texture, 0);
 
 	tien.init();
+
+	//initialize menus
 	menuOverlay.init();
 	menuOverlay.loadMenu("data/TiEnEdit/menu.json");
 	menuOverlay.rootMenu->setAction("file/new", [this]() {tien.scene.reset(); {		vrlib::tien::Node* n = new vrlib::tien::Node("Camera", &tien.scene);		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0)));		n->addComponent(new vrlib::tien::components::Camera());		n->addComponent(new vrlib::tien::components::DynamicSkyBox());		tien.scene.cameraNode = n;	} });
@@ -232,9 +235,8 @@ void TienEdit::init()
 	menuOverlay.rootMenu->setAction("object/paste", std::bind(&TienEdit::paste, this));
 	menuOverlay.rootMenu->setAction("object/delete", std::bind(&TienEdit::deleteSelection, this));
 
+	//build up UI
 	mainPanel = new SplitPanel(SplitPanel::Alignment::HORIZONTAL);
-
-
 	class TienNodeTree : public Tree<vrlib::tien::Node*>::TreeLoader
 	{
 		TienEdit* edit;
@@ -276,7 +278,6 @@ void TienEdit::init()
 			return 3;
 		}
 	};
-
 	objectTree = new Tree<vrlib::tien::Node*>();
 	objectTree->loader = new TienNodeTree(this);
 	mainPanel->addPanel(objectTree);
@@ -311,23 +312,6 @@ void TienEdit::init()
 			vrlib::json::Value popupMenu = vrlib::json::readJson(std::ifstream("data/TiEnEdit/newnodemenu.json"));
 			Menu* menu = new Menu(popupMenu);
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
-			menu->setAction("new model", [this]()
-			{
-/*				browseCallback = [this](const std::string &fileName)
-				{
-					std::string name = fileName;
-					if (name.find("/") != std::string::npos)
-						name = name.substr(name.rfind("/"));
-					if (name.find(".") != std::string::npos)
-						name = name.substr(0, name.find("."));
-
-					vrlib::tien::Node* n = new vrlib::tien::Node(name, &tien.scene);
-					n->addComponent(new vrlib::tien::components::Transform());
-					n->addComponent(new vrlib::tien::components::ModelRenderer(fileName));
-					perform(new SelectionChangeAction(this, { n }));
-				};
-				showBrowsePanel();*/
-			});
 			menu->setAction("new node", [this]()
 			{
 				vrlib::tien::Node* n = new vrlib::tien::Node("new node", &tien.scene);
@@ -479,7 +463,6 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 			for (auto s : selectedNodes)
 				if (n->isChildOf(s))
 					return false;
-			
 			return true;// std::find(std::begin(selectedNodes), std::end(selectedNodes), n) == std::end(selectedNodes);
 		});
 		if (targetPos.first)

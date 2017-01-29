@@ -1,14 +1,6 @@
 [
 	{
-		"name" : "new model",
-		"type" : "item"
-	},
-	{
 		"name" : "new node",
-		"type" : "item"
-	},
-	{
-		"name" : "new terrain",
 		"type" : "item"
 	}
 ]

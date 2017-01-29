@@ -16,6 +16,10 @@
 		"type" : "item"
 	},
 	{
+		"name" : "make prefab",
+		"type" : "item"
+	},
+	{
 		"name" : "add debug",
 		"type" : "item"
 	}
