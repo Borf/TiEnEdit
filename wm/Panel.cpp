@@ -47,3 +47,11 @@ Component * Panel::getComponentAt(const glm::ivec2 & pos)
 			return c->getComponentAt(pos);
 	return nullptr;
 }
+
+bool Panel::scrollRecursive(const glm::ivec2 & mousePos, float direction)
+{
+	for (auto c : components)
+		if (c->inComponent(mousePos))
+			return c->scrollRecursive(mousePos, direction);
+	return false;
+}

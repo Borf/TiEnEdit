@@ -64,6 +64,13 @@
 
 
 #include "EditorBuilderGui.h"
+#include "BrowsePanel.h"
+
+
+#define SCENEWIDTH 300
+#define PROPERTYWIDTH 300
+#define BROWSERHEIGHT 300
+
 
 
 class Rotator : public vrlib::tien::Component
@@ -270,21 +277,19 @@ void TienEdit::init()
 		}
 	};
 
-	modelBrowsePanel = nullptr;
-
 	objectTree = new Tree<vrlib::tien::Node*>();
 	objectTree->loader = new TienNodeTree(this);
 	mainPanel->addPanel(objectTree);
 	
 	SplitPanel* subPanel = new SplitPanel(SplitPanel::Alignment::VERTICAL);
-	subPanel->addPanel(renderPanel = new RenderComponent());
-	subPanel->addPanel(new Panel());
-	subPanel->sizes[1] = 200;
-	subPanel->sizes[0] = mainPanel->size.y - 200;
+	subPanel->addPanel(renderPanel = new RenderComponent(this));
+	subPanel->addPanel(new ScrollPanel(browsePanel = new BrowsePanel(this)));
+	subPanel->sizes[1] = BROWSERHEIGHT;
+	subPanel->sizes[0] = mainPanel->size.y - BROWSERHEIGHT;
 
 	mainPanel->addPanel(subPanel);
 	propertiesPanel = new Panel();
-	propertiesPanel->size.x = 300;
+	propertiesPanel->size.x = PROPERTYWIDTH;
 	propertiesPanel->size.y = 100000;
 	mainPanel->addPanel(new ScrollPanel( propertiesPanel ));
 
@@ -308,7 +313,7 @@ void TienEdit::init()
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
 			menu->setAction("new model", [this]()
 			{
-				browseCallback = [this](const std::string &fileName)
+/*				browseCallback = [this](const std::string &fileName)
 				{
 					std::string name = fileName;
 					if (name.find("/") != std::string::npos)
@@ -321,7 +326,7 @@ void TienEdit::init()
 					n->addComponent(new vrlib::tien::components::ModelRenderer(fileName));
 					perform(new SelectionChangeAction(this, { n }));
 				};
-				showBrowsePanel();
+				showBrowsePanel();*/
 			});
 			menu->setAction("new node", [this]()
 			{
@@ -348,10 +353,10 @@ void TienEdit::init()
 
 	mainPanel->position = glm::ivec2(0, 25+36);
 	mainPanel->size = glm::ivec2(kernel->getWindowWidth(), kernel->getWindowHeight());
-	mainPanel->sizes[0] = 300;
-	mainPanel->sizes[2] = 300;
-	mainPanel->sizes[1] = mainPanel->size.x - 600;
-	dynamic_cast<SplitPanel*>(mainPanel->components[1])->sizes[0] = mainPanel->size.y - 200;
+	mainPanel->sizes[0] = SCENEWIDTH;
+	mainPanel->sizes[2] = PROPERTYWIDTH;
+	mainPanel->sizes[1] = mainPanel->size.x - SCENEWIDTH-PROPERTYWIDTH;
+	dynamic_cast<SplitPanel*>(mainPanel->components[1])->sizes[0] = mainPanel->size.y - BROWSERHEIGHT;
 	mainPanel->onReposition(nullptr);
 
 	vrlib::tien::Node* sunlight;
@@ -446,14 +451,14 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		if (glm::length(cameraMovement) < 0.00001f)
 			cameraSpeed = 0;
 
-		cameraMovement *= frameTime / 200.0f;
+		cameraMovement *= frameTime / 400.0f;
 		if (KeyboardDeviceDriver::isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
 			cameraMovement *= 10.0f;
 
 		cameraMovement *= cameraSpeed;
-		cameraSpeed += frameTime / 1000.0f;
-		if (cameraSpeed > 4)
-			cameraSpeed = 4;
+		cameraSpeed += (float)frameTime / 1000.0f;
+		if (cameraSpeed > 1)
+			cameraSpeed = 1;
 
 		cameraPos += cameraMovement * cameraRot;
 
@@ -626,6 +631,8 @@ void TienEdit::draw()
 	mainPanel->draw(&menuOverlay);
 	menuOverlay.drawPopups();
 
+
+
 	
 	//if (mainPanel->components[1] == renderPanel)
 	{
@@ -775,11 +782,15 @@ void TienEdit::draw()
 
 
 	glViewport(0, 0, menuOverlay.windowSize.x, menuOverlay.windowSize.y);
+	menuOverlay.drawInit();
 	if (activeTool == EditTool::SCALE)
 	{
-		menuOverlay.drawInit();
 		menuOverlay.drawText("Scale: " + std::to_string(-1+glm::pow(2, 1+editorScale/100.0f)), glm::vec2(renderPanel->absPosition.x + 10, menuOverlay.windowSize.y - 12), glm::vec4(1, 1, 1, 1), true);
 	}
+
+	if (dragDrawCallback)
+		dragDrawCallback(menuOverlay.mousePos);
+
 
 
 
@@ -807,7 +818,11 @@ void TienEdit::mouseMove(int x, int y)
 
 	if(focussedComponent && focussedComponent->inComponent(mouseState.mouseDownPos) && mouseState.left)
 	{ 
-		focussedComponent->mouseDrag(mouseState.left, mouseState.mouseDownPos, mouseState.pos);
+		bool dragged = focussedComponent->mouseDrag(mouseState.left, mouseState.mouseDownPos, mouseState.pos);
+		if (!dragged)
+		{
+
+		}
 	}
 
 }
@@ -825,6 +840,11 @@ void TienEdit::mouseScroll(int offset)
 	if (!scrolled && (c = mainPanel->getComponentAt(menuOverlay.mousePos)))
 	{
 		scrolled |= c->scroll(offset / 10.0f);
+		
+		if (!scrolled)
+			scrolled |= mainPanel->scrollRecursive(menuOverlay.mousePos, offset / 10.0f);
+
+
 		if (scrolled)
 		{
 			if (focussedComponent)
@@ -846,6 +866,29 @@ void TienEdit::mouseDown(MouseButton button)
 	mouseState.buttons[(int)button] = true;
 	if (mouseState.middle)
 		return;
+
+
+	if (menuOverlay.click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left))
+		return;
+
+	Component* clickedComponent = mainPanel->getComponentAt(mouseState.pos);
+
+	if (focussedComponent != clickedComponent)
+	{
+		if (focussedComponent)
+		{
+			focussedComponent->focussed = false;
+			focussedComponent->unfocus();
+		}
+		focussedComponent = clickedComponent;
+		if (focussedComponent)
+		{
+			focussedComponent->focussed = true;
+			focussedComponent->focus();
+		}
+	}
+
+
 	if (focussedComponent)
 		focussedComponent->mouseDown(button == MouseButton::Left, mouseState.pos);
 }
@@ -1156,107 +1199,6 @@ void TienEdit::mouseUp(MouseButton button)
 		}
 	}
 
-}
-
-
-void TienEdit::showBrowsePanel()
-{
-	if (!modelBrowsePanel)
-	{
-		class BrowsePanel : public Panel
-		{
-		public:
-			virtual void onReposition(Component* parent) override
-			{
-				int count = size.x / 128;
-				int index = 0;
-				for (size_t i = 0; i < components.size(); i++)
-				{
-					int x = (index % count) * 128;
-					int y = (index / count) * 150;
-					if (dynamic_cast<Image*>(components[i]))
-					{
-						components[i]->position.x = x;
-						components[i]->position.y = y;
-					}
-					if (dynamic_cast<Label*>(components[i]))
-					{
-						components[i]->position.x = x;
-						components[i]->position.y = y+130;
-						index++;
-					}
-
-				}
-				Panel::onReposition(parent);
-			}
-		};
-		modelBrowsePanel = new BrowsePanel();
-		buildBrowsePanel("./data/models/");
-	}
-	mainPanel->components[1] = modelBrowsePanel;
-	mainPanel->onReposition(nullptr);
-}
-
-void TienEdit::buildBrowsePanel(const std::string & directory)
-{
-	focussedComponent = nullptr;
-	for (auto c : modelBrowsePanel->components)
-		delete c;
-	modelBrowsePanel->components.clear();
-
-	std::vector<std::string> files = vrlib::util::scandir(directory);
-	files.erase(std::remove_if(files.begin(), files.end(), [](const std::string &s)
-	{
-		if (s.size() == 0)
-			return true;
-		if (s[0] == '.')
-			return true;
-		if (s[s.length() - 1] == '/')
-			return false;
-		if (s.find("."))
-		{
-			std::string extension = s.substr(s.rfind("."));
-			std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-			if (extension == ".fbx" || extension == ".obj" || extension == ".ma" || extension == ".lwo" || extension == ".stl" || extension == ".dae")
-				return false;
-			else 
-				return true;
-		}
-		return false;
-	}), files.end());
-
-	if (directory != "./")
-		files.insert(files.begin(), "../");
-
-	for (size_t i = 0; i < files.size(); i++)
-	{
-		Image* img = nullptr;
-		if (files[i][files[i].size() - 1] == '/')
-		{
-			img = new Image(menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 0), glm::ivec2(333 + 128, 128));
-			img->onClick = [this, directory, i, files]()
-			{
-				std::string newDirectory = directory + files[i];
-				if (files[i] == "../")
-					newDirectory = directory.substr(0, directory.rfind("/", directory.size()-2)) + "/";
-				buildBrowsePanel(newDirectory);
-			};
-		}
-		else
-		{
-			img = new Image(menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 0), glm::ivec2(333 + 128, 128));
-			img->onClick = [this, directory, i, files]()
-			{
-				browseCallback(directory + files[i]);
-				mainPanel->components[1] = renderPanel;
-			};
-
-		}
-		if (img)
-			modelBrowsePanel->components.push_back(img);
-		modelBrowsePanel->components.push_back(new Label(files[i], glm::ivec2(0,0)));
-	}
-	mainPanel->onReposition(nullptr);
 }
 
 

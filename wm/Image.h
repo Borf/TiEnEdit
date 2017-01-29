@@ -11,6 +11,7 @@ namespace vrlib
 
 class Image : public Component
 {
+protected:
 	vrlib::Texture* texture;
 	glm::vec2 _srcTl;
 	glm::vec2 _srcBr;

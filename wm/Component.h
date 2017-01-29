@@ -5,6 +5,19 @@
 
 class MenuOverlay;
 
+class DragProperties
+{
+public:
+	enum class Type
+	{
+		Model,
+		Texture,
+		Prefab,
+		Other,
+	} type;
+	std::string file;
+};
+
 class Component
 {
 public:
@@ -43,6 +56,7 @@ public:
 	virtual bool mouseFinishDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) { return false; }
 
 	virtual bool scroll(float offset) { return false; };
+	virtual bool scrollRecursive(const glm::ivec2 &mousePos, float direction);
 	virtual Component* getComponentAt(const glm::ivec2 &pos) { return inComponent(pos) ? this : nullptr; }
 
 	virtual inline bool inComponent(const glm::ivec2 &pos) { return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y; }
@@ -53,6 +67,7 @@ public:
 	virtual bool keyUp(int key) { return false;  };
 	virtual bool keyDown(int key) { return false; };
 
+	virtual void handleDrag(DragProperties* draggedObject) {};
 
 
 	static std::list<int*> scissorStack;

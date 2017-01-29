@@ -126,6 +126,9 @@
     <ClInclude Include="wm\Divider.h">
       <Filter>wm</Filter>
     </ClInclude>
+    <ClInclude Include="BrowsePanel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -214,6 +217,9 @@
     </ClCompile>
     <ClCompile Include="wm\Divider.cpp">
       <Filter>wm</Filter>
+    </ClCompile>
+    <ClCompile Include="BrowsePanel.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

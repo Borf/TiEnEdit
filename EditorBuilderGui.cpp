@@ -91,7 +91,7 @@ inline GuiEditor::TextComponent* GuiEditor::addComboBox(const std::string & valu
 
 void GuiEditor::addBrowseButton(BrowseType type, std::function<void(const std::string &)> onClick)
 {
-	Button* button = new Button("Browse", glm::ivec2(100, line));
+/*	Button* button = new Button("Browse", glm::ivec2(100, line));
 	button->size.x = 200;
 	button->size.y = 20;
 	button->onClick = [this, onClick]()
@@ -99,7 +99,7 @@ void GuiEditor::addBrowseButton(BrowseType type, std::function<void(const std::s
 		editor->browseCallback = onClick;
 		editor->showBrowsePanel();
 	};
-	group.push_back(button);
+	group.push_back(button);*/
 }
 
 inline void GuiEditor::beginGroup(const std::string & name, bool verticalGroup)

@@ -91,6 +91,7 @@
     <ClInclude Include="actions\NodeRotateAction.h" />
     <ClInclude Include="actions\NodeScaleAction.h" />
     <ClInclude Include="actions\SelectionChangeAction.h" />
+    <ClInclude Include="BrowsePanel.h" />
     <ClInclude Include="EditorBuilderGui.h" />
     <ClInclude Include="menu\ActionMenuItem.h" />
     <ClInclude Include="menu\Menu.h" />
@@ -124,6 +125,7 @@
     <ClCompile Include="actions\NodeRotateAction.cpp" />
     <ClCompile Include="actions\NodeScaleAction.cpp" />
     <ClCompile Include="actions\SelectionChangeAction.cpp" />
+    <ClCompile Include="BrowsePanel.cpp" />
     <ClCompile Include="EditorBuilderGui.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu\Menu.cpp" />

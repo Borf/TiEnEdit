@@ -34,10 +34,10 @@ void Image::draw(MenuOverlay* overlay)
 	glm::vec2 srcSize = (srcBr - srcTl);
 	glm::vec2 _srcSize = (_srcBr - _srcTl);
 
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x,				dstTl.y),				glm::vec2(srcTl.x,				1-srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x,	dstTl.y),				glm::vec2(srcTl.x + srcSize.x,	1-srcTl.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + _srcSize.x,	dstTl.y + _srcSize.y),	glm::vec2(srcTl.x + srcSize.x,	1-srcTl.y - srcSize.y)));
-	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x,				dstTl.y + _srcSize.y),	glm::vec2(srcTl.x,				1-srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x,			dstTl.y),			glm::vec2(srcTl.x,				1-srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + size.x,	dstTl.y),			glm::vec2(srcTl.x + srcSize.x,	1-srcTl.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x + size.x,	dstTl.y + size.y),	glm::vec2(srcTl.x + srcSize.x,	1-srcTl.y - srcSize.y)));
+	verts.push_back(vrlib::gl::VertexP2T2(glm::vec2(dstTl.x,			dstTl.y + size.y),	glm::vec2(srcTl.x,				1-srcTl.y - srcSize.y)));
 
 	texture->bind();
 	vrlib::gl::setAttributes<vrlib::gl::VertexP2T2>(&verts[0]);

@@ -15,6 +15,7 @@ class Panel;
 class Action;
 class GuiEditor;
 class GroupAction;
+class BrowsePanel;
 
 namespace vrlib
 {
@@ -76,7 +77,7 @@ public:
 	Component* renderPanel;
 	SplitPanel* mainPanel;
 	Tree<vrlib::tien::Node*>* objectTree;
-	Panel* modelBrowsePanel;
+	BrowsePanel* browsePanel;
 	Panel* propertiesPanel;
 	GuiEditor* editorBuilder;
 
@@ -129,9 +130,9 @@ public:
 	virtual void keyChar(char character) override;
 
 
-	void showBrowsePanel();
-	void buildBrowsePanel(const std::string &directory);
-	std::function<void(const std::string &)> browseCallback;
+	//void showBrowsePanel();
+	//void buildBrowsePanel(const std::string &directory);
+	//std::function<void(const std::string &)> browseCallback;
 
 	MouseState mouseState;
 	MouseState lastMouseState;
@@ -145,6 +146,9 @@ public:
 	std::list<Action*> redoactions;
 	void perform(Action* action);
 	glm::vec3 getSelectionCenter() const;
+
+
+	std::function<void(const glm::ivec2 &mousePos)> dragDrawCallback = nullptr;
 
 	
 	//file

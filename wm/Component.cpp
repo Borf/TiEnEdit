@@ -6,7 +6,13 @@
 
 std::list<int*> Component::scissorStack;
 
-void Component::scissorPush(int x, int y, int width, int height) 
+bool Component::scrollRecursive(const glm::ivec2 & mousePos, float direction)
+{
+	if (inComponent(mousePos))
+		return scroll(direction);
+}
+
+void Component::scissorPush(int x, int y, int width, int height)
 {
 	int windowHeight = vrlib::Kernel::getInstance()->getWindowHeight();
 	GLboolean scissorEnabled;
