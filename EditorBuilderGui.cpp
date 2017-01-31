@@ -48,6 +48,43 @@ inline GuiEditor::TextComponent* GuiEditor::addTextBox(const std::string & value
 	return field;
 }
 
+
+inline GuiEditor::TextComponent* GuiEditor::addModelBox(const std::string & value, std::function<void(const std::string&)> onChange)
+{
+	TextField* field = new ModelTextField(value, glm::ivec2(100, line));
+	field->size.x = 200;
+	field->size.y = 20;
+	field->onChange = [onChange, field]()
+	{
+		if (onChange)
+			onChange(field->value);
+	};
+	group.push_back(field);
+	return field;
+}
+
+inline GuiEditor::TextComponent* GuiEditor::addTextureBox(const std::string & value, std::function<void(const std::string&)> onChange)
+{
+	TextField* field = new TextureTextField(value, glm::ivec2(100, line));
+	field->size.x = 200;
+	field->size.y = 20;
+	field->onChange = [onChange, field]()
+	{
+		if (onChange)
+			onChange(field->value);
+	};
+	group.push_back(field);
+	return field;
+}
+GuiEditor::TextComponent * GuiEditor::addLabel(const std::string & value)
+{
+	Label* field = new Label(value, glm::ivec2(100, line+2));
+	field->size.x = 200;
+	field->size.y = 20;
+	group.push_back(field);
+	return field;
+}
+
 inline void GuiEditor::addCheckbox(bool value, std::function<void(bool)> onChange)
 {
 	CheckBox* box = new CheckBox(value, glm::ivec2(100, line));
@@ -64,6 +101,17 @@ inline void GuiEditor::addButton(const std::string & value, std::function<void()
 	group.push_back(button);
 
 }
+
+inline void GuiEditor::addSmallButton(const std::string & value, std::function<void()> onClick)
+{
+	Button* button = new Button(value, glm::ivec2(100, line));
+	button->size.x = 20 + value.size() * 8;
+	button->size.y = 20;
+	button->onClick = onClick;
+	group.push_back(button);
+
+}
+
 
 inline void GuiEditor::addDivider()
 {
@@ -111,6 +159,18 @@ inline void GuiEditor::beginGroup(const std::string & name, bool verticalGroup)
 inline void GuiEditor::endGroup()
 {
 	int i = 0;
+
+	int widthRemaining = 200;
+	int countRemaining = group.size();
+	if (!vertical)
+		for (auto c : group)
+			if (c->size.x != 200)
+			{
+				widthRemaining -= c->size.x;
+				countRemaining--;
+			}
+	int posX = 0;
+
 	for (auto c : group)
 	{
 		if (vertical)
@@ -121,8 +181,10 @@ inline void GuiEditor::endGroup()
 		else
 		{
 			c->position.y = (int)line;
-			c->position.x += 200 / (group.size()) * i;
-			c->size.x = 200 / group.size();
+			c->position.x += posX;
+			if(c->size.x == 200)
+				c->size.x = widthRemaining / countRemaining;
+			posX += c->size.x;
 		}
 		panel->components.push_back(c);
 		i++;
@@ -140,3 +202,34 @@ void GuiEditor::updateComponentsPanel()
 {
 	editor->updateComponentsPanel();
 }
+
+ModelTextField::ModelTextField(const std::string & value, const glm::ivec2 & pos) : TextField(value, pos)
+{
+	readonly = true;
+}
+
+void ModelTextField::handleDrag(DragProperties * draggedObject)
+{
+	if (!draggedObject)
+		return;
+	if (draggedObject->type != DragProperties::Type::Model)
+		return;
+	this->value = draggedObject->file;
+	onChange();
+}
+
+TextureTextField::TextureTextField(const std::string & value, const glm::ivec2 & pos) : TextField(value, pos)
+{
+	readonly = true;
+}
+
+void TextureTextField::handleDrag(DragProperties * draggedObject)
+{
+	if (!draggedObject)
+		return;
+	if (draggedObject->type != DragProperties::Type::Texture)
+		return;
+	this->value = draggedObject->file;
+	onChange();
+}
+

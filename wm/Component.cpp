@@ -10,6 +10,7 @@ bool Component::scrollRecursive(const glm::ivec2 & mousePos, float direction)
 {
 	if (inComponent(mousePos))
 		return scroll(direction);
+	return false;
 }
 
 void Component::scissorPush(int x, int y, int width, int height)

@@ -736,6 +736,22 @@ void TienEdit::draw()
 						glEnd();
 					}
 				}
+				{
+					vrlib::tien::components::MeshRenderer* r = n->getComponent<vrlib::tien::components::MeshRenderer>();
+					if (r && r->mesh)
+					{
+						glBegin(GL_LINES);
+						for (size_t i = 0; i < r->mesh->indices.size(); i += 3)
+						{
+							for (int ii = 0; ii < 3; ii++)
+							{
+								glVertex3fv(glm::value_ptr(vrlib::gl::getP3(r->mesh->vertices[r->mesh->indices[i + ii]])));
+								glVertex3fv(glm::value_ptr(vrlib::gl::getP3(r->mesh->vertices[r->mesh->indices[i + (ii+1)%3]])));
+							}
+						}
+						glEnd();
+					}
+				}
 				glPopMatrix();
 			}
 			glEndList();

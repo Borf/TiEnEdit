@@ -2,6 +2,7 @@
 
 #include "../menu/MenuOverlay.h"
 #include <VrLib/Kernel.h>
+#include <VrLib/Font.h>
 
 Button::Button(const std::string &text, glm::ivec2 position)
 {
@@ -15,7 +16,10 @@ void Button::draw(MenuOverlay * overlay)
 {
 	overlay->drawRect(glm::vec2(128, 328), glm::vec2(128 + 37, 328 + 33), absPosition, absPosition + size); //button
 	overlay->flushVerts();
-	overlay->drawText(text, absPosition + glm::ivec2(5, 14));
+
+	float len = overlay->font->textlen(text);
+
+	overlay->drawText(text, absPosition + glm::ivec2((size.x - len) / 2, 14));
 
 }
 

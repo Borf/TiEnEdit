@@ -13,6 +13,7 @@ public:
 	std::string value;
 	int cursor;
 	int selectionEnd;
+	bool readonly;
 
 	float offsetX = 0;
 	vrlib::TrueTypeFont* font = nullptr;

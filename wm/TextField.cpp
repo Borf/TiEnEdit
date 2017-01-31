@@ -12,6 +12,7 @@ TextField::TextField(const std::string & value, glm::ivec2 position)
 	this->position = position;
 	this->cursor = 0;
 	this->selectionEnd = 0;
+	this->readonly = false;
 }
 
 
@@ -99,6 +100,8 @@ bool TextField::mouseDown(bool leftButton, const glm::ivec2 & clickPos)
 
 bool TextField::keyChar(char character)
 {
+	if (readonly)
+		return true;
 	if (character > 31)
 	{
 		if (cursor != selectionEnd && !value.empty())
@@ -142,6 +145,9 @@ bool TextField::keyChar(char character)
 
 bool TextField::keyUp(int keyCode)
 {
+	if (readonly)
+		return true;
+
 	if (keyCode == VK_DELETE || keyCode == VK_LEFT || keyCode == VK_RIGHT || keyCode == VK_HOME || keyCode == VK_END)
 		return true;
 	if ((keyCode >= 'a' && keyCode <= 'z') || (keyCode >= 'A' && keyCode <= 'Z') || (keyCode >= '0' && keyCode <= '9'))
@@ -152,7 +158,7 @@ bool TextField::keyUp(int keyCode)
 
 bool TextField::keyDown(int keyCode)
 {
-	if (keyCode == VK_DELETE && cursor != selectionEnd)
+	if (keyCode == VK_DELETE && cursor != selectionEnd && !readonly)
 	{
 		value = value.substr(0, glm::min(cursor, selectionEnd)) + value.substr(glm::max(cursor, selectionEnd));
 		cursor = glm::min(cursor, selectionEnd);
@@ -162,7 +168,7 @@ bool TextField::keyDown(int keyCode)
 		return true;
 	}
 
-	if (keyCode == VK_DELETE && cursor < (int)value.size())
+	if (keyCode == VK_DELETE && cursor < (int)value.size() && !readonly)
 	{
 		value = value.substr(0, cursor) + value.substr(cursor + 1);
 		selectionEnd = cursor;
