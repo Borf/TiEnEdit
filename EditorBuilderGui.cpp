@@ -198,6 +198,8 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 	public:
 		glm::vec4 color;
 
+		std::function<void(const glm::vec4 &newColor)> oncolorChange;
+
 		ColorBox(const glm::vec4 &color, const glm::ivec2 &pos) : TextField("", pos)
 		{
 			this->color = color;
@@ -212,6 +214,7 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 				this->color.b = ((rgb >> 0) & 255) / 255.0f;
 				this->color.g = ((rgb >> 8) & 255) / 255.0f;
 				this->color.r = ((rgb >> 16) & 255) / 255.0f;
+				oncolorChange(this->color);
 			};
 		}
 
@@ -221,7 +224,7 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 			TextField::draw(overlay);
 			if (focussed)
 			{
-				overlay->drawRect(glm::vec2(128, 328), glm::vec2(128 + 37, 328 + 33), absPosition + glm::ivec2(0, size.y), absPosition + glm::ivec2(size.x, size.y + 300 + 5)); //dropdown
+				overlay->drawRect(glm::vec2(128, 328), glm::vec2(128 + 37, 328 + 33), absPosition + glm::ivec2(0, size.y), absPosition + glm::ivec2(size.x, size.y + 350 + 5)); //dropdown
 				overlay->drawRect(glm::vec2(512, 0), glm::vec2(512+200, 200), absPosition + glm::ivec2(0, size.y)); //dropdown
 
 				glm::vec3 hsv = vrlib::util::rgb2hsv(glm::vec3(color));
@@ -231,12 +234,24 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 
 				float rad = 90 * hsv.y;
 				float a = glm::radians(hsv.x) - glm::half_pi<float>();
+				overlay->drawRect(glm::vec2(114, 487), glm::vec2(114 + 7, 487+7), absPosition + glm::ivec2(0, size.y) + glm::ivec2(100-3 + rad * cos(a),100-3 + rad * sin(a))); //dropdown
+				
+				overlay->drawRect(glm::vec2(42, 487), glm::vec2(42 + 7, 487 + 7), absPosition + glm::ivec2(5, size.y + 200 + 22), absPosition + glm::ivec2(size.x - 10, size.y + 200 + 25)); //hue
+				overlay->drawRect(glm::vec2(42, 487), glm::vec2(42 + 7, 487 + 7), absPosition + glm::ivec2(5, size.y + 200 + 62), absPosition + glm::ivec2(size.x - 10, size.y + 200 + 65)); //sat
+				overlay->drawRect(glm::vec2(42, 487), glm::vec2(42 + 7, 487 + 7), absPosition + glm::ivec2(5, size.y + 200 + 102), absPosition + glm::ivec2(size.x - 10, size.y + 200 + 105)); //val
 
-				overlay->drawRect(glm::vec2(114, 487), glm::vec2(114+ 7, 487+7), absPosition + glm::ivec2(0, size.y) + glm::ivec2(100-3 + rad * cos(a),100-3 + rad * sin(a))); //dropdown
+				overlay->drawRect(glm::vec2(224, 480), glm::vec2(224 + 8, 480 + 18), absPosition + glm::ivec2(5 + 185 * hsv.x / 360.0f - 2, size.y + 200 + 15)); //hue
+				overlay->drawRect(glm::vec2(224, 480), glm::vec2(224 + 8, 480 + 18), absPosition + glm::ivec2(5 + 185 * hsv.y - 2, size.y + 200 + 55)); //sat
+				overlay->drawRect(glm::vec2(224, 480), glm::vec2(224 + 8, 480 + 18), absPosition + glm::ivec2(5 + 185 * hsv.z - 2, size.y + 200 + 95)); //val
+				overlay->flushVerts();
 
-				if (overlay->mousePos.y > absPosition.y + size.y && inComponent(overlay->mousePos))
-				{
-				}
+
+
+
+				overlay->drawText("Hue", absPosition + glm::ivec2(5, size.y + 200 + 10));
+				overlay->drawText("Saturation", absPosition + glm::ivec2(5, size.y + 200 + 10 + 40));
+				overlay->drawText("Value", absPosition + glm::ivec2(5, size.y + 200 + 10 + 80));
+
 			}
 		}
 
@@ -249,8 +264,53 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 
 			float v = vrlib::util::rgb2hsv(glm::vec3(color)).z;
 
-			color = glm::vec4(vrlib::util::hsv2rgb(glm::vec3(glm::degrees(angle), dist, v)), 1);
+			if (dist < 1)
+			{
+				color = glm::vec4(vrlib::util::hsv2rgb(glm::vec3(glm::degrees(angle)+90, dist, v)), 1);
+				char rgb[10];
+				sprintf(rgb, "%02X%02X%02X", (int)(color.r * 255), (int)(color.g * 255), (int)(color.b * 255));
+				this->value = rgb;
+				if(oncolorChange)
+					oncolorChange(this->color);
+			}
 
+
+			if (mousePos.y > absPosition.y + size.y + 200 + 10 &&
+				mousePos.y < absPosition.y + size.y + 200 + 40)
+			{
+				glm::vec3 hsv = vrlib::util::rgb2hsv(glm::vec3(color));
+				hsv.x = glm::min(1.0f, (mousePos.x - absPosition.x - 5) / 185.0f) * 360;
+				color = glm::vec4(vrlib::util::hsv2rgb(hsv), 1);
+				char rgb[10];
+				sprintf(rgb, "%02X%02X%02X", (int)(color.r * 255), (int)(color.g * 255), (int)(color.b * 255));
+				this->value = rgb;
+				if (oncolorChange)
+					oncolorChange(this->color);
+			}
+			if (mousePos.y > absPosition.y + size.y + 200 + 50 &&
+				mousePos.y < absPosition.y + size.y + 200 + 80)
+			{
+				glm::vec3 hsv = vrlib::util::rgb2hsv(glm::vec3(color));
+				hsv.y = glm::clamp((mousePos.x - absPosition.x - 5) / 185.0f, 0.0f, 1.0f);
+				color = glm::vec4(vrlib::util::hsv2rgb(hsv), 1);
+				char rgb[10];
+				sprintf(rgb, "%02X%02X%02X", (int)(color.r * 255), (int)(color.g * 255), (int)(color.b * 255));
+				this->value = rgb;
+				if (oncolorChange)
+					oncolorChange(this->color);
+			}
+			if (mousePos.y > absPosition.y + size.y + 200 + 90 &&
+				mousePos.y < absPosition.y + size.y + 200 + 120)
+			{
+				glm::vec3 hsv = vrlib::util::rgb2hsv(glm::vec3(color));
+				hsv.z = glm::clamp((mousePos.x - absPosition.x - 5) / 185.0f, 0.0f, 1.0f);
+				color = glm::vec4(vrlib::util::hsv2rgb(hsv), 1);
+				char rgb[10];
+				sprintf(rgb, "%02X%02X%02X", (int)(color.r * 255), (int)(color.g * 255), (int)(color.b * 255));
+				this->value = rgb;
+				if (oncolorChange)
+					oncolorChange(this->color);
+			}
 
 			
 			return true;
@@ -261,7 +321,7 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 			if (!focussed)
 				return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y;
 			else
-				return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y + 300;
+				return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y + 350;
 		}
 		glm::vec4 getColor() const override { return color; }
 		void setColor(const glm::vec4 &color) override { this->color = color; }
@@ -270,11 +330,11 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 	ColorBox* field = new ColorBox(value, glm::ivec2(100, line));
 	field->size.x = 200;
 	field->size.y = 20;
-	/*field->onChange = [onChange, field]()
+	field->oncolorChange = [onChange, field](const glm::vec4 &color)
 	{
 		if (onChange)
 			onChange(field->color);
-	};*/
+	};
 	group.push_back(field);
 	return field;
 }
