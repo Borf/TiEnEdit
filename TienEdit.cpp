@@ -79,9 +79,9 @@ class Rotator : public vrlib::tien::Component
 	{
 		node->transform->rotate(glm::vec3(0, elapsedTime, 0));
 	}
-	virtual vrlib::json::Value toJson(vrlib::json::Value & meshes) const override
+	virtual json toJson(json & meshes) const override
 	{
-		vrlib::json::Value ret;
+		json ret;
 		ret["type"] = "rotate";
 		return ret;
 	}
@@ -91,10 +91,10 @@ class Rotator : public vrlib::tien::Component
 class StubComponent : public vrlib::tien::Component
 {
 public:
-	vrlib::json::Value stub;
-	virtual vrlib::json::Value toJson(vrlib::json::Value & meshes) const override
+	json stub;
+	virtual json toJson(json & meshes) const override
 	{
-		vrlib::json::Value ret;
+		json ret;
 		ret["type"] = stub["type"];
 		return ret;
 	}
@@ -102,51 +102,51 @@ public:
 
 
 
-typedef std::pair<std::function<vrlib::tien::Component*(vrlib::tien::Node*)>, std::function<vrlib::tien::Component*(const vrlib::json::Value&, const vrlib::json::Value&)>> ComponentPair;
+typedef std::pair<std::function<vrlib::tien::Component*(vrlib::tien::Node*)>, std::function<vrlib::tien::Component*(const json&, const json&)>> ComponentPair;
 std::map<std::string, ComponentPair> componentFactory =
 {
 	{ "Mesh Renderer", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshRenderer(); }, 
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::MeshRenderer(json, totalJson); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::MeshRenderer(data, totalJson); }) },
 	{ "Model Renderer", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::ModelRenderer(""); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::ModelRenderer(json); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::ModelRenderer(data); }) },
 	{ "Animated Model Renderer", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::AnimatedModelRenderer(""); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::AnimatedModelRenderer(json); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::AnimatedModelRenderer(data); }) },
 	{ "Terrain Renderer", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::TerrainRenderer(nullptr); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::TerrainRenderer(nullptr); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::TerrainRenderer(nullptr); }) },
 	{ "Light", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::Light(); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::Light(json); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::Light(data); }) },
 	{ "Static Skybox", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::StaticSkyBox(); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::StaticSkyBox(); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::StaticSkyBox(); }) },
 	{ "Dynamic Skybox", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::DynamicSkyBox(); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::DynamicSkyBox(json); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::DynamicSkyBox(data); }) },
 	{ "Camera", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::Camera(); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::Camera(json); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::Camera(data); }) },
 	{ "RigidBody", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::RigidBody(0.0f, vrlib::tien::components::RigidBody::Type::Static); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::RigidBody(json); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::RigidBody(data); }) },
 	{ "BoxCollider", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::BoxCollider(n); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::BoxCollider(json); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::BoxCollider(data); }) },
 	{ "MeshCollider", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshCollider(n, true); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { throw "ugh";  return new vrlib::tien::components::MeshCollider(nullptr, true); }) },
+		[](const json &data, const json &totalJson) { throw "ugh";  return new vrlib::tien::components::MeshCollider(nullptr, true); }) },
 	{ "SphereCollider", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::SphereCollider(); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::SphereCollider(); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::SphereCollider(); }) },
 	{ "TerrainCollider", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::TerrainCollider(n); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::TerrainCollider(); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::TerrainCollider(); }) },
 	{ "rotator", ComponentPair(
 		[](vrlib::tien::Node* n) { return new Rotator(); },
-		[](const vrlib::json::Value &json, const vrlib::json::Value &totalJson) { return new vrlib::tien::components::ModelRenderer(json); }) },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::ModelRenderer(data); }) },
 
 
 };
@@ -183,8 +183,10 @@ void TienEdit::init()
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
 	//load stubs for different applications
-	vrlib::json::Value stubs = vrlib::json::readJson(std::ifstream("data/TiEnEdit/stubs.json"));
-	for (const vrlib::json::Value &stub : stubs)
+	std::ifstream file("data/TiEnEdit/stubs.json");
+	json stubs;
+	file >> stubs;
+	for (const json &stub : stubs)
 	{
 		componentFactory[stub["name"]] = ComponentPair([stub](vrlib::tien::Node* n)
 		{
@@ -192,7 +194,7 @@ void TienEdit::init()
 			c->stub = stub;
 			return c;
 		},
-		[stub](const vrlib::json::Value &json, const vrlib::json::Value &totalJson)
+		[stub](const json &data, const json &totalJson)
 		{
 			StubComponent* c = new StubComponent();
 			c->stub = stub;
@@ -301,7 +303,7 @@ void TienEdit::init()
 	{
 		if (!objectTree->selectedItems.empty())
 		{
-			Menu* menu = new Menu(vrlib::json::readJson(std::ifstream("data/TiEnEdit/nodemenu.json")));
+			Menu* menu = new Menu(json::parse(std::ifstream("data/TiEnEdit/nodemenu.json")));
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
 			menu->setAction("delete", std::bind(&TienEdit::deleteSelection, this));
 			menu->setAction("focus with camera", std::bind(&TienEdit::focusSelectedObject, this));
@@ -309,7 +311,7 @@ void TienEdit::init()
 		}
 		else
 		{
-			vrlib::json::Value popupMenu = vrlib::json::readJson(std::ifstream("data/TiEnEdit/newnodemenu.json"));
+			json popupMenu = json::parse(std::ifstream("data/TiEnEdit/newnodemenu.json"));
 			Menu* menu = new Menu(popupMenu);
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
 			menu->setAction("new node", [this]()
@@ -374,7 +376,7 @@ void TienEdit::init()
 //		n->addComponent(new vrlib::tien::components::ModelRenderer("data/tientest/models/crytek-sponza/sponza.obj"));
 		n->getComponent<vrlib::tien::components::ModelRenderer>()->castShadow = false;
 	}*/
-	/*vrlib::json::Value v = vrlib::json::readJson(std::ifstream("data/virtueelpd/scenes/Real PD1 v1-6.json"));
+	/*json v = json::parse(std::ifstream("data/virtueelpd/scenes/Real PD1 v1-6.json"));
 	for (const auto &o : v["objects"])
 	{
 		if (o["model"].asString().find(".fbx") != std::string::npos)
@@ -1360,8 +1362,8 @@ void TienEdit::save()
 
 		vrlib::logger << "Save" << vrlib::Log::newline;
 		vrlib::logger << "Saving to " << fileName;
-		vrlib::json::Value saveFile;
-		saveFile["meshes"] = vrlib::json::Value(vrlib::json::Type::arrayValue);
+		json saveFile;
+		saveFile["meshes"] = json::array();
 		saveFile["scene"] = tien.scene.asJson(saveFile["meshes"]);
 		std::ofstream(fileName) << saveFile;
 	}
@@ -1403,11 +1405,11 @@ void TienEdit::load()
 			fileName += ".json";
 
 		vrlib::logger << "Opening " << fileName << Log::newline;
-		vrlib::json::Value saveFile = vrlib::json::readJson(std::ifstream(fileName));
+		json saveFile = json::parse(std::ifstream(fileName));
 		tien.scene.reset();
-		tien.scene.fromJson(saveFile["scene"], saveFile, [this, saveFile](const vrlib::json::Value &json) -> vrlib::tien::Component*
+		tien.scene.fromJson(saveFile["scene"], saveFile, [this, saveFile](const json &json) -> vrlib::tien::Component*
 		{
-			std::string type = json["type"].asString();
+			std::string type = json["type"].get<std::string>();
 			if (componentFactory.find(type) != componentFactory.end())
 				return componentFactory[type].second(json, saveFile);
 			type[0] = ::toupper(type[0]);
@@ -1471,16 +1473,15 @@ void TienEdit::copy()
 {
 	vrlib::logger << "Copy" << vrlib::Log::newline;
 
-	vrlib::json::Value clipboard;	
-	clipboard["nodes"] = vrlib::json::Value(vrlib::json::Type::arrayValue);
+	json clipboard;	
+	clipboard["nodes"] = json::array();
 	for (auto c : selectedNodes)
 	{
 		// TODO: only copy parents, not children of selected parents
 		clipboard["nodes"].push_back(c->asJson(clipboard["meshes"]));
 	}
 
-	std::string out;
-	out << clipboard;
+	std::string out = clipboard.dump();
 	toClipboard(out);
 }
 
@@ -1488,15 +1489,15 @@ void TienEdit::paste()
 {
 	vrlib::logger << "Paste" << vrlib::Log::newline;
 
-	vrlib::json::Value clipboard = vrlib::json::readJson(std::stringstream(fromClipboard()));
-	if (clipboard.isNull())
+	json clipboard = json::parse(std::stringstream(fromClipboard()));
+	if (clipboard.is_null())
 	{
 		vrlib::logger << "Invalid json on clipboard" << vrlib::Log::newline;
 		return;
 	}
 
 	selectedNodes.clear();
-	for (const vrlib::json::Value &n : clipboard["nodes"])
+	for (const json &n : clipboard["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
 		newNode->fromJson(n, clipboard);

@@ -2,7 +2,7 @@
 
 #include <VrLib/Texture.h>
 #include <VrLib/Image.h>
-#include <VrLib/json.h>
+#include <VrLib/json.hpp>
 #include <VrLib/Font.h>
 
 #include "Menu.h"
@@ -42,7 +42,7 @@ void MenuOverlay::init()
 
 void MenuOverlay::loadMenu(const std::string &menuFile)
 {
-	rootMenu = new Menu(vrlib::json::readJson(std::ifstream(menuFile)));
+	rootMenu = new Menu(json::parse(std::ifstream(menuFile)));
 }
 
 

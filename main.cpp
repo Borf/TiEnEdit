@@ -1,7 +1,9 @@
 #include <VrLib/Kernel.h>
-#include <vrlib/json.h>
+#include <vrlib/json.hpp>
 #include <vrlib/ServerConnection.h>
 #include <VrLib/Log.h>
+
+#include <VrLib/json.hpp>
 
 #include <sys/stat.h>
 #include <direct.h>
@@ -60,6 +62,7 @@ int main(int argc, char** argv) {
 	vrlib::Kernel* kernel = vrlib::Kernel::getInstance();
 
 	std::string filename;
+
 
 	for (int i = 1; i < argc; ++i)
 	{

@@ -2,7 +2,7 @@
 #include "../TienEdit.h"
 #include "../actions/SelectionChangeAction.h"
 
-#include <VrLib/json.h>
+#include <VrLib/json.hpp>
 #include <VrLib/Texture.h>
 #include <VrLib/tien/Scene.h>
 #include <VrLib/tien/Node.h>

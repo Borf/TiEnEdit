@@ -5,32 +5,32 @@
 #include "ToggleMenuItem.h"
 #include "ActionMenuItem.h"
 
-#include <vrlib/json.h>
+#include <vrlib/json.hpp>
 #include <vrlib/Log.h>
 
 using vrlib::logger; using vrlib::Log;
 
 
-Menu::Menu(const vrlib::json::Value &data)
+Menu::Menu(const json &data)
 {
 	for (size_t i = 0; i < data.size(); i++)
 	{
 		MenuItem* subItem = NULL;
 
-		if (data[i]["type"].asString() == "menu")
+		if (data[i]["type"] == "menu")
 		{
-			subItem = new SubMenuMenuItem(data[i]["name"].asString(), new Menu(data[i]["subitems"]));
+			subItem = new SubMenuMenuItem(data[i]["name"], new Menu(data[i]["subitems"]));
 		}
-		else if (data[i]["type"].asString() == "item")
+		else if (data[i]["type"] == "item")
 		{
-			subItem = new ActionMenuItem(data[i]["name"].asString());
+			subItem = new ActionMenuItem(data[i]["name"].get<std::string>());
 		}
-		else if (data[i]["type"].asString() == "toggle")
+		else if (data[i]["type"] == "toggle")
 		{
-			subItem = new ToggleMenuItem(data[i]["name"].asString(), data[i]["initial"].asBool());
+			subItem = new ToggleMenuItem(data[i]["name"], data[i]["initial"]);
 		}
 		else
-			logger<< "Unknown menu type: " << data[i]["type"].asString() << Log::newline;
+			logger<< "Unknown menu type: " << data[i]["type"] << Log::newline;
 
 		if (subItem)
 		{
@@ -168,7 +168,7 @@ void Menu::setMenu(std::string menuLoc, MenuItem* menuItem)
 		}
 	}
 	
-	Menu* menu = new Menu(vrlib::json::Value(vrlib::json::Type::arrayValue));
+	Menu* menu = new Menu(json::array());
 	menu->setMenu(menuLoc.substr(first.length() == menuLoc.length() ? first.length() : first.length() + 1), menuItem);
 	menuItems.push_back(new SubMenuMenuItem(first, menu));
 }

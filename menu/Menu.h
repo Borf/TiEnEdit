@@ -3,15 +3,15 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <VrLib/json.hpp>
 
 
-namespace vrlib { namespace json { class Value; } }
 class MenuItem;
 
 class Menu
 {
 public:
-	Menu(const vrlib::json::Value &data);
+	Menu(const json &data);
 	void setAction(std::string path, std::function<void() > callback);
 	void linkToggle(std::string path, bool* linkBool);
 	void setToggleValue(std::string path, bool value);
