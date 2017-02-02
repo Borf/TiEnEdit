@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <functional>
 
+#include <Windows.h>
+
+
 const int LINESIZE = 16;
 const int TEXTOFFSET = 13;
 
@@ -95,10 +98,26 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 		}
 		else
 		{
+			bool shift = ((GetKeyState(VK_LSHIFT) | GetKeyState(VK_RSHIFT)) & 0x80) != 0;
+			bool ctrl = ((GetKeyState(VK_LCONTROL) | GetKeyState(VK_RCONTROL)) & 0x80) != 0;
+
 			selectedItems.clear();
-			selectedIndices.clear();
-			selectedIndices.push_back(index);
-			selectedItems.push_back(flatList[index].item);
+			if(!ctrl && !shift)
+				selectedIndices.clear();
+
+			if(ctrl || !shift)
+				selectedIndices.push_back(index);
+
+			if (shift)
+			{
+				int lastIndex = selectedIndices.back();
+				for (int i = lastIndex + 1; i != index; i+=index > lastIndex?1:-1)
+					selectedIndices.push_back(i);
+				std::unique(selectedIndices.begin(), selectedIndices.end());
+			}
+
+			for(auto i : selectedIndices)
+				selectedItems.push_back(flatList[i].item);
 			if (selectItem)
 				selectItem();
 		}
@@ -137,6 +156,13 @@ bool Tree<T>::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm:
 	if (!dragging)
 	{
 		dragIndex = (int)((startPos.y - absPosition.y - 5 + scrollOffset) / LINESIZE);
+		if (std::find(selectedIndices.begin(), selectedIndices.end(), dragIndex) == selectedIndices.end())
+		{
+			selectedIndices.clear();
+			selectedIndices.push_back(dragIndex);
+			selectedItems = { flatList[dragIndex].item };
+		}
+
 	}
 	dragging = true;
 	dragPos = mousePos;
@@ -154,16 +180,18 @@ bool Tree<T>::mouseFinishDrag(bool leftButton, const glm::ivec2 & startPos, cons
 	int indexFrom = dragIndex;
 	int indexTo = (int)((mousePos.y - absPosition.y - 5 + scrollOffset) / LINESIZE);
 
-	T from = nullptr;
-	if(indexFrom >= 0 && indexFrom < (int)flatList.size())
-		from = flatList[indexFrom].item;
-	
 	T to = nullptr;
 	if (indexTo >= 0 && indexTo < (int)flatList.size())
 		to = flatList[indexTo].item;
 
+
+	if (std::find(selectedItems.begin(), selectedItems.end(), to) != selectedItems.end())
+		return true;
+
+
+
 	if (dragItem)
-		dragItem(from, to);
+		dragItem(selectedItems, to);
 	return true;
 }
 

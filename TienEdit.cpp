@@ -134,7 +134,7 @@ std::map<std::string, ComponentPair> componentFactory =
 		[](const json &data, const json &totalJson) { return new vrlib::tien::components::RigidBody(data); }) },
 	{ "BoxCollider", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::BoxCollider(n); },
-		[](const json &data, const json &totalJson) { return new vrlib::tien::components::BoxCollider(data); }) },
+		[](const json &data, const json &totalJson) { return vrlib::tien::components::BoxCollider::fromJson(data); }) },
 	{ "MeshCollider", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshCollider(n, true); },
 		[](const json &data, const json &totalJson) { throw "ugh";  return new vrlib::tien::components::MeshCollider(nullptr, true); }) },
@@ -327,11 +327,12 @@ void TienEdit::init()
 		perform(new SelectionChangeAction(this, objectTree->selectedItems));
 	};
 	objectTree->doubleClickItem = std::bind(&TienEdit::focusSelectedObject, this);
-	objectTree->dragItem = [this](vrlib::tien::Node* from, vrlib::tien::Node* to)
+	objectTree->dragItem = [this](std::vector<vrlib::tien::Node*> from, vrlib::tien::Node* to)
 	{//TODO: undo
 		if (!to)
 			to = &tien.scene;
-		from->setParent(to); //TODO: keep transforms
+		for(auto n : from)
+			n->setParent(to); //TODO: keep transforms
 		objectTree->update();
 	};
 

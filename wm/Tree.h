@@ -62,7 +62,7 @@ public:
 	std::function<void()> selectItem;
 	std::function<void()> doubleClickItem;
 	std::function<void()> rightClickItem;
-	std::function<void(T from, T to)> dragItem;
+	std::function<void(std::vector<T> from, T to)> dragItem;
 
 
 	Tree();
