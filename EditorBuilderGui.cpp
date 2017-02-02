@@ -11,6 +11,7 @@
 
 #include "TienEdit.h"
 
+#include <VrLib/util.h>
 #include <glm/glm.hpp>
 
 GuiEditor::GuiEditor(TienEdit* editor, Panel * panel)
@@ -137,19 +138,6 @@ inline GuiEditor::TextComponent* GuiEditor::addComboBox(const std::string & valu
 	return box;
 }
 
-void GuiEditor::addBrowseButton(BrowseType type, std::function<void(const std::string &)> onClick)
-{
-/*	Button* button = new Button("Browse", glm::ivec2(100, line));
-	button->size.x = 200;
-	button->size.y = 20;
-	button->onClick = [this, onClick]()
-	{
-		editor->browseCallback = onClick;
-		editor->showBrowsePanel();
-	};
-	group.push_back(button);*/
-}
-
 inline void GuiEditor::beginGroup(const std::string & name, bool verticalGroup)
 {
 	panel->components.push_back(new Label(name, glm::ivec2(0, line + 2)));
@@ -201,6 +189,99 @@ inline void GuiEditor::endGroup()
 void GuiEditor::updateComponentsPanel()
 {
 	editor->updateComponentsPanel();
+}
+
+GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std::function<void(const glm::vec4&)> onChange)
+{
+	class ColorBox : public TextField, public ColorComponent
+	{
+	public:
+		glm::vec4 color;
+
+		ColorBox(const glm::vec4 &color, const glm::ivec2 &pos) : TextField("", pos)
+		{
+			this->color = color;
+			char rgb[10];
+			sprintf(rgb, "%02X%02X%02X", (int)(color.r * 255), (int)(color.g * 255), (int)(color.b * 255));
+			this->value = rgb;
+			this->onChange = [this]()
+			{
+				std::stringstream c(value);
+				unsigned int rgb;
+				c >> std::hex >> rgb;
+				this->color.b = ((rgb >> 0) & 255) / 255.0f;
+				this->color.g = ((rgb >> 8) & 255) / 255.0f;
+				this->color.r = ((rgb >> 16) & 255) / 255.0f;
+			};
+		}
+
+
+		virtual void draw(MenuOverlay* overlay) override
+		{
+			TextField::draw(overlay);
+			if (focussed)
+			{
+				overlay->drawRect(glm::vec2(128, 328), glm::vec2(128 + 37, 328 + 33), absPosition + glm::ivec2(0, size.y), absPosition + glm::ivec2(size.x, size.y + 300 + 5)); //dropdown
+				overlay->drawRect(glm::vec2(512, 0), glm::vec2(512+200, 200), absPosition + glm::ivec2(0, size.y)); //dropdown
+
+				glm::vec3 hsv = vrlib::util::rgb2hsv(glm::vec3(color));
+
+				if (glm::isinf(hsv.x) || glm::isnan(hsv.x))
+					hsv.x = 0;
+
+				float rad = 90 * hsv.y;
+				float a = glm::radians(hsv.x) - glm::half_pi<float>();
+
+				overlay->drawRect(glm::vec2(114, 487), glm::vec2(114+ 7, 487+7), absPosition + glm::ivec2(0, size.y) + glm::ivec2(100-3 + rad * cos(a),100-3 + rad * sin(a))); //dropdown
+
+				if (overlay->mousePos.y > absPosition.y + size.y && inComponent(overlay->mousePos))
+				{
+				}
+			}
+		}
+
+		virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos)
+		{
+			glm::ivec2 rel = mousePos - absPosition - glm::ivec2(100, 100 + size.y);
+
+			float dist = glm::length(glm::vec2(rel)) / 90.0f;
+			float angle = glm::atan((float)rel.y, (float)rel.x);
+
+			float v = vrlib::util::rgb2hsv(glm::vec3(color)).z;
+
+			color = glm::vec4(vrlib::util::hsv2rgb(glm::vec3(glm::degrees(angle), dist, v)), 1);
+
+
+			
+			return true;
+		}
+
+		virtual bool inComponent(const glm::ivec2 & pos) override
+		{
+			if (!focussed)
+				return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y;
+			else
+				return pos.x > absPosition.x && pos.x < absPosition.x + size.x && pos.y > absPosition.y && pos.y < absPosition.y + size.y + 300;
+		}
+		glm::vec4 getColor() const override { return color; }
+		void setColor(const glm::vec4 &color) override { this->color = color; }
+	};
+
+	ColorBox* field = new ColorBox(value, glm::ivec2(100, line));
+	field->size.x = 200;
+	field->size.y = 20;
+	/*field->onChange = [onChange, field]()
+	{
+		if (onChange)
+			onChange(field->color);
+	};*/
+	group.push_back(field);
+	return field;
+}
+
+GuiEditor::FloatComponent * GuiEditor::addFloatBox(float value, float min, float max, std::function<void(float&)> onChange)
+{
+	return nullptr;
 }
 
 ModelTextField::ModelTextField(const std::string & value, const glm::ivec2 & pos) : TextField(value, pos)

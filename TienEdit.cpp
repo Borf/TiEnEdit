@@ -1366,7 +1366,7 @@ void TienEdit::save()
 		json saveFile;
 		saveFile["meshes"] = json::array();
 		saveFile["scene"] = tien.scene.asJson(saveFile["meshes"]);
-		std::ofstream(fileName) << saveFile;
+		std::ofstream(fileName) << std::setw(4) << saveFile;
 	}
 	_chdir(curdir);
 

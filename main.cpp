@@ -14,6 +14,12 @@
 #include <string>
 #include <regex>
 
+extern "C"
+{
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+}
+
 extern "C" {
 	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 }
@@ -77,6 +83,7 @@ int main(int argc, char** argv) {
 		}
 
 	}
+	av_register_all();
 	TienEdit* editor = new TienEdit(filename);
 
 	kernel->setApp(editor);

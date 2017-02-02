@@ -77,7 +77,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 			std::string extension = s.substr(s.rfind("."));
 			std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
 			if (extension == ".fbx" || extension == ".obj" || extension == ".ma" || extension == ".lwo" || extension == ".stl" || extension == ".dae" ||
-				extension == ".jpg" || extension == ".png" || extension == ".jpeg")
+				extension == ".jpg" || extension == ".png" || extension == ".jpeg" || extension == ".mp4")
 				return false;
 			else
 				return true;
@@ -135,6 +135,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 				extension == ".png" ||
 				extension == ".jpg" ||
 				extension == ".jpeg" ||
+				extension == ".mp4" ||
 				false)
 			{
 				auto tex = vrlib::Texture::loadCached(directory + files[i]);
