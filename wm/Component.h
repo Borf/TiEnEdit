@@ -42,6 +42,7 @@ public:
 	} alignment;
 
 	bool focussed = false;
+	bool focusable = false;
 	glm::ivec2 size;
 	glm::ivec2 position;
 	virtual void onReposition(Component* parent) {
@@ -52,7 +53,7 @@ public:
 
 	virtual bool mouseDown(bool leftButton, const glm::ivec2 &mousePos) { return false; }
 	virtual bool mouseUp(bool leftButton, const glm::ivec2 &mousePos) { return false; }
-	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) { return false; }
+	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos, const glm::ivec2 &lastMousePos) { return false; }
 	virtual bool mouseFinishDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) { return false; }
 
 	virtual bool scroll(float offset) { return false; };

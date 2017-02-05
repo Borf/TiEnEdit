@@ -13,7 +13,7 @@ class DraggableImage : public Image
 	DragProperties* dragProperties = nullptr;
 public:
 	DraggableImage(TienEdit* editor, vrlib::Texture* texture, const glm::ivec2& position, const glm::ivec2 &size, const glm::ivec2 &tl = glm::ivec2(0, 0), const glm::ivec2 &br = glm::ivec2(-1, -1), DragProperties* dragProperties = nullptr);
-	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) override;
+	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos, const glm::ivec2 &lastMousePos) override;
 	virtual bool mouseFinishDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) override;
 };
 

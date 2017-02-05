@@ -17,6 +17,7 @@ Tree<T>::Tree()
 {
 	scrollOffset = 0;
 	dragging = false;
+	this->focusable = true;
 }
 
 template<class T>
@@ -151,7 +152,7 @@ bool Tree<T>::mouseUp(bool leftButton, const glm::ivec2 & mousePos)
 }
 
 template<class T>
-bool Tree<T>::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm::ivec2 & mousePos)
+bool Tree<T>::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm::ivec2 & mousePos, const glm::ivec2 & lastMousePos)
 {
 	if (!dragging)
 	{

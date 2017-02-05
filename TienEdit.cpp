@@ -818,9 +818,9 @@ void TienEdit::mouseMove(int x, int y)
 		ray = vrlib::math::Ray(retNear, glm::normalize(retFar - retNear));
 	}
 
-	if(focussedComponent && focussedComponent->inComponent(mouseState.mouseDownPos) && mouseState.left)
+	if(focussedComponent && focussedComponent->inComponent(mouseState.mouseDownPos) && (mouseState.left || mouseState.right))
 	{ 
-		bool dragged = focussedComponent->mouseDrag(mouseState.left, mouseState.mouseDownPos, mouseState.pos);
+		bool dragged = focussedComponent->mouseDrag(mouseState.left, mouseState.mouseDownPos, mouseState.pos, lastMouseState.pos);
 		if (!dragged)
 		{
 
@@ -1026,8 +1026,46 @@ void TienEdit::keyChar(char character)
 	NormalApp::keyChar(character);
 	if (mouseState.middle)
 		return;
+
 	if (focussedComponent && !mouseState.middle)
-		focussedComponent->keyChar(character);
+	{
+		if (character == '\t' && focussedComponent->focusable)
+		{
+			std::function<void(Component*)> nextComponent;
+			nextComponent = [this, &nextComponent](Component* c)
+			{
+				Panel* p = dynamic_cast<Panel*>(c);
+				if (p)
+				{
+					for (size_t i = 0; i < p->components.size(); i++)
+					{
+						if (p->components[i] == focussedComponent)
+						{
+							focussedComponent->unfocus();
+							focussedComponent->focussed = false;
+							do
+							{
+								i = (i + 1) % p->components.size();
+								focussedComponent = p->components[i];
+							} while (!focussedComponent->focusable);
+						
+							focussedComponent->focussed = true;
+							focussedComponent->focus();
+							break;
+						}
+						else
+							nextComponent(p->components[i]);
+					}
+				}
+
+				if (dynamic_cast<ScrollPanel*>(c))
+					nextComponent(dynamic_cast<ScrollPanel*>(c)->component);
+			};
+			nextComponent(mainPanel);			
+		}
+		else
+			focussedComponent->keyChar(character);
+	}
 }
 
 
@@ -1161,7 +1199,7 @@ void TienEdit::mouseUp(MouseButton button)
 			}
 		}
 	}
-	if (button == vrlib::MouseButtonDeviceDriver::Right && glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) < 3)
+	if (button == vrlib::MouseButtonDeviceDriver::Right && glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) < 3 && renderPanel->inComponent(mouseState.mouseDownPos))
 	{
 		if (activeTool == EditTool::NONE)
 		{

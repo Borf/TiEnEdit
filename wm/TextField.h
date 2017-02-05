@@ -28,10 +28,11 @@ public:
 	virtual bool keyChar(char character) override;
 	virtual bool keyUp(int keyCode) override;
 	virtual bool keyDown(int keyCode) override;
+	virtual void focus() override;
 
 	std::function<void()> onChange;
 
 	inline std::string getText() const override { return value; }
 	inline void setText(const std::string &text) override { value = text; }
-	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) override;
+	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos, const glm::ivec2 & lastMousePos) override;
 };

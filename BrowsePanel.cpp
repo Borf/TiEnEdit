@@ -170,7 +170,7 @@ DraggableImage::DraggableImage(TienEdit* editor, vrlib::Texture * texture, const
 	//TODO: simplify
 }
 
-bool DraggableImage::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm::ivec2 & mousePos)
+bool DraggableImage::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm::ivec2 & mousePos, const glm::ivec2 & lastMousePos)
 {
 	if (!editor->dragDrawCallback)
 	{

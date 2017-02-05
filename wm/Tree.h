@@ -70,7 +70,7 @@ public:
 	virtual bool click(bool leftButton, const glm::ivec2 &clickPos, int clickCount) override;
 	virtual bool mouseDown(bool leftButton, const glm::ivec2 &mousePos)  override;
 	virtual bool mouseUp(bool leftButton, const glm::ivec2 &mousePos)  override;
-	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) override;
+	virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos, const glm::ivec2 & lastMousePos) override;
 	virtual bool mouseFinishDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos) override;
 	virtual bool scroll(float offset) override;
 	void update();

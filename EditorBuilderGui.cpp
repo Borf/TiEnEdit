@@ -222,6 +222,16 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 		virtual void draw(MenuOverlay* overlay) override
 		{
 			TextField::draw(overlay);
+
+			overlay->shader->setUniform(MenuOverlay::Uniforms::colorMult, color);
+			overlay->flushVerts();
+			overlay->drawRect(glm::vec2(58, 495), glm::vec2(58 + 7, 495 + 7), absPosition + glm::ivec2(size.x - 20, 2), absPosition + glm::ivec2(size.x-4, size.y-2)); //val
+			overlay->flushVerts();
+			overlay->shader->setUniform(MenuOverlay::Uniforms::colorMult, glm::vec4(1, 1, 1, 1));
+
+
+
+
 			if (focussed)
 			{
 				overlay->drawRect(glm::vec2(128, 328), glm::vec2(128 + 37, 328 + 33), absPosition + glm::ivec2(0, size.y), absPosition + glm::ivec2(size.x, size.y + 350 + 5)); //dropdown
@@ -245,9 +255,6 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 				overlay->drawRect(glm::vec2(224, 480), glm::vec2(224 + 8, 480 + 18), absPosition + glm::ivec2(5 + 185 * hsv.z - 2, size.y + 200 + 95)); //val
 				overlay->flushVerts();
 
-
-
-
 				overlay->drawText("Hue", absPosition + glm::ivec2(5, size.y + 200 + 10));
 				overlay->drawText("Saturation", absPosition + glm::ivec2(5, size.y + 200 + 10 + 40));
 				overlay->drawText("Value", absPosition + glm::ivec2(5, size.y + 200 + 10 + 80));
@@ -255,7 +262,7 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 			}
 		}
 
-		virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos)
+		virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos, const glm::ivec2 & lastMousePos)
 		{
 			glm::ivec2 rel = mousePos - absPosition - glm::ivec2(100, 100 + size.y);
 
@@ -339,9 +346,63 @@ GuiEditor::ColorComponent * GuiEditor::addColorBox(const glm::vec4 & value, std:
 	return field;
 }
 
-GuiEditor::FloatComponent * GuiEditor::addFloatBox(float value, float min, float max, std::function<void(float&)> onChange)
+GuiEditor::FloatComponent * GuiEditor::addFloatBox(float value, float min, float max, std::function<void(float)> onChange)
 {
-	return nullptr;
+	class FloatField : public TextField, public FloatComponent
+	{
+	public:
+		FloatField(float value, const glm::ivec2 &pos) : TextField("", pos)
+		{
+			setValue(value);
+		}
+
+		virtual bool mouseDrag(bool leftButton, const glm::ivec2 &startPos, const glm::ivec2 &mousePos, const glm::ivec2 & lastMousePos)
+		{
+			if (!leftButton)
+			{
+				setValue(getValue() + (mousePos.x - lastMousePos.x) / 10.0f);
+				onChange();
+			}
+			return true;
+		}
+
+		virtual bool keyChar(char character) override
+		{
+			std::string oldValue = value;
+			float oldValueFloat = getValue();
+			int oldCursor = cursor;
+			int oldSelectionEnd = selectionEnd;
+			bool ret = TextField::keyChar(character);
+			//check if the last key pressed actually contributed something. Don't check if it's a . and there's no period yet, or when there's a backspace
+			if (ret && getValue() == oldValueFloat && (character != '.' || value.find('.') != value.rfind('.')) && character != 8)
+			{
+				value = oldValue;
+				selectionEnd = oldSelectionEnd;
+				cursor = oldCursor;
+				onChange();
+			}
+			return ret;
+		}
+
+		float getValue() const override { return (float)atof(value.c_str()); }
+		void setValue(float v) override 
+		{ 
+			std::ostringstream ss;
+			ss << v;
+			value = ss.str();
+		}
+	};
+
+	FloatField* field = new FloatField(value, glm::ivec2(100, line));
+	field->size.x = 200;
+	field->size.y = 20;
+	field->onChange = [onChange, field]()
+	{
+		onChange(field->getValue());
+	};
+
+	group.push_back(field);
+	return field;
 }
 
 ModelTextField::ModelTextField(const std::string & value, const glm::ivec2 & pos) : TextField(value, pos)

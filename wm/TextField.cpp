@@ -13,6 +13,7 @@ TextField::TextField(const std::string & value, glm::ivec2 position)
 	this->cursor = 0;
 	this->selectionEnd = 0;
 	this->readonly = false;
+	this->focusable = true;
 }
 
 
@@ -49,7 +50,7 @@ void TextField::draw(MenuOverlay * overlay)
 		}
 	}
 
-	if (cursor != selectionEnd)
+	if (cursor != selectionEnd && focussed)
 	{
 		float selectionEndPos = overlay->font->textlen(value.substr(0, selectionEnd)) - offsetX;
 
@@ -208,7 +209,13 @@ bool TextField::keyDown(int keyCode)
 	return false;
 }
 
-bool TextField::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm::ivec2 & mousePos)
+void TextField::focus()
+{
+	this->cursor = 0;
+	this->selectionEnd = value.size();
+}
+
+bool TextField::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm::ivec2 & mousePos, const glm::ivec2 & lastMousePos)
 {
 	float clickPosX = mousePos.x + offsetX - absPosition.x;
 	cursor = value.size();
