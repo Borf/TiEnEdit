@@ -160,6 +160,43 @@ void BrowsePanel::rebuild(const std::string & directory)
 	editor->focussedComponent = nullptr;
 }
 
+FileType BrowsePanel::fileType(const std::string & file)
+{
+	std::string extension = file;
+	if (extension.find("."))
+		extension = extension.substr(extension.rfind("."));
+	std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+
+	if (false ||
+		extension == ".fbx" ||
+		extension == ".obj" ||
+		extension == ".ma" ||
+		extension == ".lwo" ||
+		extension == ".stl" ||
+		extension == ".dae" ||
+		extension == ".skn" ||
+		false)
+		return FileType::Model;
+	else if (false ||
+		extension == ".png" ||
+		extension == ".jpg" ||
+		extension == ".jpeg" ||
+		false)
+		return FileType::Image;
+	else if (false || 
+		extension == ".mp4" ||
+		extension == ".mkv" ||
+		extension == ".avi" ||
+		extension == ".mpg" ||
+		extension == ".mpeg" ||
+		false)
+		return FileType::Image;
+
+
+	return FileType::Other;
+}
+
 
 
 

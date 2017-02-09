@@ -22,12 +22,22 @@ class BrowsePanel : public Panel
 {
 	TienEdit* editor;
 public:
+
+	enum class FileType
+	{
+		Other,
+		Image,
+		Model,
+		Video,
+	};
+
 	BrowsePanel(TienEdit* editor);
 	~BrowsePanel();
 
 	virtual void onReposition(Component* parent) override;
 	virtual void rebuild(const std::string & directory);
 
+	FileType fileType(const std::string &file);
 
 };
 
