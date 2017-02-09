@@ -26,3 +26,9 @@ void SelectionChangeAction::undo(TienEdit * editor)
 	editor->updateComponentsPanel();
 	editor->cacheSelection = true;
 }
+
+void SelectionChangeAction::updateNodePointer(vrlib::tien::Node * oldNode, vrlib::tien::Node * newNode)
+{
+	Action::updateNodePointer(oldSelection, oldNode, newNode);
+	Action::updateNodePointer(newSelection, oldNode, newNode);
+}

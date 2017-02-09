@@ -16,3 +16,9 @@ void GroupAction::undo(TienEdit * editor)
 	for (auto a : actions)
 		a->undo(editor);
 }
+
+void GroupAction::updateNodePointer(vrlib::tien::Node * oldNode, vrlib::tien::Node * newNode)
+{
+	for (auto a : actions)
+		a->updateNodePointer(oldNode, newNode);
+}

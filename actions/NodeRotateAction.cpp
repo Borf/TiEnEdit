@@ -24,3 +24,9 @@ void NodeRotateAction::undo(TienEdit * editor)
 	node->transform->position = originalPosition;
 	editor->cacheSelection = true;
 }
+
+void NodeRotateAction::updateNodePointer(vrlib::tien::Node * oldNode, vrlib::tien::Node * newNode)
+{
+	if (node == oldNode)
+		node = newNode;
+}

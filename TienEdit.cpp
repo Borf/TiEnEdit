@@ -61,6 +61,7 @@
 #include "actions/NodeMoveAction.h"
 #include "actions/NodeScaleAction.h"
 #include "actions/NodeRotateAction.h"
+#include "actions/NodeDeleteAction.h"
 
 
 #include "EditorBuilderGui.h"
@@ -1068,6 +1069,23 @@ void TienEdit::keyChar(char character)
 	}
 }
 
+void TienEdit::updateNodePointer(vrlib::tien::Node * oldNode, vrlib::tien::Node * newNode)
+{
+	tien.scene.updateNodePointer(oldNode, newNode);
+	for (auto a : actions)
+		a->updateNodePointer(oldNode, newNode);
+}
+
+bool TienEdit::checkNodePointer(vrlib::tien::Node * oldNode)
+{
+	bool ret = false;
+	tien.scene.fortree([&ret](const vrlib::tien::Node* n)
+	{
+		
+	});
+	return ret;
+}
+
 
 void TienEdit::mouseUp(MouseButton button)
 {
@@ -1152,7 +1170,7 @@ void TienEdit::mouseUp(MouseButton button)
 				glm::vec3 diff = originalPosition - getSelectionCenter();
 				std::vector<Action*> group;
 				for (auto n : selectedNodes)
-					group.push_back(new NodeMoveAction(n, n->transform->position + diff, n->transform->position));
+					group.push_back(new NodeMoveAction(n, n->transform->getGlobalPosition() + diff, n->transform->getGlobalPosition()));
 				actions.push_back(new GroupAction(group));
 				activeTool = EditTool::NONE;
 				cacheSelection = true;
@@ -1470,13 +1488,8 @@ void TienEdit::load()
 void TienEdit::deleteSelection()
 {
 	vrlib::logger << "Delete" << vrlib::Log::newline;
-	for (auto c : selectedNodes)
-		delete c;
-	selectedNodes.clear();
-	objectTree->selectedItems.clear();
-	objectTree->update();
-	updateComponentsPanel();
-	cacheSelection = true;
+
+	perform(new NodeDeleteAction(selectedNodes));
 }
 
 

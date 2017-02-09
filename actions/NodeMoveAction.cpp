@@ -13,12 +13,18 @@ NodeMoveAction::NodeMoveAction(vrlib::tien::Node* node, const glm::vec3 &origina
 
 void NodeMoveAction::perform(TienEdit * editor)
 {
-	node->transform->position = newPosition;
+	node->transform->setGlobalPosition(newPosition);
 	editor->cacheSelection = true;
 }
 
 void NodeMoveAction::undo(TienEdit * editor)
 {
-	node->transform->position = originalPosition;
+	node->transform->setGlobalPosition(originalPosition);
 	editor->cacheSelection = true;
+}
+
+void NodeMoveAction::updateNodePointer(vrlib::tien::Node * oldNode, vrlib::tien::Node * newNode)
+{
+	if (node == oldNode)
+		node = newNode;
 }

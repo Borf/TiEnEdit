@@ -129,6 +129,9 @@ public:
 	virtual void keyUp(int button) override;
 	virtual void keyChar(char character) override;
 
+	void updateNodePointer(vrlib::tien::Node* oldNode, vrlib::tien::Node* newNode);
+	bool checkNodePointer(vrlib::tien::Node* oldNode);
+
 
 	//void showBrowsePanel();
 	//void buildBrowsePanel(const std::string &directory);

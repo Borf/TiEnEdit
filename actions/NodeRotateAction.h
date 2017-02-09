@@ -25,4 +25,7 @@ public:
 
 	virtual void perform(TienEdit * editor) override;
 	virtual void undo(TienEdit * editor) override;
+
+	// Inherited via Action
+	virtual void updateNodePointer(vrlib::tien::Node * oldNode, vrlib::tien::Node * newNode) override;
 };
