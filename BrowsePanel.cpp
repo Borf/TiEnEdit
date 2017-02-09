@@ -17,7 +17,7 @@
 BrowsePanel::BrowsePanel(TienEdit* editor)
 {
 	this->editor = editor;
-	rebuild("./data/models/testsphere/");
+	rebuild("./data/");
 }
 
 

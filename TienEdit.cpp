@@ -922,12 +922,16 @@ void TienEdit::keyUp(int button)
 	{
 		if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool != EditTool::TRANSLATE && activeTool != EditTool::TRANSLATEWITHOUTCHILDREN && !selectedNodes.empty())
 		{
+			if (activeTool != EditTool::NONE)
+				finishCurrentTransformAction();
 			activeTool = EditTool::TRANSLATE;
 			originalPosition = getSelectionCenter();
 			axis = Axis::XYZ;
 		}
 		else if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool == EditTool::TRANSLATE)
 		{
+			if (activeTool != EditTool::NONE && activeTool != EditTool::TRANSLATE)
+				finishCurrentTransformAction();
 			activeTool = EditTool::TRANSLATEWITHOUTCHILDREN;
 			glm::vec3 diff = originalPosition - getSelectionCenter();
 			for (auto n : selectedNodes)
@@ -942,6 +946,8 @@ void TienEdit::keyUp(int button)
 		}
 		if (buttonLookup[button] == KeyboardButton::KEY_R && activeTool != EditTool::ROTATE && activeTool != EditTool::ROTATELOCAL && !selectedNodes.empty())
 		{
+			if (activeTool != EditTool::NONE)
+				finishCurrentTransformAction();
 			activeTool = EditTool::ROTATE;
 			originalPosition = getSelectionCenter();
 			axis = Axis::Y;
@@ -952,11 +958,15 @@ void TienEdit::keyUp(int button)
 		}
 		else if (buttonLookup[button] == KeyboardButton::KEY_R && activeTool == EditTool::ROTATE)
 		{
+			if (activeTool != EditTool::NONE && activeTool != EditTool::ROTATE)
+				finishCurrentTransformAction();
 			activeTool = EditTool::ROTATELOCAL;
 			activeEditAction->undo(this);
 		}
 		else if(buttonLookup[button] == KeyboardButton::KEY_R && activeTool == EditTool::ROTATELOCAL)
 		{
+			if (activeTool != EditTool::NONE)
+				finishCurrentTransformAction();
 			activeTool = EditTool::NONE;
 			activeEditAction->undo(this);
 			delete activeEditAction;
@@ -965,6 +975,8 @@ void TienEdit::keyUp(int button)
 
 		if (buttonLookup[button] == KeyboardButton::KEY_S && activeTool != EditTool::SCALE && !selectedNodes.empty())
 		{
+			if (activeTool != EditTool::NONE)
+				finishCurrentTransformAction();
 			activeTool = EditTool::SCALE;
 			originalPosition = getSelectionCenter();
 			axis = Axis::XYZ;
@@ -1157,7 +1169,7 @@ void TienEdit::mouseUp(MouseButton button)
 							newSelection.push_back(closestClickedNode);
 						else
 							newSelection.erase(std::remove(newSelection.begin(), newSelection.end(), closestClickedNode), newSelection.end());
-						perform(new SelectionChangeAction(this, newSelection ));
+						perform(new SelectionChangeAction(this, newSelection));
 					}
 					else
 						perform(new SelectionChangeAction(this, { closestClickedNode }));
@@ -1165,56 +1177,9 @@ void TienEdit::mouseUp(MouseButton button)
 				else
 					perform(new SelectionChangeAction(this, {}));
 			}
-			else if (activeTool == EditTool::TRANSLATE)
-			{
-				glm::vec3 diff = originalPosition - getSelectionCenter();
-				std::vector<Action*> group;
-				for (auto n : selectedNodes)
-					group.push_back(new NodeMoveAction(n, n->transform->getGlobalPosition() + diff, n->transform->getGlobalPosition()));
-				actions.push_back(new GroupAction(group));
-				activeTool = EditTool::NONE;
-				cacheSelection = true;
-				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
-			}
-			else if (activeTool == EditTool::TRANSLATEWITHOUTCHILDREN)
-			{ 
-				glm::vec3 diff = originalPosition - getSelectionCenter();
-				std::vector<Action*> group;
-				for (auto n : selectedNodes)
-					group.push_back(new NodeMoveAction(n, n->transform->position + diff, n->transform->position));
-				actions.push_back(new GroupAction(group));
-				activeTool = EditTool::NONE;
-				cacheSelection = true;
-				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
-			}
-			else if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
-			{
-				activeTool = EditTool::NONE;
-				for (Action* a : activeEditAction->actions)
-				{
-					auto sa = dynamic_cast<NodeRotateAction*>(a);
-					sa->newRotation = sa->node->transform->rotation;
-					sa->newPosition = sa->node->transform->position;
-				}
-				actions.push_back(activeEditAction);
-				activeEditAction = nullptr;
-				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
-				cacheSelection = true;
-			}
-			else if (activeTool == EditTool::SCALE)
-			{
-				activeTool = EditTool::NONE;
-				for (Action* a : activeEditAction->actions)
-				{
-					auto sa = dynamic_cast<NodeScaleAction*>(a);
-					sa->newScale = sa->node->transform->scale;
-					sa->newPosition = sa->node->transform->position;
-				}
-				actions.push_back(activeEditAction);
-				activeEditAction = nullptr;
-				updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
-				cacheSelection = true;
-			}
+			else
+				finishCurrentTransformAction();
+				
 		}
 	}
 	if (button == vrlib::MouseButtonDeviceDriver::Right && glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) < 3 && renderPanel->inComponent(mouseState.mouseDownPos))
@@ -1276,6 +1241,60 @@ glm::vec3 TienEdit::getSelectionCenter() const
 	for (auto n : selectedNodes)
 		center += n->transform->getGlobalPosition() / (float)selectedNodes.size();
 	return center;
+}
+
+void TienEdit::finishCurrentTransformAction()
+{
+	if (activeTool == EditTool::TRANSLATE)
+	{
+		glm::vec3 diff = originalPosition - getSelectionCenter();
+		std::vector<Action*> group;
+		for (auto n : selectedNodes)
+			group.push_back(new NodeMoveAction(n, n->transform->getGlobalPosition() + diff, n->transform->getGlobalPosition()));
+		actions.push_back(new GroupAction(group));
+		activeTool = EditTool::NONE;
+		cacheSelection = true;
+		updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
+	}
+	else if (activeTool == EditTool::TRANSLATEWITHOUTCHILDREN)
+	{
+		glm::vec3 diff = originalPosition - getSelectionCenter();
+		std::vector<Action*> group;
+		for (auto n : selectedNodes)
+			group.push_back(new NodeMoveAction(n, n->transform->position + diff, n->transform->position));
+		actions.push_back(new GroupAction(group));
+		activeTool = EditTool::NONE;
+		cacheSelection = true;
+		updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
+	}
+	else if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
+	{
+		activeTool = EditTool::NONE;
+		for (Action* a : activeEditAction->actions)
+		{
+			auto sa = dynamic_cast<NodeRotateAction*>(a);
+			sa->newRotation = sa->node->transform->rotation;
+			sa->newPosition = sa->node->transform->position;
+		}
+		actions.push_back(activeEditAction);
+		activeEditAction = nullptr;
+		updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
+		cacheSelection = true;
+	}
+	else if (activeTool == EditTool::SCALE)
+	{
+		activeTool = EditTool::NONE;
+		for (Action* a : activeEditAction->actions)
+		{
+			auto sa = dynamic_cast<NodeScaleAction*>(a);
+			sa->newScale = sa->node->transform->scale;
+			sa->newPosition = sa->node->transform->position;
+		}
+		actions.push_back(activeEditAction);
+		activeEditAction = nullptr;
+		updateComponentsPanel(); //TODO: don't make it update all elements, but just the proper textboxes
+		cacheSelection = true;
+	}
 }
 
 void TienEdit::undo()

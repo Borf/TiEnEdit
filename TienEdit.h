@@ -150,6 +150,8 @@ public:
 	void perform(Action* action);
 	glm::vec3 getSelectionCenter() const;
 
+	void finishCurrentTransformAction();
+
 
 	std::function<void(const glm::ivec2 &mousePos)> dragDrawCallback = nullptr;
 
