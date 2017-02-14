@@ -12,12 +12,13 @@
 #include <VrLib/Model.h>
 
 #include <algorithm>
+#include <filesystem> // windows only?
 #include <glm/gtc/matrix_transform.hpp>
 
 BrowsePanel::BrowsePanel(TienEdit* editor)
 {
 	this->editor = editor;
-	rebuild("./data/");
+	rebuild("./data/Models/mier/");
 }
 
 
@@ -32,7 +33,7 @@ inline void BrowsePanel::onReposition(Component * parent)
 	int count = glm::max(1, size.x / 128);
 	int index = 0;
 	if(parent && !components.empty())
-		this->size.y = 150 * glm::max(2u, components.size() / 2 / count);
+		this->size.y = 150 * glm::max(2, (int)glm::ceil((components.size() / 2) / (float)count));
 
 
 	for (size_t i = 0; i < components.size(); i++)
@@ -64,25 +65,20 @@ void BrowsePanel::rebuild(const std::string & directory)
 	components.clear();
 
 	std::vector<std::string> files = vrlib::util::scandir(directory);
-	files.erase(std::remove_if(files.begin(), files.end(), [](const std::string &s)
+	files.erase(std::remove_if(files.begin(), files.end(), [this](const std::string &s)
 	{
+
 		if (s.size() == 0)
 			return true;
 		if (s[0] == '.')
 			return true;
 		if (s[s.length() - 1] == '/')
 			return false;
-		if (s.find("."))
-		{
-			std::string extension = s.substr(s.rfind("."));
-			std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-			if (extension == ".fbx" || extension == ".obj" || extension == ".ma" || extension == ".lwo" || extension == ".stl" || extension == ".dae" ||
-				extension == ".jpg" || extension == ".png" || extension == ".jpeg" || extension == ".mp4")
-				return false;
-			else
-				return true;
-		}
-		return false;
+		FileType type = fileType(s);
+
+		if (type != FileType::Other)
+			return false;
+		return true;
 	}), files.end());
 
 	if (directory != "./")
@@ -106,7 +102,10 @@ void BrowsePanel::rebuild(const std::string & directory)
 		Image* img = nullptr;
 		if (files[i][files[i].size() - 1] == '/')
 		{
-			img = new Image(editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(120, 120), glm::ivec2(333, 0), glm::ivec2(333 + 128, 128));
+			if (std::tr2::sys::exists(directory + files[i] + ".icon.png"))
+				img = new Image(vrlib::Texture::loadCached(directory + files[i] + ".icon.png"), glm::ivec2(0, 0), glm::ivec2(120, 120));
+			else
+				img = new Image(editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(120, 120), glm::ivec2(333, 0), glm::ivec2(333 + 128, 128));
 			img->onClick = [this, directory, i, files]()
 			{
 				std::string newDirectory = directory + files[i];
@@ -117,26 +116,10 @@ void BrowsePanel::rebuild(const std::string & directory)
 		}
 		else
 		{
-			std::string extension = files[i];
-			if (extension.find(".") != std::string::npos)
-				extension = extension.substr(extension.rfind("."));
-
-			if(false ||
-				extension == ".fbx" ||
-				extension == ".obj" ||
-				extension == ".ma" ||
-				extension == ".lwo" ||
-				extension == ".stl" ||
-				extension == ".dae" ||
-				extension == ".skn" ||
-				false)
+			FileType type = fileType(files[i]);
+			if(type == FileType::Model)
 				img = new DraggableImage(editor, editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 128), glm::ivec2(333 + 128, 128 + 128), new DragProperties{DragProperties::Type::Model, directory + files[i] });
-			else if (false ||
-				extension == ".png" ||
-				extension == ".jpg" ||
-				extension == ".jpeg" ||
-				extension == ".mp4" ||
-				false)
+			else if (type == FileType::Image || type == FileType::Video)
 			{
 				auto tex = vrlib::Texture::loadCached(directory + files[i]);
 				img = new DraggableImage(editor, tex, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(0, 0), glm::ivec2(tex->image->width, tex->image->height), new DragProperties{ DragProperties::Type::Texture, directory + files[i] });
@@ -160,7 +143,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 	editor->focussedComponent = nullptr;
 }
 
-FileType BrowsePanel::fileType(const std::string & file)
+BrowsePanel::FileType BrowsePanel::fileType(const std::string & file)
 {
 	std::string extension = file;
 	if (extension.find("."))
@@ -176,6 +159,7 @@ FileType BrowsePanel::fileType(const std::string & file)
 		extension == ".stl" ||
 		extension == ".dae" ||
 		extension == ".skn" ||
+		extension == ".3ds" ||
 		false)
 		return FileType::Model;
 	else if (false ||

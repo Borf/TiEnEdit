@@ -21,7 +21,7 @@ void SelectionChangeAction::perform(TienEdit * editor)
 void SelectionChangeAction::undo(TienEdit * editor)
 {
 	editor->selectedNodes = this->oldSelection;
-	editor->objectTree->selectedItems = newSelection;
+	editor->objectTree->selectedItems = this->oldSelection;
 	editor->objectTree->update();
 	editor->updateComponentsPanel();
 	editor->cacheSelection = true;

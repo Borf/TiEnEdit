@@ -708,7 +708,7 @@ void TienEdit::draw()
 				glMultMatrixf(glm::value_ptr(n->transform->globalTransform));
 				{
 					vrlib::tien::components::ModelRenderer* r = n->getComponent<vrlib::tien::components::ModelRenderer>();
-					if (r)
+					if (r && r->model)
 					{
 						glBegin(GL_LINES);
 						auto triangles = r->model->getIndexedTriangles(); //TODO: cache this !

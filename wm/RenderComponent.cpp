@@ -1,7 +1,8 @@
 #include "RenderComponent.h"
 #include "../TienEdit.h"
 #include "../actions/SelectionChangeAction.h"
-
+#include "../actions/NodeNewAction.h"
+#include "../actions/GroupAction.h"
 #include <VrLib/json.hpp>
 #include <VrLib/Texture.h>
 #include <VrLib/tien/Scene.h>
@@ -40,7 +41,9 @@ void RenderComponent::handleDrag(DragProperties* properties)
 		vrlib::tien::Node* n = new vrlib::tien::Node(name, &editor->tien.scene);
 		n->addComponent(new vrlib::tien::components::Transform(mousePos));
 		n->addComponent(new vrlib::tien::components::ModelRenderer(fileName));
-		editor->perform(new SelectionChangeAction(editor, { n }));
+
+		editor->perform(new GroupAction ({ new NodeNewAction(n),
+										  new SelectionChangeAction(editor, { n }) }));
 	}
 	if (properties->type == DragProperties::Type::Texture)
 	{
@@ -65,6 +68,7 @@ void RenderComponent::handleDrag(DragProperties* properties)
 		mesh->material.texture = vrlib::Texture::loadCached(fileName);
 
 		n->addComponent(new vrlib::tien::components::MeshRenderer(mesh));
-		editor->perform(new SelectionChangeAction(editor, { n }));
+		editor->perform(new GroupAction({ new NodeNewAction(n),
+											new SelectionChangeAction(editor,{ n }) }));
 	}
 }
