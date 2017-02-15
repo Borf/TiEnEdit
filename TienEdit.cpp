@@ -704,6 +704,8 @@ void TienEdit::draw()
 			glNewList(selectionCache, GL_COMPILE);
 			for (auto n : selectedNodes)
 			{
+				if (!n->transform)
+					continue;
 				glPushMatrix();
 				glMultMatrixf(glm::value_ptr(n->transform->globalTransform));
 				{
