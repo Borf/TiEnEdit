@@ -114,6 +114,7 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 				int lastIndex = selectedIndices.back();
 				for (int i = lastIndex + 1; i != index; i+=index > lastIndex?1:-1)
 					selectedIndices.push_back(i);
+				selectedIndices.push_back(index);
 				std::unique(selectedIndices.begin(), selectedIndices.end());
 			}
 
