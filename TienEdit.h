@@ -169,4 +169,7 @@ public:
 	void paste();
 	void deleteSelection();
 	void focusSelectedObject();
+
+
+	void rebakeSelectedLights();
 };

@@ -491,6 +491,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		glm::vec3 diff = pos - getSelectionCenter();
 		for(auto n : selectedNodes)
 			n->transform->setGlobalPosition(n->transform->getGlobalPosition() + diff);
+		rebakeSelectedLights();
 	}
 	if (activeTool == EditTool::TRANSLATEWITHOUTCHILDREN)
 	{
@@ -529,6 +530,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 				nn->transform->position -= diff;
 			});
 		}
+		rebakeSelectedLights();
 	}
 	if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
 	{
@@ -579,6 +581,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 				}
 
 			}
+			rebakeSelectedLights();
 		}
 	}
 
@@ -665,7 +668,10 @@ void TienEdit::draw()
 			{
 				if (n->light->type == vrlib::tien::components::Light::Type::directional)
 				{
-					glColor3f(1, 1, 0);
+					if(std::find(selectedNodes.begin(), selectedNodes.end(), n) == selectedNodes.end())
+						glColor3f(1, 1, 0);
+					else
+						glColor3f(1, 0, 0);
 					glBegin(GL_LINES);
 					for (float f = 0; f < glm::two_pi<float>(); f += glm::pi<float>() / 10)
 					{
@@ -677,7 +683,10 @@ void TienEdit::draw()
 				else if (n->light->type == vrlib::tien::components::Light::Type::spot)
 				{
 					float dist = tan(glm::radians(n->light->spotlightAngle)/2.0f);
-					glColor3f(1, 1, 0);
+					if (std::find(selectedNodes.begin(), selectedNodes.end(), n) == selectedNodes.end())
+						glColor3f(1, 1, 0);
+					else
+						glColor3f(1, 0, 0);
 					glBegin(GL_LINES);
 					for (float f = 0; f < glm::two_pi<float>(); f += glm::pi<float>() / 10)
 					{
@@ -1598,6 +1607,18 @@ void TienEdit::focusSelectedObject()
 
 	glm::mat4 mat = glm::lookAt(cameraPos, lookat, glm::vec3(0, 1, 0));
 	cameraRotTo = glm::quat(mat);
+}
+
+void TienEdit::rebakeSelectedLights()
+{
+	for (auto n : selectedNodes)
+	{
+		n->fortree([this, &n](const vrlib::tien::Node* nn)
+		{
+			if (nn->light && nn->light->baking == vrlib::tien::components::Light::Baking::baked)
+				nn->light->rebake();
+		});
+	}
 }
 
 
