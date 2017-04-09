@@ -54,7 +54,7 @@ void Tree<T>::draw(MenuOverlay * overlay)
 	}
 
 
-	if (dragging)
+	if (dragging && dragIndex >= 0 && dragIndex < (int)flatList.size())
 	{
 		float textlen = overlay->font->textlen(flatList[dragIndex].text);
 		overlay->drawRect(glm::vec2(64, 416), glm::vec2(64 + 32, 416 + 32), dragPos, dragPos + glm::ivec2(textlen+10, LINESIZE)); //selection background

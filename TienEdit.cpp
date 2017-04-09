@@ -135,7 +135,7 @@ std::map<std::string, ComponentPair> componentFactory =
 		[](const json &data, const json &totalJson) { return new vrlib::tien::components::RigidBody(data); }) },
 	{ "BoxCollider", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::BoxCollider(n); },
-		[](const json &data, const json &totalJson) { return vrlib::tien::components::BoxCollider::fromJson(data); }) },
+		[](const json &data, const json &totalJson) { return vrlib::tien::components::BoxCollider::fromJson(data, nullptr); }) },
 	{ "MeshCollider", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::MeshCollider(n, true); },
 		[](const json &data, const json &totalJson) { throw "ugh";  return new vrlib::tien::components::MeshCollider(nullptr, true); }) },
@@ -413,6 +413,7 @@ void TienEdit::init()
 	cameraPos = glm::vec3(0, 1.8f, 8.0f);
 	load();
 	tien.start();
+	tien.update(0.000001f);
 	tien.pause();
 
 }
