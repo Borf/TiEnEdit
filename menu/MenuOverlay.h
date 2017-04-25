@@ -75,6 +75,7 @@ public:
 	bool click(bool button);
 	bool wasClicked();
 	void hover();
+	bool mouseUp();
 
 
 

@@ -71,6 +71,7 @@ void Tree<T>::draw(MenuOverlay * overlay)
 template<class T>
 bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
 {
+	dragging = false;
 	int index = (int)((clickPos.y - absPosition.y - 5 + scrollOffset) / LINESIZE);
 	if (index < 0 || index >= (int)flatList.size())
 	{
@@ -109,9 +110,11 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 			if(ctrl || !shift)
 				selectedIndices.push_back(index);
 
-			if (shift)
+			if (shift && !selectedIndices.empty())
 			{
 				int lastIndex = selectedIndices.back();
+				if (index < lastIndex)
+					lastIndex--;
 				for (int i = lastIndex + 1; i != index; i+=index > lastIndex?1:-1)
 					selectedIndices.push_back(i);
 				selectedIndices.push_back(index);

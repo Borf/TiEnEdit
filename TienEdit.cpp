@@ -320,6 +320,7 @@ void TienEdit::init()
 		{
 			Menu* menu = new Menu(json::parse(std::ifstream("data/TiEnEdit/nodemenu.json")));
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
+			menu->setAction("duplicate", std::bind(&TienEdit::duplicate, this));
 			menu->setAction("delete", std::bind(&TienEdit::deleteSelection, this));
 			menu->setAction("focus with camera", std::bind(&TienEdit::focusSelectedObject, this));
 			menu->setAction("add debug", [this]() { for (auto i : objectTree->selectedItems) { i->addDebugChildSphere(); } });
@@ -994,8 +995,11 @@ void TienEdit::keyUp(int button)
 			if (activeTool != EditTool::NONE)
 				finishCurrentTransformAction();
 			activeTool = EditTool::NONE;
-			activeEditAction->undo(this);
-			delete activeEditAction;
+			if (activeEditAction)
+			{
+				activeEditAction->undo(this);
+				delete activeEditAction;
+			}
 			activeEditAction = nullptr;
 		}
 
@@ -1165,6 +1169,8 @@ void TienEdit::mouseUp(MouseButton button)
 
 
 		if (mainPanel->click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left, mouseState.pos, mouseState.clickCount))
+			return;
+		if (mainPanel->mouseUp(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left, mouseState.pos))
 			return;
 	}
 
@@ -1441,6 +1447,9 @@ void TienEdit::newScene()
 			n->addComponent(new vrlib::tien::components::DynamicSkyBox());
 			tien.scene.cameraNode = n;
 		}
+		selectedNodes.clear();
+		objectTree->selectedItems = selectedNodes;
+		objectTree->update();
 	}
 }
 
@@ -1638,6 +1647,43 @@ void TienEdit::focusSelectedObject()
 
 	glm::mat4 mat = glm::lookAt(cameraPos, lookat, glm::vec3(0, 1, 0));
 	cameraRotTo = glm::quat(mat);
+}
+
+void TienEdit::duplicate()
+{
+	json clipboard;
+	clipboard["nodes"] = json::array();
+	for (auto c : selectedNodes)
+	{
+		// TODO: only copy parents, not children of selected parents
+		clipboard["nodes"].push_back(c->asJson(clipboard["meshes"]));
+	}
+
+	if (clipboard.is_null())
+	{
+		vrlib::logger << "Invalid json on clipboard" << vrlib::Log::newline;
+		return;
+	}
+
+	selectedNodes.clear();
+	for (const json &n : clipboard["nodes"])
+	{
+		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
+		newNode->fromJson(n, clipboard);
+
+		newNode->fortree([](vrlib::tien::Node* n) {
+			n->guid = vrlib::util::getGuid();
+		});
+
+		selectedNodes.push_back(newNode);
+	}
+
+	objectTree->selectedItems = selectedNodes;
+	objectTree->update();
+
+	activeTool = EditTool::TRANSLATE;
+	originalPosition = getSelectionCenter();
+	axis = Axis::XYZ;
 }
 
 void TienEdit::rebakeSelectedLights()

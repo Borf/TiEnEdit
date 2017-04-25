@@ -170,6 +170,7 @@ public:
 	void paste();
 	void deleteSelection();
 	void focusSelectedObject();
+	void duplicate();
 
 
 	void rebakeSelectedLights();

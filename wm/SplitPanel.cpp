@@ -60,3 +60,14 @@ bool SplitPanel::click(bool leftButton, const glm::ivec2 & clickPos, int clickCo
 	return false;
 }
 
+bool SplitPanel::mouseUp(bool leftButton, const glm::ivec2 & clickPos)
+{
+	if (!inComponent(clickPos))
+		return false;
+
+	for (auto p : components)
+		if (p->inComponent(clickPos))
+			return p->mouseUp(leftButton, clickPos);
+	return false;
+}
+
