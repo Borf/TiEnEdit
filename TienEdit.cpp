@@ -226,7 +226,7 @@ void TienEdit::init()
 	//initialize menus
 	menuOverlay.init();
 	menuOverlay.loadMenu("data/TiEnEdit/menu.json");
-	menuOverlay.rootMenu->setAction("file/new", [this]() {tien.scene.reset(); {		vrlib::tien::Node* n = new vrlib::tien::Node("Camera", &tien.scene);		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0)));		n->addComponent(new vrlib::tien::components::Camera());		n->addComponent(new vrlib::tien::components::DynamicSkyBox());		tien.scene.cameraNode = n;	} });
+	menuOverlay.rootMenu->setAction("file/new", std::bind(&TienEdit::newScene, this));
 	menuOverlay.rootMenu->setAction("file/open", std::bind(&TienEdit::load, this));
 	menuOverlay.rootMenu->setAction("file/save", std::bind(&TienEdit::save, this));
 
@@ -237,6 +237,20 @@ void TienEdit::init()
 	menuOverlay.rootMenu->setAction("object/copy", std::bind(&TienEdit::copy, this));
 	menuOverlay.rootMenu->setAction("object/paste", std::bind(&TienEdit::paste, this));
 	menuOverlay.rootMenu->setAction("object/delete", std::bind(&TienEdit::deleteSelection, this));
+
+
+	menuOverlay.addToolbarButton(0, "New", std::bind(&TienEdit::newScene, this));
+	menuOverlay.addToolbarButton(1, "Open", std::bind(&TienEdit::load, this));
+	menuOverlay.addToolbarButton(2, "Save", std::bind(&TienEdit::save, this));
+	menuOverlay.addToolbarSeperator();
+	menuOverlay.addToolbarButton(3, "Undo", std::bind(&TienEdit::undo, this));
+	menuOverlay.addToolbarButton(4, "Redo", std::bind(&TienEdit::redo, this));
+	menuOverlay.addToolbarSeperator();
+	menuOverlay.addToolbarButton(5, "Grab", []() {});
+	menuOverlay.addToolbarButton(6, "Rotate", []() {});
+	menuOverlay.addToolbarButton(7, "Scale", []() {});
+
+
 
 	//build up UI
 	mainPanel = new SplitPanel(SplitPanel::Alignment::HORIZONTAL);
@@ -1129,7 +1143,7 @@ void TienEdit::mouseUp(MouseButton button)
 
 	if(button != vrlib::MouseButtonDeviceDriver::MouseButton::Middle && glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) < 3)
 	{
-		if (menuOverlay.click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left))
+		if (menuOverlay.wasClicked())
 			return;
 
 		Component* clickedComponent = mainPanel->getComponentAt(mouseState.pos);
@@ -1414,6 +1428,22 @@ void TienEdit::updateComponentsPanel()
 }
 
 
+void TienEdit::newScene()
+{
+	int ret = MessageBox(nullptr, "Are you sure you want to make a new scene?", "Are you sure?", MB_YESNO | MB_ICONWARNING | MB_SYSTEMMODAL);
+	if (ret == IDYES)
+	{
+		tien.scene.reset();
+		{
+			vrlib::tien::Node* n = new vrlib::tien::Node("Camera", &tien.scene);
+			n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0)));
+			n->addComponent(new vrlib::tien::components::Camera());
+			n->addComponent(new vrlib::tien::components::DynamicSkyBox());
+			tien.scene.cameraNode = n;
+		}
+	}
+}
+
 
 void TienEdit::save()
 {
@@ -1475,11 +1505,11 @@ void TienEdit::load()
 
 	char buf[256];
 	ZeroMemory(buf, 256);
-	strcpy(buf, fileName.c_str());
+	//strcpy(buf, fileName.c_str());
 	ofn.lpstrFile = buf;
 	ofn.nMaxFile = 256;
 	ofn.lpstrFilter = filter;
-	ofn.nFilterIndex = 2;
+	ofn.nFilterIndex = 0;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = target.c_str();

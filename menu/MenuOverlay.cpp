@@ -105,13 +105,14 @@ void MenuOverlay::drawPopups()
 
 bool MenuOverlay::click(bool button)
 {
+	//menubar
 	if (mousePos.y < menuBarHeight)
 	{
 		if (menuOpen >= 0)
 		{
 			menuOpen = -1;
 			popupMenus.clear();
-			return true;
+			return lastClick = true;
 		}
 		else
 		{
@@ -130,7 +131,22 @@ bool MenuOverlay::click(bool button)
 				pos += width;
 			}
 		}
-		return true;
+		return lastClick = true;
+	}
+	//toolbar
+	else if (mousePos.y < menuBarHeight + toolBarHeight)
+	{
+		for (auto &button : toolbarButtons)
+		{
+			if (button.index >= 0)
+			{
+				if (mousePos.x > button.x && mousePos.x < button.x + 32)
+				{
+					button.callback();
+					return lastClick = true;
+				}
+			}
+		}
 	}
 
 	for (auto m : popupMenus)
@@ -161,7 +177,7 @@ bool MenuOverlay::click(bool button)
 			}
 			menuOpen = -1;
 			popupMenus.clear();
-			return true;
+			return lastClick = true;
 		}
 
 	}
@@ -169,9 +185,25 @@ bool MenuOverlay::click(bool button)
 	popupMenus.clear();
 
 
-	return false;
+	return lastClick = false;
 }
 
+
+bool MenuOverlay::wasClicked()
+{
+	if (mousePos.y < menuBarHeight)
+		return true;
+
+	for (auto m : popupMenus)
+	{
+		float width = 0;
+		for (auto mm : m.second->menuItems)
+			width = glm::max(width, font->textlen(mm->name) + 40);
+		if (isInRectangle(mousePos, m.first, m.first + glm::vec2(width, m.second->menuItems.size() * 12 + 10)))
+			return true;
+	}
+	return lastClick;
+}
 
 void MenuOverlay::hover()
 {
@@ -196,6 +228,22 @@ void MenuOverlay::hover()
 	}
 }
 
+void MenuOverlay::addToolbarButton(int icon, const std::string & name, std::function<void()> callback)
+{
+	ToolbarButton button;
+	button.index = icon;
+	button.tooltip = name;
+	button.callback = callback;
+	if (toolbarButtons.empty())
+		button.x = 5;
+	else
+		button.x = toolbarButtons[toolbarButtons.size() - 1].x + 32;
+	toolbarButtons.push_back(button);
+}
+
+
+
+
 void MenuOverlay::drawRootMenu()
 {
 	shader->setUniform(Uniforms::colorMult, glm::vec4(1, 1, 1, 1));
@@ -204,6 +252,7 @@ void MenuOverlay::drawRootMenu()
 	drawRect(glm::vec2(64, 416), glm::vec2(64 + 32, 416 + 32), glm::vec2(0, menuBarHeight), glm::vec2(windowSize.x, menuBarHeight+toolBarHeight)); //toolbar
 	flushVerts();
 
+	//draw the top menu bar
 	float pos = 5;
 	for (size_t i = 0; i < rootMenu->menuItems.size(); i++)
 	{
@@ -218,17 +267,18 @@ void MenuOverlay::drawRootMenu()
 	}
 
 
-
-	pos = 5;
-	for (int i = 0; i < 10; i++)
+	//draw the toolbar buttons
+	for (const auto &button : toolbarButtons)
 	{
-		drawRect(glm::vec2(0, 416), glm::vec2(32, 416 + 32), glm::vec2(pos, menuBarHeight + 3), glm::vec2(pos + 32, menuBarHeight + 32 + 3));
-		drawRect(glm::vec2(512-33, 1+33*i), glm::vec2(512-1, 1+33*i+32), glm::vec2(pos, menuBarHeight + 3));
+		int i = button.index;
+		if (i < 0)
+			continue;
 
-		pos += 34;
-		if (i == 2 || i == 4 || i == 7)
-			pos += 16;
-
+		if(isInRectangle(mousePos, glm::vec2(button.x, menuBarHeight + 3), glm::vec2(button.x + 32, menuBarHeight + 32 + 3)))
+			drawRect(glm::vec2(96, 416), glm::vec2(128, 416 + 32), glm::vec2(button.x, menuBarHeight + 3), glm::vec2(button.x + 32, menuBarHeight + 32 + 3));
+		else
+			drawRect(glm::vec2(0, 416), glm::vec2(32, 416 + 32), glm::vec2(button.x, menuBarHeight + 3), glm::vec2(button.x + 32, menuBarHeight + 32 + 3));
+		drawRect(glm::vec2(512-33, 1+33*i), glm::vec2(512-1, 1+33*i+32), glm::vec2(button.x, menuBarHeight + 3));
 	}
 	flushVerts();
 }

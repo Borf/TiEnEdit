@@ -15,25 +15,38 @@ namespace vrlib
 
 class MenuOverlay
 {
+	//toolbar stuff
+	class ToolbarButton
+	{
+	public:
+		int x;
+		int index;
+		std::string tooltip;
+		std::function<void()> callback;
+	};
+	std::vector<ToolbarButton> toolbarButtons;
+
 public:
 	MenuOverlay(const MenuOverlay&) = delete;				//do not copy
 	MenuOverlay& operator =(const MenuOverlay&) = delete;	//do not copy
 	MenuOverlay() {};
 	
 	
+	//some settings
 	const int menuBarHeight = 25;
 	const int menuBarPadding = 40;
 	const int menuItemHeight = 15;
-
-
 	const int toolBarHeight = 36;
 
-	
+	// properties used for menu/overlay
 	int menuOpen;
 	std::vector<std::pair<glm::vec2, Menu*> > popupMenus;
 	glm::ivec2 windowSize;
 	glm::vec2 mousePos;
+	bool lastClick;
+	Menu* rootMenu;
 
+	// graphics
 	enum class Uniforms
 	{
 		projectionMatrix,
@@ -45,25 +58,28 @@ public:
 	vrlib::Texture* skinTexture;
 	vrlib::TrueTypeFont* font;
 	std::vector<vrlib::gl::VertexP2T2> verts;
-	Menu* rootMenu;
 
 	//main interaction, use these for windows and menus
 	void loadMenu(const std::string &menuFile);
 
+	void addToolbarButton(int icon, const std::string &name, std::function<void()> callback);
+	void addToolbarSeperator() { addToolbarButton(-1, "", []() {}); }
 
+	//automatically called in tienedit
 	inline void setWindowSize(const glm::ivec2 &size) { this->windowSize = size; }
-
 	void init();
 	void drawInit();
 	void drawPopups();
 	void drawRootMenu();
 
-
 	bool click(bool button);
+	bool wasClicked();
 	void hover();
 
 
 
+
+	//drawing helper functions
 	void flushVerts();
 	void drawText(const std::string &text, const glm::vec2 position, const glm::vec4 color = glm::vec4(1, 1, 1, 1), bool shadow = true) const;
 	void drawRect(const glm::vec2 &srcTl, const glm::vec2 &srcBr, const glm::vec2 &dstTl, const glm::vec2 &dstBr);

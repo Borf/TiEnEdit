@@ -157,6 +157,7 @@ public:
 
 	
 	//file
+	void newScene();
 	void save();
 	void load();
 	//edit

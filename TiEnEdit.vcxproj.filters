@@ -260,5 +260,6 @@
     <None Include="data\TiEnEdit\stubs.json">
       <Filter>data</Filter>
     </None>
+    <None Include="README.md" />
   </ItemGroup>
 </Project>
