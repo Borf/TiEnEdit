@@ -604,6 +604,8 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 	if (activeTool == EditTool::SCALE)
 	{
 		editorScale += mouseState.pos.x - lastMouseState.pos.x;
+		if (editorScale < -99)
+			editorScale = -99;
 		glm::vec3 scale((axis & Axis::X) != 0 ? -1+glm::pow(2, 1 + editorScale / 100.0f) : 1,
 						(axis & Axis::Y) != 0 ? -1 + glm::pow(2, 1 + editorScale / 100.0f) : 1,
 						(axis & Axis::Z) != 0 ? -1 + glm::pow(2, 1 + editorScale / 100.0f) : 1);
