@@ -43,6 +43,8 @@
 #include <VrLib/tien/components/MeshCollider.h>
 #include <VrLib/tien/components/SphereCollider.h>
 #include <VrLib/tien/components/TerrainCollider.h>
+#include <VrLib/tien/components/postprocess/Bloom.h>
+#include <VrLib/tien/components/postprocess/Gamma.h>
 
 #include "actions/Action.h"
 #include "menu/MenuOverlay.h"
@@ -148,6 +150,12 @@ std::map<std::string, ComponentPair> componentFactory =
 	{ "rotator", ComponentPair(
 		[](vrlib::tien::Node* n) { return new Rotator(); },
 		[](const json &data, const json &totalJson) { return new vrlib::tien::components::ModelRenderer(data); }) },
+	{ "PostProcessing Bloom", ComponentPair(
+		[](vrlib::tien::Node* n) { return new vrlib::tien::components::postprocessors::Bloom(); },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::postprocessors::Bloom(); }) },
+	{ "PostProcessing Gamma", ComponentPair(
+		[](vrlib::tien::Node* n) { return new vrlib::tien::components::postprocessors::Gamma(); },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::postprocessors::Gamma(); }) },
 
 
 };
@@ -435,14 +443,16 @@ void TienEdit::init()
 
 void TienEdit::preFrame(double frameTime, double totalTime)
 {
+	//first reposition the overlay menu
 	menuOverlay.setWindowSize(kernel->getWindowSize());
 	menuOverlay.hover();
-
+	
+	//handle the layout for the main panel
 	mainPanel->size = glm::ivec2(kernel->getWindowWidth(), kernel->getWindowHeight() - 25 - 36);
 	mainPanel->sizes[1] = mainPanel->size.x - 600;
 	mainPanel->onReposition(nullptr); //TODO: don't do this every frame ._.;
 
-
+	//camera movement
 	if (mouseState.middle)
 	{
 		glm::vec3 cameraMovement(0, 0, 0);
@@ -470,11 +480,12 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		cameraRot = glm::quat(glm::vec3(.01f * (mouseState.pos.y - lastMouseState.pos.y), 0, 0)) * cameraRot;
 		cameraRotTo = cameraRot;
 	}
+	//slowly interpolate camera movement
 	cameraRot = glm::slerp(cameraRot, cameraRotTo, (float)frameTime / 100.0f);
 
 
 
-
+	//handle tools....
 	if (activeTool == EditTool::TRANSLATE)
 	{
 		glm::vec3 pos;
@@ -618,8 +629,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 	}
 
 
-
-
+	//update tien, though it is paused
 	//if (mainPanel->components[1] == renderPanel)
 		tien.update((float)(frameTime / 1000.0f));
 
@@ -1447,7 +1457,6 @@ void TienEdit::newScene()
 			n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0)));
 			n->addComponent(new vrlib::tien::components::Camera());
 			n->addComponent(new vrlib::tien::components::DynamicSkyBox());
-			tien.scene.cameraNode = n;
 		}
 		selectedNodes.clear();
 		objectTree->selectedItems = selectedNodes;
@@ -1546,6 +1555,8 @@ void TienEdit::load()
 				return componentFactory[type].second(json, saveFile);
 			return nullptr;
 		});
+
+		//tien.scene.cameraNode = (vrlib::tien::Node*)tien.scene.findNodeWithComponent<vrlib::tien::components::Camera>(); //TODO: just for testing post processing filters
 		selectedNodes.clear();
 		objectTree->selectedItems = selectedNodes;
 		objectTree->update();

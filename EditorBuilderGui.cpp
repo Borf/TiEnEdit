@@ -352,6 +352,9 @@ GuiEditor::FloatComponent * GuiEditor::addFloatBox(float value, float min, float
 	class FloatField : public TextField, public FloatComponent
 	{
 	public:
+		float min;
+		float max;
+
 		FloatField(float value, const glm::ivec2 &pos) : TextField("", pos)
 		{
 			setValue(value);
@@ -388,6 +391,11 @@ GuiEditor::FloatComponent * GuiEditor::addFloatBox(float value, float min, float
 		float getValue() const override { return (float)atof(value.c_str()); }
 		void setValue(float v) override 
 		{ 
+			if (v < min)
+				v = min;
+			if (v > max)
+				v = max;
+
 			std::ostringstream ss;
 			ss << v;
 			value = ss.str();
@@ -395,6 +403,8 @@ GuiEditor::FloatComponent * GuiEditor::addFloatBox(float value, float min, float
 	};
 
 	FloatField* field = new FloatField(value, glm::ivec2(100, line));
+	field->min = min;
+	field->max = max;
 	field->size.x = 200;
 	field->size.y = 20;
 	field->onChange = [onChange, field]()
