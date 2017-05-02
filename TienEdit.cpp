@@ -45,6 +45,7 @@
 #include <VrLib/tien/components/TerrainCollider.h>
 #include <VrLib/tien/components/postprocess/Bloom.h>
 #include <VrLib/tien/components/postprocess/Gamma.h>
+#include <VrLib/tien/components/postprocess/DoF.h>
 
 #include "actions/Action.h"
 #include "menu/MenuOverlay.h"
@@ -157,6 +158,9 @@ std::map<std::string, ComponentPair> componentFactory =
 	{ "PostProcessing Gamma", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::postprocessors::Gamma(); },
 		[](const json &data, const json &totalJson) { return new vrlib::tien::components::postprocessors::Gamma(); }) },
+	{ "PostProcessing Depth of Field", ComponentPair(
+		[](vrlib::tien::Node* n) { return new vrlib::tien::components::postprocessors::DoF(); },
+		[](const json &data, const json &totalJson) { return new vrlib::tien::components::postprocessors::DoF(); }) },
 
 
 };
