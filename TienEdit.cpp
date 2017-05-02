@@ -49,6 +49,7 @@
 #include "actions/Action.h"
 #include "menu/MenuOverlay.h"
 #include "menu/Menu.h"
+#include "menu/ToggleMenuItem.h"
 #include "wm/SplitPanel.h"
 #include "wm/RenderComponent.h"
 #include "wm/Tree.h"
@@ -258,6 +259,8 @@ void TienEdit::init()
 	menuOverlay.addToolbarButton(6, "Rotate", []() {});
 	menuOverlay.addToolbarButton(7, "Scale", []() {});
 
+	debugPhysics = dynamic_cast<ToggleMenuItem*>(menuOverlay.rootMenu->getItem("View/Physics meshes"));
+	debugCamera = dynamic_cast<ToggleMenuItem*>(menuOverlay.rootMenu->getItem("View/Preview selected camera"));
 
 
 	//build up UI
@@ -658,6 +661,13 @@ void TienEdit::draw()
 		glm::mat4 projectionMatrix = glm::perspective(70.0f, renderPanel->size.x / (float)renderPanel->size.y, 0.01f, 500.0f);
 		glm::mat4 modelViewMatrix = cameraMat;
 		glViewport(renderPanel->absPosition.x, kernel->getWindowHeight() - renderPanel->absPosition.y - renderPanel->size.y, renderPanel->size.x, renderPanel->size.y);
+
+		tien.scene.cameraNode = nullptr;
+		if (debugCamera->getValue())
+			for (auto n : selectedNodes)
+				if (n->getComponent<vrlib::tien::components::Camera>())
+					tien.scene.cameraNode = n;
+
 		tien.render(projectionMatrix, modelViewMatrix);
 
 		glMatrixMode(GL_PROJECTION);
@@ -821,6 +831,32 @@ void TienEdit::draw()
 		}
 	}
 
+
+	if (debugPhysics->getValue())
+	{
+		glColor4f(1, 0, 0, 1);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		tien.scene.fortree([](const vrlib::tien::Node* n)
+		{
+			auto colliders = n->getComponents<vrlib::tien::components::Collider>();
+			for (auto collider : colliders)
+				collider->drawDebug();
+		});
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_BLEND);
+		glEnable(GL_CULL_FACE);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glColor4f(1, 0, 0, 0.1f);
+		tien.scene.fortree([](const vrlib::tien::Node* n)
+		{
+			auto colliders = n->getComponents<vrlib::tien::components::Collider>();
+			for (auto collider : colliders)
+				collider->drawDebug();
+		});
+		glDisable(GL_CULL_FACE);
+	}
 
 
 	glViewport(0, 0, menuOverlay.windowSize.x, menuOverlay.windowSize.y);

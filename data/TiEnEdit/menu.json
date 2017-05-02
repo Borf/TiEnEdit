@@ -55,12 +55,33 @@
 		"subitems" : 
 		[
 			{
+				"name" : "Preview Camera",
+				"type" : "item"
+			},
+			{
 				"name" : "clear",
 				"type" : "item"
 			},
 			{
 				"name" : "properties",
 				"type" : "item"
+			}
+		]
+	},
+	{
+		"name" : "View",
+		"type" : "menu",
+		"subitems" :
+		[
+			{
+				"name" : "Physics meshes",
+				"type" : "toggle",
+				"initial" : false
+			},
+			{
+				"name" : "Preview selected camera",
+				"type" : "toggle",
+				"initial" : false
 			}
 		]
 	},

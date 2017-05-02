@@ -405,6 +405,7 @@ GuiEditor::FloatComponent * GuiEditor::addFloatBox(float value, float min, float
 	FloatField* field = new FloatField(value, glm::ivec2(100, line));
 	field->min = min;
 	field->max = max;
+	field->setValue(value);
 	field->size.x = 200;
 	field->size.y = 20;
 	field->onChange = [onChange, field]()

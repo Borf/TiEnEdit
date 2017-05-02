@@ -17,6 +17,8 @@ class GuiEditor;
 class GroupAction;
 class BrowsePanel;
 
+class ToggleMenuItem;
+
 namespace vrlib
 {
 	class Kernel;
@@ -151,6 +153,9 @@ public:
 	glm::vec3 getSelectionCenter() const;
 
 	void finishCurrentTransformAction();
+
+	ToggleMenuItem* debugPhysics;
+	ToggleMenuItem* debugCamera;
 
 
 	std::function<void(const glm::ivec2 &mousePos)> dragDrawCallback = nullptr;
