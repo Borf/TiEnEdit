@@ -6,5 +6,42 @@
 		"properties" :
 		[
 		]
+	},
+	{
+		"name" : "Example Stub",
+		"type" : "example",
+		"categories" : [ "nothing"],
+		"properties" : 
+		[
+			{
+				"name" : "Text",
+				"type" : "string",
+				"default" : ""
+			},
+			{
+				"name" : "Float",
+				"type" : "float",
+				"default" : 0,
+				"min" : -100,
+				"max" : 100
+			},
+			{
+				"name" : "Bool",
+				"type" : "bool",
+				"default" : false
+			},
+			{
+				"name" : "Color",
+				"type" : "color",
+				"default" : [ 1, 1, 1, 1]
+			},
+			{
+				"name" : "Enum",
+				"type" : "enum",
+				"default" : "value2",
+				"values" : [ "value1", "value2", "value3" ]
+			}
+
+		]
 	}
 ]
