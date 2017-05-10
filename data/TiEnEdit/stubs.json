@@ -7,41 +7,71 @@
 		[
 		]
 	},
-	{
-		"name" : "Example Stub",
-		"type" : "example",
-		"categories" : [ "nothing"],
-		"properties" : 
-		[
-			{
-				"name" : "Text",
-				"type" : "string",
-				"default" : ""
-			},
-			{
-				"name" : "Float",
-				"type" : "float",
-				"default" : 0,
-				"min" : -100,
-				"max" : 100
-			},
-			{
-				"name" : "Bool",
-				"type" : "bool",
-				"default" : false
-			},
-			{
-				"name" : "Color",
-				"type" : "color",
-				"default" : [ 1, 1, 1, 1]
-			},
-			{
-				"name" : "Enum",
-				"type" : "enum",
-				"default" : "value2",
-				"values" : [ "value1", "value2", "value3" ]
-			}
+  {
+    "name": "Example Stub",
+    "type": "example",
+    "categories": [ "nothing" ],
+    "properties": [
+      {
+        "name": "Text",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "Float",
+        "type": "float",
+        "default": 0,
+        "min": -100,
+        "max": 100
+      },
+      {
+        "name": "Bool",
+        "type": "bool",
+        "default": false
+      },
+      {
+        "name": "Color",
+        "type": "color",
+        "default": [ 1, 1, 1, 1 ]
+      },
+      {
+        "name": "Enum",
+        "type": "enum",
+        "default": "value2",
+        "values": [ "value1", "value2", "value3" ]
+      }
 
-		]
-	}
+    ]
+  },
+  {
+    "name": "Multiple models",
+    "type": "multplemodels",
+    "categories": [ "chemicalstorage" ],
+    "properties": [
+      {
+        "name": "Model_1",
+        "type": "model",
+        "default": ""
+      },
+      {
+        "name": "Error_type_1",
+        "type": "enum",
+        "default": "correct",
+        "values": [ "correct", "not_correct" ]
+      },
+      {
+        "name": "Model_2",
+        "type": "model",
+        "default": ""
+      },
+      {
+        "name": "Error_type_2",
+        "type": "enum",
+        "default": "correct",
+        "values": [ "correct", "not_correct" ]
+      }
+
+    ]
+
+  }
 ]

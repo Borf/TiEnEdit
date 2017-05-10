@@ -113,6 +113,8 @@ public:
 			builder->beginGroup(property["name"]);
 			if (property["type"] == "string")
 				builder->addTextBox(values[property["name"].get<std::string>()].get<std::string>(), [this, &property](const std::string &newValue) { values[property["name"].get<std::string>()] = newValue; });
+			if (property["type"] == "model")
+				builder->addModelBox(values[property["name"].get<std::string>()].get<std::string>(), [this, &property](const std::string &newValue) { values[property["name"].get<std::string>()] = newValue; });
 			else if (property["type"] == "float")
 				builder->addFloatBox(values[property["name"].get<std::string>()].get<float>(), 
 					property["min"].get<float>(), 
