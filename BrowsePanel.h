@@ -22,13 +22,14 @@ class BrowsePanel : public Panel
 {
 	TienEdit* editor;
 public:
-
+	std::string directory;
 	enum class FileType
 	{
 		Other,
 		Image,
 		Model,
 		Video,
+		Prefab
 	};
 
 	BrowsePanel(TienEdit* editor);

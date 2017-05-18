@@ -7,7 +7,7 @@
 Button::Button(const std::string &text, glm::ivec2 position)
 {
 	this->text = text;
-	this->position = position;
+	this->absPosition = this->position = position;
 	this->size = glm::ivec2(50, 25);
 }
 

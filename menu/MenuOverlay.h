@@ -6,6 +6,12 @@
 #include <VrLib/gl/Vertex.h>
 
 class Menu;
+class Button;
+class TextField;
+class Panel;
+class Label;
+class SplitPanel;
+class Component;
 
 namespace vrlib
 {
@@ -46,6 +52,26 @@ public:
 	bool lastClick;
 	Menu* rootMenu;
 
+	//panels
+	Component* focussedComponent;
+	SplitPanel* mainPanel;
+
+
+
+	struct
+	{
+		bool shown = false;
+		std::string title;
+		std::string defaultValue;
+		TextField* inputText;
+		Label* lblDescription;
+		Button* btnOk;
+		Button* btnCancel;
+		Panel* panel = nullptr;
+		std::function<void(const std::string &)> callback;
+	} inputDialog;
+
+
 	// graphics
 	enum class Uniforms
 	{
@@ -65,6 +91,8 @@ public:
 	void addToolbarButton(int icon, const std::string &name, std::function<void()> callback);
 	void addToolbarSeperator() { addToolbarButton(-1, "", []() {}); }
 
+	void showInputDialog(const std::string &title, const std::string defaultValue, std::function<void(const std::string &)> callback);
+
 	//automatically called in tienedit
 	inline void setWindowSize(const glm::ivec2 &size) { this->windowSize = size; }
 	void init();
@@ -75,9 +103,11 @@ public:
 	bool click(bool button);
 	bool wasClicked();
 	void hover();
-	bool mouseUp();
+	bool mouseUp(bool button);
+	bool mouseScroll(int offset);
+	bool mouseMove(const glm::ivec2 &pos);
 
-
+	Component* getRootComponent();
 
 
 	//drawing helper functions

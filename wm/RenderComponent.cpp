@@ -12,6 +12,8 @@
 #include <VrLib/tien/components/MeshRenderer.h>
 #include <VrLib/math/Plane.h>
 
+#include <fstream>
+
 RenderComponent::RenderComponent(TienEdit * editor)
 {
 	this->editor = editor;
@@ -71,4 +73,23 @@ void RenderComponent::handleDrag(DragProperties* properties)
 		editor->perform(new GroupAction({ new NodeNewAction(n),
 											new SelectionChangeAction(editor,{ n }) }));
 	}
+	if (properties->type == DragProperties::Type::Prefab)
+	{
+		json saveFile = json::parse(std::ifstream(properties->file));
+
+		GroupAction* a = new GroupAction({});
+		std::vector<vrlib::tien::Node*> newNodes;
+		for (auto &n : saveFile["nodes"])
+		{
+			vrlib::tien::Node* newNode = new vrlib::tien::Node("", &editor->tien.scene);
+			newNode->fromJson(n, saveFile, std::bind(&TienEdit::loadCallback, editor, std::placeholders::_1, saveFile));
+			newNode->transform->position = mousePos;
+			a->actions.push_back(new NodeNewAction(newNode));
+			newNodes.push_back(newNode);
+		}
+		a->actions.push_back(new SelectionChangeAction(editor, newNodes));
+		editor->perform(a);
+
+	}
+
 }

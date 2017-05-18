@@ -18,7 +18,7 @@
 BrowsePanel::BrowsePanel(TienEdit* editor)
 {
 	this->editor = editor;
-	rebuild("./data/Models/mier/");
+	rebuild("./data/NetworkEngine/models/cars/generic/");
 }
 
 
@@ -60,6 +60,7 @@ inline void BrowsePanel::onReposition(Component * parent)
 
 void BrowsePanel::rebuild(const std::string & directory)
 {
+	this->directory = directory;
 	for (auto c : components)
 		delete c;
 	components.clear();
@@ -117,8 +118,10 @@ void BrowsePanel::rebuild(const std::string & directory)
 		else
 		{
 			FileType type = fileType(files[i]);
-			if(type == FileType::Model)
-				img = new DraggableImage(editor, editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 128), glm::ivec2(333 + 128, 128 + 128), new DragProperties{DragProperties::Type::Model, directory + files[i] });
+			if (type == FileType::Model)
+				img = new DraggableImage(editor, editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 128), glm::ivec2(333 + 128, 128 + 128), new DragProperties{ DragProperties::Type::Model, directory + files[i] });
+			else if (type == FileType::Prefab)
+				img = new DraggableImage(editor, editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 256), glm::ivec2(333 + 128, 256 + 128), new DragProperties{ DragProperties::Type::Prefab, directory + files[i] });
 			else if (type == FileType::Image || type == FileType::Video)
 			{
 				auto tex = vrlib::Texture::loadCached(directory + files[i]);
@@ -140,7 +143,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 	if(editor->mainPanel->components.size() == 3) //TODO: ew
 		dynamic_cast<ScrollPanel*>(dynamic_cast<SplitPanel*>(editor->mainPanel->components[1])->components[1])->scrollOffset = glm::ivec2(0, 0); //TODO: ew too
 	onReposition(nullptr);
-	editor->focussedComponent = nullptr;
+	editor->menuOverlay.focussedComponent = nullptr;
 }
 
 BrowsePanel::FileType BrowsePanel::fileType(const std::string & file)
@@ -176,6 +179,10 @@ BrowsePanel::FileType BrowsePanel::fileType(const std::string & file)
 		extension == ".mpeg" ||
 		false)
 		return FileType::Image;
+	else if (false ||
+		extension == ".json" ||
+		false)
+		return FileType::Prefab;
 
 
 	return FileType::Other;
