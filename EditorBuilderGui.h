@@ -20,6 +20,12 @@ public:
 	virtual void handleDrag(DragProperties* draggedObject) override;
 };
 
+class PrefabTextField : public TextField
+{
+public:
+	PrefabTextField(const std::string &value, const glm::ivec2 &pos);
+	virtual void handleDrag(DragProperties* draggedObject) override;
+};
 
 class GuiEditor : public vrlib::tien::EditorBuilder
 {
@@ -40,6 +46,7 @@ public:
 	virtual TextComponent* addTextBox(const std::string & value, std::function<void(const std::string&)> onChange) override;
 	virtual TextComponent* addTextureBox(const std::string & value, std::function<void(const std::string&)> onChange) override;
 	virtual TextComponent* addModelBox(const std::string & value, std::function<void(const std::string&)> onChange) override;
+	virtual TextComponent* addPrefabBox(const std::string & value, std::function<void(const std::string&)> onChange) override;
 	virtual TextComponent* addLabel(const std::string & value) override;
 	virtual ColorComponent * addColorBox(const glm::vec4 & value, std::function<void(const glm::vec4&)> onChange) override;
 	virtual FloatComponent * addFloatBox(float value, float min, float max, std::function<void(float)> onChange) override;

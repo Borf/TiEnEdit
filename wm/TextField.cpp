@@ -9,7 +9,7 @@
 TextField::TextField(const std::string & value, glm::ivec2 position)
 {
 	this->value = value;
-	this->position = position;
+	this->absPosition = this->position = position;
 	this->cursor = 0;
 	this->selectionEnd = 0;
 	this->readonly = false;
@@ -77,7 +77,7 @@ bool TextField::click(bool leftButton, const glm::ivec2 & clickPos, int clickCou
 		selectionEnd = 0;
 		return true;
 	}
-	return false;
+	return true;
 }
 
 bool TextField::mouseDown(bool leftButton, const glm::ivec2 & clickPos)

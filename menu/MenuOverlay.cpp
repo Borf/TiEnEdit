@@ -5,10 +5,16 @@
 #include <VrLib/json.hpp>
 #include <VrLib/Font.h>
 
+#include "../TienEdit.h"
 #include "Menu.h"
 #include "MenuItem.h"
 #include "SubMenuMenuItem.h"
 #include "ToggleMenuItem.h"
+#include "../wm/Panel.h"
+#include "../wm/Button.h"
+#include "../wm/TextField.h"
+#include "../wm/Label.h"
+#include "../wm/SplitPanel.h"
 
 #include <fstream>
 #include <glm/gtc/matrix_transform.hpp>
@@ -99,6 +105,13 @@ void MenuOverlay::drawPopups()
 		}
 
 	}
+
+	if (inputDialog.shown)
+	{
+		inputDialog.panel->draw(this);
+	}
+
+
 	flushVerts();
 }
 
@@ -184,6 +197,29 @@ bool MenuOverlay::click(bool button)
 
 	popupMenus.clear();
 
+	///
+
+	Component* clickedComponent = getRootComponent()->getComponentAt(mousePos);
+
+	if (focussedComponent != clickedComponent)
+	{
+		if (focussedComponent)
+		{
+			focussedComponent->focussed = false;
+			focussedComponent->unfocus();
+		}
+		focussedComponent = clickedComponent;
+		if (focussedComponent)
+		{
+			focussedComponent->focussed = true;
+			focussedComponent->focus();
+		}
+	}
+
+
+	if (focussedComponent)
+		focussedComponent->mouseDown(button, mousePos);
+
 
 	return lastClick = false;
 }
@@ -227,6 +263,86 @@ void MenuOverlay::hover()
 		}
 	}
 }
+Component* MenuOverlay::getRootComponent()
+{
+	if (inputDialog.shown)
+		return inputDialog.panel;
+	return mainPanel;
+}
+
+
+bool MenuOverlay::mouseUp(bool button)
+{
+	Component* root = getRootComponent();
+
+
+	Component* clickedComponent = root->getComponentAt(mousePos);
+
+	if (focussedComponent != clickedComponent)
+	{
+		if (focussedComponent)
+		{
+			focussedComponent->focussed = false;
+			focussedComponent->unfocus();
+		}
+		focussedComponent = clickedComponent;
+		if (focussedComponent)
+		{
+			focussedComponent->focussed = true;
+			focussedComponent->focus();
+		}
+	}
+
+
+	if (root->click(button, mousePos, TienEdit::mouseState.clickCount))
+		return true;
+	if (root->mouseUp(button, mousePos))
+		return true;
+
+	return false;
+}
+
+bool MenuOverlay::mouseScroll(int offset)
+{
+	bool scrolled = false;
+	Component* c;
+	if ((c = getRootComponent()->getComponentAt(mousePos)))
+	{
+		scrolled |= c->scroll(offset / 10.0f);
+
+		if (!scrolled)
+			scrolled |= getRootComponent()->scrollRecursive(mousePos, offset / 10.0f);
+
+
+		if (scrolled)
+		{
+			if (focussedComponent)
+			{
+				focussedComponent->unfocus();
+				focussedComponent->focussed = false;
+			}
+			focussedComponent = c;
+			c->focus();
+			c->focussed = true;
+		}
+	}
+	return scrolled;
+}
+
+bool MenuOverlay::mouseMove(const glm::ivec2 & pos)
+{
+	mousePos = pos;
+	if (focussedComponent && focussedComponent->inComponent(TienEdit::mouseState.mouseDownPos) && (TienEdit::mouseState.left || TienEdit::mouseState.right))
+	{
+		bool dragged = focussedComponent->mouseDrag(TienEdit::mouseState.left, TienEdit::mouseState.mouseDownPos, TienEdit::mouseState.pos, TienEdit::lastMouseState.pos);
+		if (!dragged)
+		{
+
+		}
+		return dragged;
+	}
+	return false;
+}
 
 void MenuOverlay::addToolbarButton(int icon, const std::string & name, std::function<void()> callback)
 {
@@ -239,6 +355,46 @@ void MenuOverlay::addToolbarButton(int icon, const std::string & name, std::func
 	else
 		button.x = toolbarButtons[toolbarButtons.size() - 1].x + 32;
 	toolbarButtons.push_back(button);
+}
+
+void MenuOverlay::showInputDialog(const std::string & title, const std::string defaultValue, std::function<void(const std::string&)> callback)
+{
+	inputDialog.shown = true;
+	inputDialog.title = title;
+	inputDialog.callback = callback;
+	if (!inputDialog.panel)
+	{
+
+		inputDialog.panel = new Panel();
+		inputDialog.panel->size = glm::vec2(500, 200);
+		inputDialog.panel->absPosition = glm::ivec2(windowSize / 2 - inputDialog.panel->size / 2);
+
+		inputDialog.btnOk = new Button("Ok", glm::ivec2(inputDialog.panel->absPosition + glm::ivec2(300, 170)));
+		inputDialog.btnOk->size = glm::ivec2(200, 25);
+		inputDialog.panel->components.push_back(inputDialog.btnOk);
+
+		inputDialog.btnCancel = new Button("Cancel", glm::ivec2(inputDialog.panel->absPosition + glm::ivec2(10, 170)));
+		inputDialog.btnCancel->size = glm::ivec2(200, 25);
+		inputDialog.panel->components.push_back(inputDialog.btnCancel);
+
+		inputDialog.inputText = new TextField(defaultValue, glm::ivec2(inputDialog.panel->absPosition + glm::ivec2(10, 100)));
+		inputDialog.inputText->size = glm::ivec2(480, 25);
+		inputDialog.panel->components.push_back(inputDialog.inputText);
+
+		inputDialog.lblDescription = new Label(title, glm::ivec2(inputDialog.panel->absPosition + glm::ivec2(10, 10)));
+		inputDialog.lblDescription->size = glm::ivec2(480, 25);
+		inputDialog.panel->components.push_back(inputDialog.lblDescription);
+	}
+	else
+	{
+		inputDialog.inputText->setText(defaultValue);
+		inputDialog.lblDescription->setText(title);
+	}
+
+	inputDialog.btnOk->onClick = [this, callback]() {inputDialog.shown = false; callback(inputDialog.inputText->getText());  };
+	inputDialog.btnCancel->onClick = [this]() {inputDialog.shown = false; };
+
+
 }
 
 

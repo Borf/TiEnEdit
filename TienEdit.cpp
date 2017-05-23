@@ -77,6 +77,9 @@
 #define BROWSERHEIGHT 300
 
 
+MouseState TienEdit::mouseState;
+MouseState TienEdit::lastMouseState;
+
 
 class StubComponent : public vrlib::tien::Component
 {
@@ -274,6 +277,7 @@ void TienEdit::init()
 	shader->use();
 	shader->setUniform(EditorShaderUniforms::s_texture, 0);
 
+	vrlib::tien::_tieneditor = true;
 	tien.init();
 
 	//initialize menus
@@ -308,7 +312,7 @@ void TienEdit::init()
 
 
 	//build up UI
-	mainPanel = new SplitPanel(SplitPanel::Alignment::HORIZONTAL);
+	menuOverlay.mainPanel = mainPanel = new SplitPanel(SplitPanel::Alignment::HORIZONTAL);
 	class TienNodeTree : public Tree<vrlib::tien::Node*>::TreeLoader
 	{
 		TienEdit* edit;
@@ -379,6 +383,18 @@ void TienEdit::init()
 			menu->setAction("delete", std::bind(&TienEdit::deleteSelection, this));
 			menu->setAction("focus with camera", std::bind(&TienEdit::focusSelectedObject, this));
 			menu->setAction("add debug", [this]() { for (auto i : objectTree->selectedItems) { i->addDebugChildSphere(); } });
+			menu->setAction("make prefab", [this]() {
+				//TODO: check if the currently selected node is already a prefab
+				menuOverlay.showInputDialog("Please enter prefab name", browsePanel->directory + objectTree->selectedItems[0]->name + ".json", [this](const std::string value)
+				{
+					json prefabJson;
+					prefabJson["nodes"] = json::array();
+					for (auto c : selectedNodes)
+						prefabJson["nodes"].push_back(c->asJson(prefabJson["meshes"]));
+					std::ofstream pFile(value.c_str());
+					pFile << prefabJson.dump();
+				});
+			});
 		}
 		else
 		{
@@ -475,7 +491,7 @@ void TienEdit::init()
 	}*/
 
 
-	focussedComponent = renderPanel;
+	menuOverlay.focussedComponent = renderPanel;
 
 	objectTree->update();
 
@@ -909,6 +925,7 @@ void TienEdit::draw()
 	{
 		menuOverlay.drawText("Scale: " + std::to_string(-1+glm::pow(2, 1+editorScale/100.0f)), glm::vec2(renderPanel->absPosition.x + 10, menuOverlay.windowSize.y - 12), glm::vec4(1, 1, 1, 1), true);
 	}
+	menuOverlay.drawPopups();
 
 	if (dragDrawCallback)
 		dragDrawCallback(menuOverlay.mousePos);
@@ -924,7 +941,7 @@ void TienEdit::mouseMove(int x, int y)
 {
 	mouseState.pos.x = x;
 	mouseState.pos.y = y;
-	menuOverlay.mousePos = glm::vec2(x, y);
+	menuOverlay.mouseMove(glm::vec2(x, y));
 
 	if (renderPanel->inComponent(mouseState.pos))
 	{
@@ -937,48 +954,17 @@ void TienEdit::mouseMove(int x, int y)
 		glm::vec3 retFar = glm::unProject(glm::vec3(mousePos, 1), cameraMat, projection, glm::vec4(Viewport[0], Viewport[1], Viewport[2], Viewport[3]));
 		ray = vrlib::math::Ray(retNear, glm::normalize(retFar - retNear));
 	}
-
-	if(focussedComponent && focussedComponent->inComponent(mouseState.mouseDownPos) && (mouseState.left || mouseState.right))
-	{ 
-		bool dragged = focussedComponent->mouseDrag(mouseState.left, mouseState.mouseDownPos, mouseState.pos, lastMouseState.pos);
-		if (!dragged)
-		{
-
-		}
-	}
-
 }
 
 void TienEdit::mouseScroll(int offset)
 {
 	bool scrolled = false;
-	Component* c;
 	if (renderPanel->inComponent(menuOverlay.mousePos))
-	{
 		cameraPos += glm::vec3(0, 0, -offset / 120.0f) * cameraRot;
-	}
+	else if (!scrolled)
+		scrolled |= menuOverlay.mouseScroll(offset);
 	//else if (focussedComponent) //TODO: find component under mouse to scroll
 	//	scrolled |= focussedComponent->scroll(offset / 10.0f);
-	if (!scrolled && (c = mainPanel->getComponentAt(menuOverlay.mousePos)))
-	{
-		scrolled |= c->scroll(offset / 10.0f);
-		
-		if (!scrolled)
-			scrolled |= mainPanel->scrollRecursive(menuOverlay.mousePos, offset / 10.0f);
-
-
-		if (scrolled)
-		{
-			if (focussedComponent)
-			{
-				focussedComponent->unfocus();
-				focussedComponent->focussed = false;
-			}
-			focussedComponent = c;
-			c->focus();
-			c->focussed = true;
-		}
-	}
 }
 
 
@@ -989,38 +975,18 @@ void TienEdit::mouseDown(MouseButton button)
 	if (mouseState.middle)
 		return;
 
-
 	if (menuOverlay.click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left))
 		return;
 
-	Component* clickedComponent = mainPanel->getComponentAt(mouseState.pos);
 
-	if (focussedComponent != clickedComponent)
-	{
-		if (focussedComponent)
-		{
-			focussedComponent->focussed = false;
-			focussedComponent->unfocus();
-		}
-		focussedComponent = clickedComponent;
-		if (focussedComponent)
-		{
-			focussedComponent->focussed = true;
-			focussedComponent->focus();
-		}
-	}
-
-
-	if (focussedComponent)
-		focussedComponent->mouseDown(button == MouseButton::Left, mouseState.pos);
 }
 
 void TienEdit::keyDown(int button)
 {
 	NormalApp::keyDown(button);
 
-	if (focussedComponent)
-		if (focussedComponent->keyDown(button))
+	if (menuOverlay.focussedComponent)
+		if (menuOverlay.focussedComponent->keyDown(button))
 			return;
 }
 
@@ -1031,9 +997,9 @@ void TienEdit::keyUp(int button)
 		return;
 
 
-	if (focussedComponent && focussedComponent != renderPanel)
+	if (menuOverlay.focussedComponent && menuOverlay.focussedComponent != renderPanel)
 	{
-		if (focussedComponent->keyUp(button))
+		if (menuOverlay.focussedComponent->keyUp(button))
 			return;
 	}
 
@@ -1161,10 +1127,10 @@ void TienEdit::keyChar(char character)
 	NormalApp::keyChar(character);
 	if (mouseState.middle)
 		return;
-
-	if (focussedComponent && !mouseState.middle)
+	//TODO: move to menuOverlay
+	if (menuOverlay.focussedComponent && !mouseState.middle)
 	{
-		if (character == '\t' && focussedComponent->focusable)
+		if (character == '\t' && menuOverlay.focussedComponent->focusable)
 		{
 			std::function<void(Component*)> nextComponent;
 			nextComponent = [this, &nextComponent](Component* c)
@@ -1174,18 +1140,18 @@ void TienEdit::keyChar(char character)
 				{
 					for (size_t i = 0; i < p->components.size(); i++)
 					{
-						if (p->components[i] == focussedComponent)
+						if (p->components[i] == menuOverlay.focussedComponent)
 						{
-							focussedComponent->unfocus();
-							focussedComponent->focussed = false;
+							menuOverlay.focussedComponent->unfocus();
+							menuOverlay.focussedComponent->focussed = false;
 							do
 							{
 								i = (i + 1) % p->components.size();
-								focussedComponent = p->components[i];
-							} while (!focussedComponent->focusable);
+								menuOverlay.focussedComponent = p->components[i];
+							} while (!menuOverlay.focussedComponent->focusable);
 						
-							focussedComponent->focussed = true;
-							focussedComponent->focus();
+							menuOverlay.focussedComponent->focussed = true;
+							menuOverlay.focussedComponent->focus();
 							break;
 						}
 						else
@@ -1196,10 +1162,10 @@ void TienEdit::keyChar(char character)
 				if (dynamic_cast<ScrollPanel*>(c))
 					nextComponent(dynamic_cast<ScrollPanel*>(c)->component);
 			};
-			nextComponent(mainPanel);			
+			nextComponent(menuOverlay.getRootComponent());			
 		}
 		else
-			focussedComponent->keyChar(character);
+			menuOverlay.focussedComponent->keyChar(character);
 	}
 }
 
@@ -1242,27 +1208,7 @@ void TienEdit::mouseUp(MouseButton button)
 		if (menuOverlay.wasClicked())
 			return;
 
-		Component* clickedComponent = mainPanel->getComponentAt(mouseState.pos);
-
-		if (focussedComponent != clickedComponent)
-		{
-			if (focussedComponent)
-			{
-				focussedComponent->focussed = false;
-				focussedComponent->unfocus();
-			}
-			focussedComponent = clickedComponent;
-			if (focussedComponent)
-			{
-				focussedComponent->focussed = true;
-				focussedComponent->focus();
-			}
-		}
-
-
-		if (mainPanel->click(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left, mouseState.pos, mouseState.clickCount))
-			return;
-		if (mainPanel->mouseUp(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left, mouseState.pos))
+		if (menuOverlay.mouseUp(button == vrlib::MouseButtonDeviceDriver::MouseButton::Left))
 			return;
 	}
 
@@ -1340,9 +1286,9 @@ void TienEdit::mouseUp(MouseButton button)
 
 //	if (glm::distance(glm::vec2(mouseState.mouseDownPos), glm::vec2(mouseState.pos)) >= 3)
 	{
-		if (focussedComponent && focussedComponent->inComponent(mouseState.mouseDownPos))
+		if (menuOverlay.focussedComponent && menuOverlay.focussedComponent->inComponent(mouseState.mouseDownPos))
 		{
-			focussedComponent->mouseFinishDrag(button == MouseButton::Left, mouseState.mouseDownPos, mouseState.pos);
+			menuOverlay.focussedComponent->mouseFinishDrag(button == MouseButton::Left, mouseState.mouseDownPos, mouseState.pos);
 		}
 	}
 
@@ -1421,6 +1367,17 @@ void TienEdit::finishCurrentTransformAction()
 	}
 }
 
+vrlib::tien::Component * TienEdit::loadCallback(const json & value, const json &completeFile)
+{
+	std::string type = value["type"].get<std::string>();
+	if (componentFactory.find(type) != componentFactory.end())
+		return componentFactory[type].second(value, completeFile);
+	type[0] = ::toupper(type[0]);
+	if (componentFactory.find(type) != componentFactory.end())
+		return componentFactory[type].second(value, completeFile);
+	return nullptr;
+}
+
 void TienEdit::undo()
 {
 	if (actions.empty())
@@ -1451,7 +1408,7 @@ std::map<vrlib::tien::Component*, ComponentRenderProps> renderProps;
 
 void TienEdit::updateComponentsPanel()
 {
-	focussedComponent = nullptr;
+	menuOverlay.focussedComponent = nullptr;
 	for (auto c : propertiesPanel->components)
 		delete c;
 	propertiesPanel->components.clear();
@@ -1475,6 +1432,10 @@ void TienEdit::updateComponentsPanel()
 	editorBuilder->addTextBox(node->parent ? node->parent->name : "-", [node](const std::string &newValue) {});
 	editorBuilder->endGroup();
 
+	editorBuilder->beginGroup("Prefab");
+	editorBuilder->addPrefabBox(node->prefabFile, [node](const std::string &newValue) { node->prefabFile = newValue; });
+	editorBuilder->endGroup();
+
 	std::vector<vrlib::tien::Component*> components = node->getComponents();
 	for (auto c : components)
 	{
@@ -1487,7 +1448,7 @@ void TienEdit::updateComponentsPanel()
 			button->size.y = 20;
 			button->onClick = [this,c, node]() {
 				node->removeComponent(c);
-				focussedComponent = nullptr;
+				menuOverlay.focussedComponent = nullptr;
 				updateComponentsPanel();
 			};
 			propertiesPanel->components.push_back(button);
@@ -1498,7 +1459,7 @@ void TienEdit::updateComponentsPanel()
 			button->size.y = 20;
 			button->onClick = [&props, this]() { 
 				props.folded = !props.folded; 
-				focussedComponent = nullptr;
+				menuOverlay.focussedComponent = nullptr;
 				updateComponentsPanel(); 
 			};
 			propertiesPanel->components.push_back(button);
@@ -1625,16 +1586,7 @@ void TienEdit::load()
 		vrlib::logger << "Opening " << fileName << Log::newline;
 		json saveFile = json::parse(std::ifstream(fileName));
 		tien.scene.reset();
-		tien.scene.fromJson(saveFile["scene"], saveFile, [this, saveFile](const json &json) -> vrlib::tien::Component*
-		{
-			std::string type = json["type"].get<std::string>();
-			if (componentFactory.find(type) != componentFactory.end())
-				return componentFactory[type].second(json, saveFile);
-			type[0] = ::toupper(type[0]);
-			if (componentFactory.find(type) != componentFactory.end())
-				return componentFactory[type].second(json, saveFile);
-			return nullptr;
-		});
+		tien.scene.fromJson(saveFile["scene"], saveFile, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, saveFile));
 
 		//tien.scene.cameraNode = (vrlib::tien::Node*)tien.scene.findNodeWithComponent<vrlib::tien::components::Camera>(); //TODO: just for testing post processing filters
 		selectedNodes.clear();

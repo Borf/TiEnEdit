@@ -72,8 +72,7 @@ public:
 	glm::quat cameraRotTo;
 	glm::vec3 cameraPos;
 
-	Component* focussedComponent;
-	
+
 	vrlib::Model* ruler;
 
 	Component* renderPanel;
@@ -139,8 +138,8 @@ public:
 	//void buildBrowsePanel(const std::string &directory);
 	//std::function<void(const std::string &)> browseCallback;
 
-	MouseState mouseState;
-	MouseState lastMouseState;
+	static MouseState mouseState;
+	static MouseState lastMouseState;
 
 	std::vector<vrlib::tien::Node*> selectedNodes;
 	bool cacheSelection = 0;
@@ -153,6 +152,10 @@ public:
 	glm::vec3 getSelectionCenter() const;
 
 	void finishCurrentTransformAction();
+
+
+	vrlib::tien::Component* loadCallback(const json &value, const json &completeFile);
+
 
 	ToggleMenuItem* debugPhysics;
 	ToggleMenuItem* debugCamera;

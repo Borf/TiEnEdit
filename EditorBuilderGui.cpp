@@ -65,6 +65,20 @@ inline GuiEditor::TextComponent* GuiEditor::addModelBox(const std::string & valu
 	return field;
 }
 
+
+inline GuiEditor::TextComponent* GuiEditor::addPrefabBox(const std::string & value, std::function<void(const std::string&)> onChange)
+{
+	TextField* field = new PrefabTextField(value, glm::ivec2(100, line));
+	field->size.x = 200;
+	field->size.y = 20;
+	field->onChange = [onChange, field]()
+	{
+		if (onChange)
+			onChange(field->value);
+	};
+	group.push_back(field);
+	return field;
+}
 inline GuiEditor::TextComponent* GuiEditor::addTextureBox(const std::string & value, std::function<void(const std::string&)> onChange)
 {
 	TextField* field = new TextureTextField(value, glm::ivec2(100, line));
@@ -427,6 +441,21 @@ void ModelTextField::handleDrag(DragProperties * draggedObject)
 	if (!draggedObject)
 		return;
 	if (draggedObject->type != DragProperties::Type::Model)
+		return;
+	this->value = draggedObject->file;
+	onChange();
+}
+
+PrefabTextField::PrefabTextField(const std::string & value, const glm::ivec2 & pos) : TextField(value, pos)
+{
+	readonly = true;
+}
+
+void PrefabTextField::handleDrag(DragProperties * draggedObject)
+{
+	if (!draggedObject)
+		return;
+	if (draggedObject->type != DragProperties::Type::Prefab)
 		return;
 	this->value = draggedObject->file;
 	onChange();

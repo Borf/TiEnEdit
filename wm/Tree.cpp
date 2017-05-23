@@ -161,7 +161,7 @@ bool Tree<T>::mouseDrag(bool leftButton, const glm::ivec2 & startPos, const glm:
 	if (!dragging)
 	{
 		dragIndex = (int)((startPos.y - absPosition.y - 5 + scrollOffset) / LINESIZE);
-		if (std::find(selectedIndices.begin(), selectedIndices.end(), dragIndex) == selectedIndices.end() && dragIndex < flatList.size())
+		if (std::find(selectedIndices.begin(), selectedIndices.end(), dragIndex) == selectedIndices.end() && dragIndex < (int)flatList.size())
 		{
 			selectedIndices.clear();
 			selectedIndices.push_back(dragIndex);

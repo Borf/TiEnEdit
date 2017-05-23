@@ -8,7 +8,7 @@
 Label::Label(const std::string & text, const glm::ivec2 & position)
 {
 	this->text = text;
-	this->position = position;
+	this->absPosition = this->position = position;
 }
 
 void Label::draw(MenuOverlay* overlay)
