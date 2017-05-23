@@ -111,7 +111,10 @@ bool TextField::keyChar(char character)
 			cursor = glm::min(cursor, selectionEnd);
 			selectionEnd = cursor;
 		}
-		value = value.substr(0, cursor) + character + value.substr(cursor);
+		std::string pre = "";
+		if (cursor > 0)
+			pre = value.substr(0, cursor);
+		value = pre + character + value.substr(cursor);
 		cursor++;
 		selectionEnd = cursor;
 		if (onChange)
