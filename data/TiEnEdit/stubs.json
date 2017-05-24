@@ -57,7 +57,33 @@
         "name": "Error_type_1",
         "type": "enum",
         "default": "correct",
-        "values": [ "correct", "not_correct" ]
+        "values": [
+          "correct",
+          "labelling_doesNotMatchLabel",
+          "labelling_missingWarningSigns",
+          "labelling_rippedOffOrLabelCovered",
+          "labelling_upsideDown",
+          "packaging_notInNon-corrosiveContainer",
+          "packaging_leaking",
+          "packaging_rustyOrCorroded",
+          "packaging_damagedOrBroken",
+          "packaging_notCoveredCorrectly",
+          "storage_notSecuredOrStoredCorrectly",
+          "storage_nextToIncompatibleSubstance",
+          "signs_escapeRouteSignMissingOrIncorrect",
+          "signs_noFireExtenguisherSign",
+          "signs_noWarningSignsDoor",
+          "signs_incorrectWarning",
+          "routes_incorrectMarksOnFloor",
+          "routes_emergencyRouteBlocked",
+          "routes_inaccessibleFireExtenguisher",
+          "routes_emergencyDoorLeftOpen",
+          "misc_missingSafetyGear",
+          "misc_foodWasteOrSigaretteButts",
+          "misc_fireExtenguisherAbsent",
+          "misc_incorrectVentilation",
+          "misc_incorrectLighting"
+        ]
       },
       {
         "name": "Model_2",
@@ -68,7 +94,32 @@
         "name": "Error_type_2",
         "type": "enum",
         "default": "correct",
-        "values": [ "correct", "not_correct" ]
+        "values": [
+          "correct",
+          "labelling_doesNotMatchLabel",
+          "labelling_missingWarningSigns",
+          "labelling_rippedOffOrLabelCovered",
+          "labelling_upsideDown",
+          "packaging_notInNon-corrosiveContainer",
+          "packaging_leaking",
+          "packaging_rustyOrCorroded",
+          "packaging_damagedOrBroken",
+          "packaging_notCoveredCorrectly",
+          "storage_notSecuredOrStoredCorrectly",
+          "storage_nextToIncompatibleSubstance",
+          "signs_escapeRouteSignMissingOrIncorrect",
+          "signs_noFireExtenguisherSign",
+          "signs_noWarningSignsDoor",
+          "signs_incorrectWarning",
+          "routes_incorrectMarksOnFloor",
+          "routes_emergencyRouteBlocked",
+          "routes_inaccessibleFireExtenguisher",
+          "routes_emergencyDoorLeftOpen",
+          "misc_missingSafetyGear",
+          "misc_foodWasteOrSigaretteButts",
+          "misc_fireExtenguisherAbsent",
+          "misc_incorrectVentilation",
+          "misc_incorrectLighting"]
       }
 
     ]
