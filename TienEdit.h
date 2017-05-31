@@ -141,7 +141,6 @@ public:
 	static MouseState mouseState;
 	static MouseState lastMouseState;
 
-	std::vector<vrlib::tien::Node*> selectedNodes;
 	bool cacheSelection = 0;
 	GLuint selectionCache = 0;
 	void updateComponentsPanel();

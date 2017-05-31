@@ -96,14 +96,19 @@ void MenuOverlay::drawPopups()
 				flushVerts();
 			}
 
+			glm::vec4 color(1, 1, 1, 1);
+			if (!mm->enabled)
+				color = glm::vec4(0.5, 0.5, 0.5, 1);
+
+
 			SubMenuMenuItem* smi = dynamic_cast<SubMenuMenuItem*>(mm);
 			ToggleMenuItem* i = dynamic_cast<ToggleMenuItem*>(mm);
 			if (i)
-				drawText((i->getValue() ? "X " : "   ") + mm->name, glm::vec2(m.first.x + 5, y + 12), glm::vec4(1, 1, 1, 1), false);
+				drawText((i->getValue() ? "X " : "   ") + mm->name, glm::vec2(m.first.x + 5, y + 12), color, false);
 			else
-				drawText("   " + mm->name, glm::vec2(m.first.x + 5, y + 12), glm::vec4(1, 1, 1, 1), false);
+				drawText("   " + mm->name, glm::vec2(m.first.x + 5, y + 12), color, false);
 			if(smi)
-				drawText("->", glm::vec2(m.first.x + width - 20, y + 12), glm::vec4(1, 1, 1, 1), false);
+				drawText("->", glm::vec2(m.first.x + width - 20, y + 12), color, false);
 			y += menuItemHeight;
 		}
 

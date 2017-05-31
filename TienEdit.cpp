@@ -390,7 +390,7 @@ void TienEdit::init()
 				{
 					json prefabJson;
 					prefabJson["nodes"] = json::array();
-					for (auto c : selectedNodes)
+					for (auto c : objectTree->selectedItems)
 						prefabJson["nodes"].push_back(c->asJson(prefabJson["meshes"]));
 					std::ofstream pFile(value.c_str());
 					pFile << prefabJson.dump();
@@ -619,10 +619,10 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		glm::vec3 pos;
 
 		auto targetPos = tien.scene.castRay(ray, false, [this](vrlib::tien::Node* n) {
-			for (auto s : selectedNodes)
+			for (auto s : objectTree->selectedItems)
 				if (n->isChildOf(s))
 					return false;
-			return true;// std::find(std::begin(selectedNodes), std::end(selectedNodes), n) == std::end(selectedNodes);
+			return true;// std::find(std::begin(objectTree->selectedItems), std::end(objectTree->selectedItems), n) == std::end(objectTree->selectedItems);
 		});
 		if (targetPos.first)
 			pos = targetPos.second;
@@ -644,7 +644,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 			pos.z = originalPosition.z;
 
 		glm::vec3 diff = pos - getSelectionCenter();
-		for(auto n : selectedNodes)
+		for(auto n : objectTree->selectedItems)
 			n->transform->setGlobalPosition(n->transform->getGlobalPosition() + diff);
 		rebakeSelectedLights();
 	}
@@ -653,7 +653,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 		glm::vec3 pos;
 
 		auto targetPos = tien.scene.castRay(ray, false, [this](vrlib::tien::Node* n) {
-			return std::find(std::begin(selectedNodes), std::end(selectedNodes), n) == std::end(selectedNodes);
+			return std::find(std::begin(objectTree->selectedItems), std::end(objectTree->selectedItems), n) == std::end(objectTree->selectedItems);
 		});
 		if (targetPos.first)
 			pos = targetPos.second;
@@ -675,7 +675,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 			pos.z = originalPosition.z;
 
 		glm::vec3 diff = pos - getSelectionCenter();
-		for (auto n : selectedNodes)
+		for (auto n : objectTree->selectedItems)
 		{
 			n->transform->position += diff;
 			n->fortree([this, &n, &diff](const vrlib::tien::Node* nn)
@@ -691,7 +691,7 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 	{
 		glm::vec3 center = getSelectionCenter();
 		float inc = 0.01f * glm::pi<float>() * (mouseState.pos.x - lastMouseState.pos.x);
-		for (auto n : selectedNodes)
+		for (auto n : objectTree->selectedItems)
 		{
 			int axisIndex = axis == Axis::Z ? 2 : ((int)axis - 1);
 			glm::vec3 rotationIncEuler;
@@ -789,7 +789,7 @@ void TienEdit::draw()
 
 		tien.scene.cameraNode = nullptr;
 		if (debugCamera->getValue())
-			for (auto n : selectedNodes)
+			for (auto n : objectTree->selectedItems)
 				if (n->getComponent<vrlib::tien::components::Camera>())
 					tien.scene.cameraNode = n;
 
@@ -815,6 +815,7 @@ void TienEdit::draw()
 			float length = glm::pow(glm::distance(cameraPos, n->transform->getGlobalPosition()), 0.1f) / 3.0f;
 			glPushMatrix();
 			glMultMatrixf(glm::value_ptr(n->transform->globalTransform));
+			glLineWidth(1);
 			glBegin(GL_LINES);
 			glColor3f(1, 0, 0);
 			glVertex3f(0, 0, 0);
@@ -831,7 +832,7 @@ void TienEdit::draw()
 			{
 				if (n->light->type == vrlib::tien::components::Light::Type::directional)
 				{
-					if(std::find(selectedNodes.begin(), selectedNodes.end(), n) == selectedNodes.end())
+					if(std::find(objectTree->selectedItems.begin(), objectTree->selectedItems.end(), n) == objectTree->selectedItems.end())
 						glColor3f(1, 1, 0);
 					else
 						glColor3f(1, 0, 0);
@@ -846,7 +847,7 @@ void TienEdit::draw()
 				else if (n->light->type == vrlib::tien::components::Light::Type::spot)
 				{
 					float dist = tan(glm::radians(n->light->spotlightAngle)/2.0f);
-					if (std::find(selectedNodes.begin(), selectedNodes.end(), n) == selectedNodes.end())
+					if (std::find(objectTree->selectedItems.begin(), objectTree->selectedItems.end(), n) == objectTree->selectedItems.end())
 						glColor3f(1, 1, 0);
 					else
 						glColor3f(1, 0, 0);
@@ -874,7 +875,8 @@ void TienEdit::draw()
 			if(selectionCache == 0)
 				selectionCache = glGenLists(1);
 			glNewList(selectionCache, GL_COMPILE);
-			for (auto n : selectedNodes)
+			glLineWidth(1);
+			for (auto n : objectTree->selectedItems)
 			{
 				if (!n || !n->transform)
 					continue;
@@ -1070,7 +1072,7 @@ void TienEdit::keyUp(int button)
 
 	//if (focussedComponent == renderPanel)
 	{
-		if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool != EditTool::TRANSLATE && activeTool != EditTool::TRANSLATEWITHOUTCHILDREN && !selectedNodes.empty())
+		if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool != EditTool::TRANSLATE && activeTool != EditTool::TRANSLATEWITHOUTCHILDREN && !objectTree->selectedItems.empty())
 		{
 			if (activeTool != EditTool::NONE)
 				finishCurrentTransformAction();
@@ -1084,17 +1086,17 @@ void TienEdit::keyUp(int button)
 				finishCurrentTransformAction();
 			activeTool = EditTool::TRANSLATEWITHOUTCHILDREN;
 			glm::vec3 diff = originalPosition - getSelectionCenter();
-			for (auto n : selectedNodes)
+			for (auto n : objectTree->selectedItems)
 				n->transform->position += diff;
 		}
 		else if (buttonLookup[button] == KeyboardButton::KEY_G && activeTool == EditTool::TRANSLATEWITHOUTCHILDREN)
 		{
 			activeTool = EditTool::NONE;
 			glm::vec3 diff = originalPosition - getSelectionCenter();
-			for (auto n : selectedNodes)
+			for (auto n : objectTree->selectedItems)
 				n->transform->position += diff;
 		}
-		if (buttonLookup[button] == KeyboardButton::KEY_R && activeTool != EditTool::ROTATE && activeTool != EditTool::ROTATELOCAL && !selectedNodes.empty())
+		if (buttonLookup[button] == KeyboardButton::KEY_R && activeTool != EditTool::ROTATE && activeTool != EditTool::ROTATELOCAL && !objectTree->selectedItems.empty())
 		{
 			if (activeTool != EditTool::NONE)
 				finishCurrentTransformAction();
@@ -1102,7 +1104,7 @@ void TienEdit::keyUp(int button)
 			originalPosition = getSelectionCenter();
 			axis = Axis::Y;
 			std::vector<Action*> actions;
-			for (auto n : selectedNodes)
+			for (auto n : objectTree->selectedItems)
 				actions.push_back(new NodeRotateAction(n));
 			activeEditAction = new GroupAction(actions);
 		}
@@ -1126,7 +1128,7 @@ void TienEdit::keyUp(int button)
 			activeEditAction = nullptr;
 		}
 
-		if (buttonLookup[button] == KeyboardButton::KEY_S && activeTool != EditTool::SCALE && !selectedNodes.empty())
+		if (buttonLookup[button] == KeyboardButton::KEY_S && activeTool != EditTool::SCALE && !objectTree->selectedItems.empty())
 		{
 			if (activeTool != EditTool::NONE)
 				finishCurrentTransformAction();
@@ -1134,7 +1136,7 @@ void TienEdit::keyUp(int button)
 			originalPosition = getSelectionCenter();
 			axis = Axis::XYZ;
 			std::vector<Action*> actions;
-			for (auto n : selectedNodes)
+			for (auto n : objectTree->selectedItems)
 				actions.push_back(new NodeScaleAction(n));
 			editorScale = 0;
 			activeEditAction = new GroupAction(actions);
@@ -1299,7 +1301,7 @@ void TienEdit::mouseUp(MouseButton button)
 				{
 					if (isModPressed(KeyboardModifiers::KEYMOD_SHIFT))
 					{
-						std::vector<vrlib::tien::Node*> newSelection = selectedNodes;
+						std::vector<vrlib::tien::Node*> newSelection = objectTree->selectedItems;
 						if (std::find(std::begin(newSelection), std::end(newSelection), closestClickedNode) == std::end(newSelection))
 							newSelection.push_back(closestClickedNode);
 						else
@@ -1321,14 +1323,14 @@ void TienEdit::mouseUp(MouseButton button)
 	{
 		if (activeTool == EditTool::NONE)
 		{
-			if (!selectedNodes.empty())
+			if (!objectTree->selectedItems.empty())
 				perform(new SelectionChangeAction(this, {}));
 		}
 		else if (activeTool == EditTool::TRANSLATE)
 		{
 			activeTool = EditTool::NONE;
 			glm::vec3 diff = originalPosition - getSelectionCenter();
-			for (auto n : selectedNodes)
+			for (auto n : objectTree->selectedItems)
 				n->transform->setGlobalPosition(n->transform->getGlobalPosition() + diff);
 		}
 		else if (activeTool == EditTool::ROTATE || activeTool == EditTool::ROTATELOCAL)
@@ -1373,8 +1375,8 @@ void TienEdit::perform(Action* action)
 glm::vec3 TienEdit::getSelectionCenter() const
 {
 	glm::vec3 center(0, 0, 0);
-	for (auto n : selectedNodes)
-		center += n->transform->getGlobalPosition() / (float)selectedNodes.size();
+	for (auto n : objectTree->selectedItems)
+		center += n->transform->getGlobalPosition() / (float)objectTree->selectedItems.size();
 	return center;
 }
 
@@ -1384,7 +1386,7 @@ void TienEdit::finishCurrentTransformAction()
 	{
 		glm::vec3 diff = originalPosition - getSelectionCenter();
 		std::vector<Action*> group;
-		for (auto n : selectedNodes)
+		for (auto n : objectTree->selectedItems)
 			group.push_back(new NodeMoveAction(n, n->transform->getGlobalPosition() + diff, n->transform->getGlobalPosition()));
 		actions.push_back(new GroupAction(group));
 		activeTool = EditTool::NONE;
@@ -1395,7 +1397,7 @@ void TienEdit::finishCurrentTransformAction()
 	{
 		glm::vec3 diff = originalPosition - getSelectionCenter();
 		std::vector<Action*> group;
-		for (auto n : selectedNodes)
+		for (auto n : objectTree->selectedItems)
 			group.push_back(new NodeMoveAction(n, n->transform->position + diff, n->transform->position));
 		actions.push_back(new GroupAction(group));
 		activeTool = EditTool::NONE;
@@ -1564,8 +1566,7 @@ void TienEdit::newScene()
 			n->addComponent(new vrlib::tien::components::Camera());
 			n->addComponent(new vrlib::tien::components::DynamicSkyBox());
 		}
-		selectedNodes.clear();
-		objectTree->selectedItems = selectedNodes;
+		objectTree->selectedItems.clear();
 		objectTree->update();
 	}
 }
@@ -1654,8 +1655,7 @@ void TienEdit::load()
 		tien.scene.fromJson(saveFile["scene"], saveFile, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, saveFile));
 
 		//tien.scene.cameraNode = (vrlib::tien::Node*)tien.scene.findNodeWithComponent<vrlib::tien::components::Camera>(); //TODO: just for testing post processing filters
-		selectedNodes.clear();
-		objectTree->selectedItems = selectedNodes;
+		objectTree->selectedItems.clear();
 		objectTree->update();
 	}
 	_chdir(curdir);
@@ -1669,7 +1669,7 @@ void TienEdit::deleteSelection()
 {
 	vrlib::logger << "Delete" << vrlib::Log::newline;
 
-	perform(new NodeDeleteAction(selectedNodes));
+	perform(new NodeDeleteAction(objectTree->selectedItems));
 }
 
 
@@ -1707,7 +1707,7 @@ void TienEdit::copy()
 
 	json clipboard;	
 	clipboard["nodes"] = json::array();
-	for (auto c : selectedNodes)
+	for (auto c : objectTree->selectedItems)
 	{
 		// TODO: only copy parents, not children of selected parents
 		clipboard["nodes"].push_back(c->asJson(clipboard["meshes"]));
@@ -1728,7 +1728,7 @@ void TienEdit::paste()
 		return;
 	}
 
-	selectedNodes.clear();
+	objectTree->selectedItems.clear();
 	for (const json &n : clipboard["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
@@ -1738,10 +1738,8 @@ void TienEdit::paste()
 			n->guid = vrlib::util::getGuid();
 		});
 
-		selectedNodes.push_back(newNode);
+		objectTree->selectedItems.push_back(newNode);
 	}
-
-	objectTree->selectedItems = selectedNodes;
 	objectTree->update();
 
 	activeTool = EditTool::TRANSLATE;
@@ -1763,7 +1761,7 @@ void TienEdit::duplicate()
 {
 	json clipboard;
 	clipboard["nodes"] = json::array();
-	for (auto c : selectedNodes)
+	for (auto c : objectTree->selectedItems)
 	{
 		// TODO: only copy parents, not children of selected parents
 		clipboard["nodes"].push_back(c->asJson(clipboard["meshes"]));
@@ -1775,7 +1773,7 @@ void TienEdit::duplicate()
 		return;
 	}
 
-	selectedNodes.clear();
+	objectTree->selectedItems.clear();
 	for (const json &n : clipboard["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
@@ -1785,10 +1783,8 @@ void TienEdit::duplicate()
 			n->guid = vrlib::util::getGuid();
 		});
 
-		selectedNodes.push_back(newNode);
+		objectTree->selectedItems.push_back(newNode);
 	}
-
-	objectTree->selectedItems = selectedNodes;
 	objectTree->update();
 
 	activeTool = EditTool::TRANSLATE;
@@ -1800,21 +1796,24 @@ void TienEdit::csgUnion()
 {
 	csgjs_model total;
 
-	for (auto n : selectedNodes)
+	for (auto n : objectTree->selectedItems)
 	{
 		auto m = n->getComponent<vrlib::tien::components::MeshRenderer>();
 		if (!m)
 			continue;
 		
+		glm::mat3 normalMatrix(glm::transpose(glm::inverse(glm::mat3(n->transform->globalTransform))));
+
 		csgjs_model mesh;
 		for (auto &m : m->mesh->vertices)
 		{
 			glm::vec3 pos(n->transform->globalTransform * glm::vec4(m.px, m.py, m.pz, 1));
-
+			glm::vec3 normal(normalMatrix * glm::vec3(m.nx, m.ny, m.nz));
 			mesh.vertices.push_back(csgjs_vertex{
 				csgjs_vector{ pos.x, pos.y, pos.z },
-				csgjs_vector{ m.nx, m.ny, m.nz },
+				csgjs_vector{ normal.x, normal.y, normal.z },
 				csgjs_vector{ m.tx, m.ty, 0 },
+				csgjs_vector{ m.tanx, m.tany, m.tanz },
 			});
 		}
 
@@ -1824,28 +1823,35 @@ void TienEdit::csgUnion()
 	}
 
 
-	auto* newMesh = selectedNodes[0]->getComponent<vrlib::tien::components::MeshRenderer>()->mesh;
+	auto* newMesh = objectTree->selectedItems[0]->getComponent<vrlib::tien::components::MeshRenderer>()->mesh;
 	newMesh->vertices.clear();
 	newMesh->indices.clear();
 
+	glm::mat4 inv = glm::inverse(objectTree->selectedItems[0]->transform->globalTransform);
 	for (auto &m : total.vertices)
 	{
+		glm::vec3 pos(inv * glm::vec4(m.pos.x, m.pos.y, m.pos.z, 1));
+
 		newMesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(
-			glm::vec3(m.pos.x, m.pos.y, m.pos.z),
+			glm::vec3(pos.x, pos.y, pos.z),
 			glm::vec3(m.normal.x, m.normal.y, m.normal.z),
 			glm::vec2(m.uv.x, m.uv.y),
-			glm::vec3(0,0,0)		
+			glm::vec3(m.tangent.x,m.tangent.y,m.tangent.z)		
 		));
 	}
 	for (auto &i : total.indices)
 		newMesh->indices.push_back(i);
-	selectedNodes[0]->getComponent<vrlib::tien::components::MeshRenderer>()->updateMesh();
-
+	objectTree->selectedItems[0]->getComponent<vrlib::tien::components::MeshRenderer>()->updateMesh();
+	for (size_t i = 1; i < objectTree->selectedItems.size(); i++)
+		delete objectTree->selectedItems[i];
+	objectTree->selectedItems.erase(objectTree->selectedItems.begin() + 1, objectTree->selectedItems.end());
+	objectTree->update();
+	cacheSelection = true;
 }
 
 void TienEdit::rebakeSelectedLights()
 {
-	for (auto n : selectedNodes)
+	for (auto n : objectTree->selectedItems)
 	{
 		n->fortree([this, &n](const vrlib::tien::Node* nn)
 		{

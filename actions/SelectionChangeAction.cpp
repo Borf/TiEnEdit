@@ -5,13 +5,12 @@
 
 SelectionChangeAction::SelectionChangeAction(TienEdit * editor, std::vector<vrlib::tien::Node*> newSelection)
 {
-	this->oldSelection = editor->selectedNodes;
+	this->oldSelection = editor->objectTree->selectedItems;
 	this->newSelection = newSelection;
 }
 
 void SelectionChangeAction::perform(TienEdit * editor)
 {
-	editor->selectedNodes = this->newSelection;
 	editor->objectTree->selectedItems = newSelection;
 	editor->objectTree->update();
 	editor->updateComponentsPanel();
@@ -20,7 +19,6 @@ void SelectionChangeAction::perform(TienEdit * editor)
 
 void SelectionChangeAction::undo(TienEdit * editor)
 {
-	editor->selectedNodes = this->oldSelection;
 	editor->objectTree->selectedItems = this->oldSelection;
 	editor->objectTree->update();
 	editor->updateComponentsPanel();

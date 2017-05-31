@@ -30,7 +30,6 @@ void NodeDeleteAction::perform(TienEdit * editor)
 		data["nodes"].push_back(node);
 		delete c;
 	}
-	editor->selectedNodes.clear();
 	editor->objectTree->selectedItems.clear();
 	editor->objectTree->update();
 	editor->updateComponentsPanel();
@@ -40,24 +39,21 @@ void NodeDeleteAction::perform(TienEdit * editor)
 
 void NodeDeleteAction::undo(TienEdit * editor)
 {
-	editor->selectedNodes.clear();
 	for (const json &n : data["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &editor->tien.scene);
 		newNode->fromJson(n, data);
 		if (n.find("parent") != n.end())
 			newNode->setParent(editor->tien.scene.findNodeWithGuid(n["parent"]));
-		editor->selectedNodes.push_back(newNode);
+		editor->objectTree->selectedItems.push_back(newNode);
 	}
-
-	editor->objectTree->selectedItems = editor->selectedNodes;
 	editor->objectTree->update();
 	editor->updateComponentsPanel();
 	editor->cacheSelection = true;
 
 	for (size_t i = 0; i < selectedNodes.size(); i++)
 	{ //TODO: assert that these node pointers match
-		editor->updateNodePointer(this->selectedNodes[i], editor->selectedNodes[i]);
+		editor->updateNodePointer(this->selectedNodes[i], editor->objectTree->selectedItems[i]);
 	}
 }
 

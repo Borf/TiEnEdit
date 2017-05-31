@@ -50,7 +50,7 @@ void Tree<T>::draw(MenuOverlay * overlay)
 
 
 		overlay->flushVerts();
-		overlay->drawText(flatList[i].text, absPosition + glm::ivec2(5+18+16, -scrollOffset + 3+ TEXTOFFSET + LINESIZE * i), glm::vec4(1, 1, 1, 1));
+		overlay->drawText(flatList[i].text, absPosition + glm::ivec2(5+18+16, -scrollOffset + 3+ TEXTOFFSET + LINESIZE * i), (!selectedIndices.empty() && selectedIndices[0] == i) ? glm::vec4(1,1,0,1) : glm::vec4(1, 1, 1, 1));
 	}
 
 
@@ -81,7 +81,9 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 			rightClickItem();
 		return true;
 	}
-	
+	bool shift = ((GetKeyState(VK_LSHIFT) | GetKeyState(VK_RSHIFT)) & 0x80) != 0;
+	bool ctrl = ((GetKeyState(VK_LCONTROL) | GetKeyState(VK_RCONTROL)) & 0x80) != 0;
+
 	if (leftButton)
 	{
 		if (std::find(std::begin(selectedIndices), std::end(selectedIndices), index) != std::end(selectedIndices))
@@ -97,11 +99,25 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 					if(doubleClickItem)
 						doubleClickItem();
 			}
+			else
+			{
+				if (ctrl)
+				{
+					int i = std::distance(std::begin(selectedIndices), std::find(std::begin(selectedIndices), std::end(selectedIndices), index));
+					selectedIndices.erase(selectedIndices.begin() + i);
+					selectedItems.erase(selectedItems.begin() + i);
+				}
+				else
+				{
+					int i = std::distance(std::begin(selectedIndices), std::find(std::begin(selectedIndices), std::end(selectedIndices), index));
+					std::swap(selectedIndices[0], selectedIndices[i]);
+					std::swap(selectedItems[0], selectedItems[i]);
+				}
+			}
+
 		}
 		else
 		{
-			bool shift = ((GetKeyState(VK_LSHIFT) | GetKeyState(VK_RSHIFT)) & 0x80) != 0;
-			bool ctrl = ((GetKeyState(VK_LCONTROL) | GetKeyState(VK_RCONTROL)) & 0x80) != 0;
 
 			selectedItems.clear();
 			if(!ctrl && !shift)
