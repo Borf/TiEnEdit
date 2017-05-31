@@ -81,7 +81,7 @@
 			{
 				"name" : "Preview selected camera",
 				"type" : "toggle",
-				"initial" : false
+				"initial" : true
 			}
 		]
 	},

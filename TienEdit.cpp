@@ -18,6 +18,7 @@
 #include <VrLib/math/Plane.h>
 #include <VrLib/util.h>
 #include <VrLib/Texture.h>
+#include <VrLib/csgjs.h>
 
 #include <math.h>
 #include <glm/glm.hpp>
@@ -395,6 +396,18 @@ void TienEdit::init()
 					pFile << prefabJson.dump();
 				});
 			});
+			if (objectTree->selectedItems.size() > 1)
+			{
+				menu->setAction("csg/union", std::bind(&TienEdit::csgUnion, this));
+				menu->getItem("csg/difference")->enabled = false;
+				menu->getItem("csg/intersect")->enabled = false;
+			}
+			else
+			{
+				menu->getItem("csg/union")->enabled = false;
+				menu->getItem("csg/difference")->enabled = false;
+				menu->getItem("csg/intersect")->enabled = false;
+			}
 		}
 		else
 		{
@@ -405,6 +418,58 @@ void TienEdit::init()
 			{
 				vrlib::tien::Node* n = new vrlib::tien::Node("new node", &tien.scene);
 				n->addComponent(new vrlib::tien::components::Transform());
+				perform(new SelectionChangeAction(this, { n }));
+			});
+			menu->setAction("new cube", [this]()
+			{
+				vrlib::tien::Node* n = new vrlib::tien::Node("cube", &tien.scene);
+				n->addComponent(new vrlib::tien::components::Transform());
+
+				auto mesh = new vrlib::tien::components::MeshRenderer::Mesh();
+				//top/bottom
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, .5f, -.5f), glm::vec3(0, 1, 0), glm::vec2(0, 0), glm::vec3(0, 0, 1)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, .5f,  .5f), glm::vec3(0, 1, 0), glm::vec2(0, 1), glm::vec3(0, 0, 1)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, .5f,  .5f), glm::vec3(0, 1, 0), glm::vec2(1, 1), glm::vec3(0, 0, 1)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, .5f, -.5f), glm::vec3(0, 1, 0), glm::vec2(1, 0), glm::vec3(0, 0, 1)));
+
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f, -.5f), glm::vec3(0, -1, 0), glm::vec2(0, 0), glm::vec3(0, 0, 1)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f,  .5f), glm::vec3(0, -1, 0), glm::vec2(0, 1), glm::vec3(0, 0, 1)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f,  .5f), glm::vec3(0, -1, 0), glm::vec2(1, 1), glm::vec3(0, 0, 1)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f, -.5f), glm::vec3(0, -1, 0), glm::vec2(1, 0), glm::vec3(0, 0, 1)));
+				//sides
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f, -.5f), glm::vec3(1, 0, 0), glm::vec2(0, 0), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f,  .5f), glm::vec3(1, 0, 0), glm::vec2(0, 1), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f,  .5f,  .5f), glm::vec3(1, 0, 0), glm::vec2(1, 1), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f,  .5f, -.5f), glm::vec3(1, 0, 0), glm::vec2(1, 0), glm::vec3(0, 1, 0)));
+
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f, -.5f), glm::vec3(-1, 0, 0), glm::vec2(0, 0), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f,  .5f), glm::vec3(-1, 0, 0), glm::vec2(0, 1), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f,  .5f,  .5f), glm::vec3(-1, 0, 0), glm::vec2(1, 1), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f,  .5f, -.5f), glm::vec3(-1, 0, 0), glm::vec2(1, 0), glm::vec3(0, 1, 0)));
+				//front/back
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f, -.5f), glm::vec3(0, 0, -1), glm::vec2(0, 0), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f, -.5f), glm::vec3(0, 0, -1), glm::vec2(0, 1), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f,  .5f, -.5f), glm::vec3(0, 0, -1), glm::vec2(1, 1), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f,  .5f, -.5f), glm::vec3(0, 0, -1), glm::vec2(1, 0), glm::vec3(0, 1, 0)));
+
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f,  .5f), glm::vec3(0, 0, 1), glm::vec2(0, 0), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f,  .5f), glm::vec3(0, 0, 1), glm::vec2(0, 1), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f,  .5f,  .5f), glm::vec3(0, 0, 1), glm::vec2(1, 1), glm::vec3(0, 1, 0)));
+				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f,  .5f,  .5f), glm::vec3(0, 0, 1), glm::vec2(1, 0), glm::vec3(0, 1, 0)));
+
+				mesh->indices.insert(mesh->indices.end(), { 0, 1, 2, 0, 2, 3 });
+				mesh->indices.insert(mesh->indices.end(), { 6, 5, 4, 7, 6, 4 });
+
+				mesh->indices.insert(mesh->indices.end(), { 10, 9, 8, 11, 10, 8 });
+				mesh->indices.insert(mesh->indices.end(), { 12, 13, 14, 12, 14, 15 });
+
+				mesh->indices.insert(mesh->indices.end(), { 18, 17, 16, 19, 18, 16 });
+				mesh->indices.insert(mesh->indices.end(), { 20, 21, 22, 20, 22, 23 });
+
+
+				mesh->material.texture = vrlib::Texture::loadCached("data/tienedit/textures/stub.png");
+
+				n->addComponent(new vrlib::tien::components::MeshRenderer(mesh));
 				perform(new SelectionChangeAction(this, { n }));
 			});
 		}
@@ -1729,6 +1794,53 @@ void TienEdit::duplicate()
 	activeTool = EditTool::TRANSLATE;
 	originalPosition = getSelectionCenter();
 	axis = Axis::XYZ;
+}
+
+void TienEdit::csgUnion()
+{
+	csgjs_model total;
+
+	for (auto n : selectedNodes)
+	{
+		auto m = n->getComponent<vrlib::tien::components::MeshRenderer>();
+		if (!m)
+			continue;
+		
+		csgjs_model mesh;
+		for (auto &m : m->mesh->vertices)
+		{
+			glm::vec3 pos(n->transform->globalTransform * glm::vec4(m.px, m.py, m.pz, 1));
+
+			mesh.vertices.push_back(csgjs_vertex{
+				csgjs_vector{ pos.x, pos.y, pos.z },
+				csgjs_vector{ m.nx, m.ny, m.nz },
+				csgjs_vector{ m.tx, m.ty, 0 },
+			});
+		}
+
+		for (auto &i : m->mesh->indices)
+			mesh.indices.push_back(i);
+		total = csgjs_union(total, mesh);
+	}
+
+
+	auto* newMesh = selectedNodes[0]->getComponent<vrlib::tien::components::MeshRenderer>()->mesh;
+	newMesh->vertices.clear();
+	newMesh->indices.clear();
+
+	for (auto &m : total.vertices)
+	{
+		newMesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(
+			glm::vec3(m.pos.x, m.pos.y, m.pos.z),
+			glm::vec3(m.normal.x, m.normal.y, m.normal.z),
+			glm::vec2(m.uv.x, m.uv.y),
+			glm::vec3(0,0,0)		
+		));
+	}
+	for (auto &i : total.indices)
+		newMesh->indices.push_back(i);
+	selectedNodes[0]->getComponent<vrlib::tien::components::MeshRenderer>()->updateMesh();
+
 }
 
 void TienEdit::rebakeSelectedLights()

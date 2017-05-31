@@ -22,5 +22,24 @@
 	{
 		"name" : "add debug",
 		"type" : "item"
+	},
+	{
+		"name" : "csg",
+		"type" : "menu",
+		"subitems" :
+		[
+			{
+				"name" : "union",
+				"type" : "item"
+			},
+			{
+				"name" : "difference",
+				"type" : "item"
+			},
+			{
+				"name" : "intersect",
+				"type" : "item"
+			}
+		]
 	}
 ]
