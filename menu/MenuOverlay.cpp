@@ -96,11 +96,14 @@ void MenuOverlay::drawPopups()
 				flushVerts();
 			}
 
+			SubMenuMenuItem* smi = dynamic_cast<SubMenuMenuItem*>(mm);
 			ToggleMenuItem* i = dynamic_cast<ToggleMenuItem*>(mm);
 			if (i)
 				drawText((i->getValue() ? "X " : "   ") + mm->name, glm::vec2(m.first.x + 5, y + 12), glm::vec4(1, 1, 1, 1), false);
 			else
 				drawText("   " + mm->name, glm::vec2(m.first.x + 5, y + 12), glm::vec4(1, 1, 1, 1), false);
+			if(smi)
+				drawText("->", glm::vec2(m.first.x + width - 20, y + 12), glm::vec4(1, 1, 1, 1), false);
 			y += menuItemHeight;
 		}
 
@@ -168,7 +171,7 @@ bool MenuOverlay::click(bool button)
 		for (auto mm : m.second->menuItems)
 			width = glm::max(width, font->textlen(mm->name) + 40);
 
-		if (isInRectangle(mousePos, m.first, m.first + glm::vec2(width, m.second->menuItems.size() * 12 + 10)))
+		if (isInRectangle(mousePos, m.first, m.first + glm::vec2(width, m.second->menuItems.size() * menuItemHeight + 10)))
 		{
 			int index = (int)((mousePos.y - m.first.y - 5) / menuItemHeight);
 			if (index >= 0 && index < (int)m.second->menuItems.size())
@@ -185,7 +188,14 @@ bool MenuOverlay::click(bool button)
 				}
 				else if (dynamic_cast<SubMenuMenuItem*>(m.second->menuItems[index]))
 				{
-
+					bool opened = false;
+					auto newMenu = dynamic_cast<SubMenuMenuItem*>(m.second->menuItems[index])->menu;
+					for(auto &m : popupMenus)
+						if (m.second == newMenu)
+							opened = true;
+					if(!opened)
+						popupMenus.push_back(std::pair<glm::vec2, Menu*>(m.first + glm::vec2(width, index*menuItemHeight), newMenu));
+					return lastClick = true;
 				}
 			}
 			menuOpen = -1;

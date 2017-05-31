@@ -180,6 +180,8 @@ public:
 	void focusSelectedObject();
 	void duplicate();
 
+	//csg
+	void csgUnion();
 
 	void rebakeSelectedLights();
 };

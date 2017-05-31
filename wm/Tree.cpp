@@ -129,12 +129,15 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 	}
 	else
 	{
-		selectedItems.clear();
-		selectedIndices.clear();
-		selectedIndices.push_back(index);
-		selectedItems.push_back(flatList[index].item);
 		if (rightClickItem)
 			rightClickItem();
+		else
+		{
+			selectedItems.clear();
+			selectedIndices.clear();
+			selectedIndices.push_back(index);
+			selectedItems.push_back(flatList[index].item);
+		}
 	}
 
 

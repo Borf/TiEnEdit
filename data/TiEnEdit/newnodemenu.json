@@ -2,5 +2,9 @@
 	{
 		"name" : "new node",
 		"type" : "item"
+	},
+	{
+		"name" : "new cube",
+		"type" : "item"
 	}
 ]

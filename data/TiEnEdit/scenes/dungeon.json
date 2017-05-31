@@ -1,0 +1,221 @@
+{
+    "meshes": [],
+    "scene": {
+        "children": [
+            {
+                "components": [
+                    {
+                        "position": [
+                            0.0,
+                            0.866025388240814,
+                            0.500000059604645
+                        ],
+                        "rotation": [
+                            -0.193299502134323,
+                            0.410782307386398,
+                            -0.379371494054794,
+                            0.806205630302429
+                        ],
+                        "scale": [
+                            1,
+                            1,
+                            1
+                        ],
+                        "type": "transform"
+                    },
+                    {
+                        "baking": "realtime",
+                        "color": [
+                            0.866025388240814,
+                            0.866025388240814,
+                            0.747120082378387,
+                            0.866025388240814
+                        ],
+                        "cutoff": 0.0,
+                        "directionalAmbient": 0.5,
+                        "intensity": 20,
+                        "lighttype": "directional",
+                        "range": 3,
+                        "shadow": "shadowmap",
+                        "spotlightAngle": 45,
+                        "type": "light"
+                    }
+                ],
+                "name": "Sunlight",
+                "uuid": "da934037-03f6-4bbd-a97c-f9a59f359ed3"
+            },
+            {
+                "components": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1
+                        ],
+                        "scale": [
+                            1,
+                            1,
+                            1
+                        ],
+                        "type": "transform"
+                    },
+                    {
+                        "type": "camera",
+                        "useFbo": false
+                    },
+                    {
+                        "light": "",
+                        "timeOfDay": 14,
+                        "type": "dynamicskybox"
+                    }
+                ],
+                "name": "Camera",
+                "uuid": "c29d6d6b-a4d4-4607-aec4-4581e40086ac"
+            },
+            {
+                "components": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1
+                        ],
+                        "scale": [
+                            1,
+                            1,
+                            1
+                        ],
+                        "type": "transform"
+                    },
+                    {
+                        "castShadow": true,
+                        "cullBackFaces": true,
+                        "file": "./data/Models/Environment/Building Blocks/Dungeon/floor_1.fbx",
+                        "materialoverrides": [
+                            null
+                        ],
+                        "type": "modelrenderer"
+                    }
+                ],
+                "name": "floor_1.fbx",
+                "uuid": "e7928528-c324-46b9-a2f0-5b6295e0a045"
+            },
+            {
+                "components": [
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            -0.5
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.70710676908493,
+                            0.0,
+                            0.70710676908493
+                        ],
+                        "scale": [
+                            1,
+                            1,
+                            1
+                        ],
+                        "type": "transform"
+                    },
+                    {
+                        "castShadow": true,
+                        "cullBackFaces": true,
+                        "file": "./data/Models/Environment/Building Blocks/Dungeon/wall_1.fbx",
+                        "materialoverrides": [
+                            null
+                        ],
+                        "type": "modelrenderer"
+                    }
+                ],
+                "name": "wall_1.fbx",
+                "uuid": "ceb4fea5-1ea9-4e06-a57f-7ab76ca3b206"
+            },
+            {
+                "components": [
+                    {
+                        "position": [
+                            -0.5,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            -4.37113882867379e-08,
+                            1,
+                            -4.37113882867379e-08,
+                            1.91068546516471e-15
+                        ],
+                        "scale": [
+                            1,
+                            1,
+                            1
+                        ],
+                        "type": "transform"
+                    },
+                    {
+                        "castShadow": true,
+                        "cullBackFaces": true,
+                        "file": "./data/Models/Environment/Building Blocks/Dungeon/wall_1.fbx",
+                        "materialoverrides": [
+                            null
+                        ],
+                        "type": "modelrenderer"
+                    }
+                ],
+                "name": "wall_1.fbx",
+                "uuid": "95fdf6ca-51ca-407e-b46d-cb5ab46f821d"
+            },
+            {
+                "components": [
+                    {
+                        "position": [
+                            0.5,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            -4.37113882867379e-08,
+                            1,
+                            -4.37113882867379e-08,
+                            1.91068546516471e-15
+                        ],
+                        "scale": [
+                            1,
+                            1,
+                            1
+                        ],
+                        "type": "transform"
+                    },
+                    {
+                        "castShadow": true,
+                        "cullBackFaces": true,
+                        "file": "./data/Models/Environment/Building Blocks/Dungeon/wall_1.fbx",
+                        "materialoverrides": [
+                            null
+                        ],
+                        "type": "modelrenderer"
+                    }
+                ],
+                "name": "wall_1.fbx",
+                "uuid": "ef83e57c-9dd5-4918-a507-f453809bafba"
+            }
+        ],
+        "name": "Root",
+        "uuid": "8605fc92-ca2b-41f6-8112-65edaafea8b6"
+    }
+}
