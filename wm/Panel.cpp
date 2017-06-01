@@ -4,16 +4,11 @@
 
 void Panel::draw(MenuOverlay * overlay)
 {
-	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), absPosition, absPosition +size); //menubar
+	overlay->drawRect(glm::vec2(32, 416), glm::vec2(32 + 32, 416 + 32), absPosition, absPosition + size); //menubar
 	overlay->flushVerts();
 
 	for (auto c : components)
-		if (!c->focussed)
-			c->draw(overlay);
-	/*for (auto c : components)
-		if (c->focussed)
-			c->draw(overlay);*/
-
+		c->draw(overlay);
 }
 
 bool Panel::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount)
