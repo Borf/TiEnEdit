@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <functional>
 #include <VrLib/json.hpp>
 
@@ -10,8 +11,11 @@ class MenuItem;
 
 class Menu
 {
-public:
 	Menu(const json &data);
+	static std::map<std::string, Menu*> loadedMenus;
+public:
+	static Menu* load(const std::string &filename);
+
 	void setAction(std::string path, std::function<void() > callback);
 	void linkToggle(std::string path, bool* linkBool);
 	void setToggleValue(std::string path, bool value);

@@ -156,17 +156,30 @@
     <Image Include="editor.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\TiEnEdit\menu.json" />
-    <None Include="data\TiEnEdit\newnodemenu.json" />
-    <None Include="data\TiEnEdit\nodemenu.json" />
+    <Text Include="data\TiEnEdit\menu.json">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="data\TiEnEdit\newnodemenu.json">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="data\TiEnEdit\nodemenu.json">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </Text>
     <None Include="data\TiEnEdit\shaders\editor.frag" />
     <None Include="data\TiEnEdit\shaders\editor.vert" />
     <None Include="data\TiEnEdit\shaders\overlay.frag" />
     <None Include="data\TiEnEdit\shaders\overlay.vert" />
-    <None Include="data\TiEnEdit\stubs.json">
+    <Text Include="data\TiEnEdit\stubs.json">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-    </None>
+      <FileType>Document</FileType>
+    </Text>
     <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

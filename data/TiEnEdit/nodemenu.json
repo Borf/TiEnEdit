@@ -29,6 +29,11 @@
 		"subitems" :
 		[
 			{
+				"name" : "keep old",
+				"type" : "toggle",
+				"initial" : false
+			},
+			{
 				"name" : "union",
 				"type" : "item"
 			},

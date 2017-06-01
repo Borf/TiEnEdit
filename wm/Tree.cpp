@@ -87,7 +87,7 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 	if (leftButton)
 	{
 		if (std::find(std::begin(selectedIndices), std::end(selectedIndices), index) != std::end(selectedIndices))
-		{
+		{ //if clicking on an existing item
 			if (clickCount == 2)
 			{
 				if (flatList[index].hasChildren)
@@ -95,19 +95,18 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 					nodeInfo[flatList[index].item].opened = !nodeInfo[flatList[index].item].opened;
 					update();
 				}
-				else
-					if(doubleClickItem)
-						doubleClickItem();
+				if(doubleClickItem)
+					doubleClickItem();
 			}
 			else
 			{
-				if (ctrl)
+				if (ctrl) //unselect a selected item
 				{
 					int i = std::distance(std::begin(selectedIndices), std::find(std::begin(selectedIndices), std::end(selectedIndices), index));
 					selectedIndices.erase(selectedIndices.begin() + i);
 					selectedItems.erase(selectedItems.begin() + i);
 				}
-				else
+				else // switch selection and make the just selected 
 				{
 					int i = std::distance(std::begin(selectedIndices), std::find(std::begin(selectedIndices), std::end(selectedIndices), index));
 					std::swap(selectedIndices[0], selectedIndices[i]);
@@ -118,7 +117,7 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 		}
 		else
 		{
-
+			//update selection
 			selectedItems.clear();
 			if(!ctrl && !shift)
 				selectedIndices.clear();
@@ -143,7 +142,7 @@ bool Tree<T>::click(bool leftButton, const glm::ivec2 & clickPos, int clickCount
 				selectItem();
 		}
 	}
-	else
+	else //rightclicking
 	{
 		if (rightClickItem)
 			rightClickItem();

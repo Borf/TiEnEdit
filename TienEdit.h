@@ -180,7 +180,8 @@ public:
 	void duplicate();
 
 	//csg
-	void csgUnion();
+	enum class CsgOp {		Union, Difference, Intersect };
+	void csgOperate(bool keepOld, CsgOp operation);
 
 	void rebakeSelectedLights();
 };

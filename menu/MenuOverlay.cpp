@@ -48,7 +48,7 @@ void MenuOverlay::init()
 
 void MenuOverlay::loadMenu(const std::string &menuFile)
 {
-	rootMenu = new Menu(json::parse(std::ifstream(menuFile)));
+	rootMenu = Menu::load(menuFile);
 }
 
 
@@ -181,11 +181,10 @@ bool MenuOverlay::click(bool button)
 			int index = (int)((mousePos.y - m.first.y - 5) / menuItemHeight);
 			if (index >= 0 && index < (int)m.second->menuItems.size())
 			{
+				if (!m.second->menuItems[index]->enabled)
+					return lastClick = true;
 				if (dynamic_cast<ToggleMenuItem*>(m.second->menuItems[index]))
-				{
 					dynamic_cast<ToggleMenuItem*>(m.second->menuItems[index])->toggle();
-				}
-
 				if (dynamic_cast<ActionMenuItem*>(m.second->menuItems[index]))
 				{
 					if (dynamic_cast<ActionMenuItem*>(m.second->menuItems[index])->callback)

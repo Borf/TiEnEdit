@@ -8,6 +8,7 @@
 #include <vrlib/json.hpp>
 #include <vrlib/Log.h>
 
+#include <fstream>
 using vrlib::logger; using vrlib::Log;
 
 
@@ -37,6 +38,14 @@ Menu::Menu(const json &data)
 			menuItems.push_back(subItem);
 		}
 	}
+}
+
+std::map<std::string, Menu*> Menu::loadedMenus;
+Menu* Menu::load(const std::string & filename)
+{
+	if (loadedMenus.find(filename) == loadedMenus.end())
+		loadedMenus[filename] = new Menu(json::parse(std::ifstream(filename)));
+	return loadedMenus[filename];
 }
 
 void Menu::setAction(std::string path, std::function<void() > callback)

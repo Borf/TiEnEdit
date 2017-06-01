@@ -378,7 +378,7 @@ void TienEdit::init()
 	{
 		if (!objectTree->selectedItems.empty())
 		{
-			Menu* menu = new Menu(json::parse(std::ifstream("data/TiEnEdit/nodemenu.json")));
+			Menu* menu = Menu::load("data/TiEnEdit/nodemenu.json");
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
 			menu->setAction("duplicate", std::bind(&TienEdit::duplicate, this));
 			menu->setAction("delete", std::bind(&TienEdit::deleteSelection, this));
@@ -398,21 +398,19 @@ void TienEdit::init()
 			});
 			if (objectTree->selectedItems.size() > 1)
 			{
-				menu->setAction("csg/union", std::bind(&TienEdit::csgUnion, this));
-				menu->getItem("csg/difference")->enabled = false;
-				menu->getItem("csg/intersect")->enabled = false;
+				menu->getItem("csg")->enabled = true;
+				menu->setAction("csg/union", std::bind(&TienEdit::csgOperate, this, dynamic_cast<ToggleMenuItem*>(menu->getItem("csg/keep old"))->getValue(), CsgOp::Union));
+				menu->setAction("csg/difference", std::bind(&TienEdit::csgOperate, this, dynamic_cast<ToggleMenuItem*>(menu->getItem("csg/keep old"))->getValue(), CsgOp::Difference));
+				menu->setAction("csg/intersect", std::bind(&TienEdit::csgOperate, this, dynamic_cast<ToggleMenuItem*>(menu->getItem("csg/keep old"))->getValue(), CsgOp::Intersect));
 			}
 			else
 			{
-				menu->getItem("csg/union")->enabled = false;
-				menu->getItem("csg/difference")->enabled = false;
-				menu->getItem("csg/intersect")->enabled = false;
+				menu->getItem("csg")->enabled = false;
 			}
 		}
 		else
 		{
-			json popupMenu = json::parse(std::ifstream("data/TiEnEdit/newnodemenu.json"));
-			Menu* menu = new Menu(popupMenu);
+			Menu* menu = Menu::load("data/TiEnEdit/newnodemenu.json");
 			menuOverlay.popupMenus.push_back(std::pair<glm::vec2, Menu*>(mouseState.pos, menu));
 			menu->setAction("new node", [this]()
 			{
@@ -425,48 +423,7 @@ void TienEdit::init()
 				vrlib::tien::Node* n = new vrlib::tien::Node("cube", &tien.scene);
 				n->addComponent(new vrlib::tien::components::Transform());
 
-				auto mesh = new vrlib::tien::components::MeshRenderer::Mesh();
-				//top/bottom
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, .5f, -.5f), glm::vec3(0, 1, 0), glm::vec2(0, 0), glm::vec3(0, 0, 1)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, .5f,  .5f), glm::vec3(0, 1, 0), glm::vec2(0, 1), glm::vec3(0, 0, 1)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, .5f,  .5f), glm::vec3(0, 1, 0), glm::vec2(1, 1), glm::vec3(0, 0, 1)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, .5f, -.5f), glm::vec3(0, 1, 0), glm::vec2(1, 0), glm::vec3(0, 0, 1)));
-
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f, -.5f), glm::vec3(0, -1, 0), glm::vec2(0, 0), glm::vec3(0, 0, 1)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f,  .5f), glm::vec3(0, -1, 0), glm::vec2(0, 1), glm::vec3(0, 0, 1)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f,  .5f), glm::vec3(0, -1, 0), glm::vec2(1, 1), glm::vec3(0, 0, 1)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f, -.5f), glm::vec3(0, -1, 0), glm::vec2(1, 0), glm::vec3(0, 0, 1)));
-				//sides
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f, -.5f), glm::vec3(1, 0, 0), glm::vec2(0, 0), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f,  .5f), glm::vec3(1, 0, 0), glm::vec2(0, 1), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f,  .5f,  .5f), glm::vec3(1, 0, 0), glm::vec2(1, 1), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f,  .5f, -.5f), glm::vec3(1, 0, 0), glm::vec2(1, 0), glm::vec3(0, 1, 0)));
-
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f, -.5f), glm::vec3(-1, 0, 0), glm::vec2(0, 0), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f,  .5f), glm::vec3(-1, 0, 0), glm::vec2(0, 1), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f,  .5f,  .5f), glm::vec3(-1, 0, 0), glm::vec2(1, 1), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f,  .5f, -.5f), glm::vec3(-1, 0, 0), glm::vec2(1, 0), glm::vec3(0, 1, 0)));
-				//front/back
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f, -.5f), glm::vec3(0, 0, -1), glm::vec2(0, 0), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f, -.5f), glm::vec3(0, 0, -1), glm::vec2(0, 1), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f,  .5f, -.5f), glm::vec3(0, 0, -1), glm::vec2(1, 1), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f,  .5f, -.5f), glm::vec3(0, 0, -1), glm::vec2(1, 0), glm::vec3(0, 1, 0)));
-
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f, -.5f,  .5f), glm::vec3(0, 0, 1), glm::vec2(0, 0), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f, -.5f,  .5f), glm::vec3(0, 0, 1), glm::vec2(0, 1), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3( .5f,  .5f,  .5f), glm::vec3(0, 0, 1), glm::vec2(1, 1), glm::vec3(0, 1, 0)));
-				mesh->vertices.push_back(vrlib::gl::VertexP3N2B2T2T2(glm::vec3(-.5f,  .5f,  .5f), glm::vec3(0, 0, 1), glm::vec2(1, 0), glm::vec3(0, 1, 0)));
-
-				mesh->indices.insert(mesh->indices.end(), { 0, 1, 2, 0, 2, 3 });
-				mesh->indices.insert(mesh->indices.end(), { 6, 5, 4, 7, 6, 4 });
-
-				mesh->indices.insert(mesh->indices.end(), { 10, 9, 8, 11, 10, 8 });
-				mesh->indices.insert(mesh->indices.end(), { 12, 13, 14, 12, 14, 15 });
-
-				mesh->indices.insert(mesh->indices.end(), { 18, 17, 16, 19, 18, 16 });
-				mesh->indices.insert(mesh->indices.end(), { 20, 21, 22, 20, 22, 23 });
-
-
+				auto mesh = new vrlib::tien::components::MeshRenderer::Cube();
 				mesh->material.texture = vrlib::Texture::loadCached("data/tienedit/textures/stub.png");
 
 				n->addComponent(new vrlib::tien::components::MeshRenderer(mesh));
@@ -501,7 +458,7 @@ void TienEdit::init()
 	vrlib::tien::Node* sunlight;
 	{
 		vrlib::tien::Node* n = new vrlib::tien::Node("Sunlight", &tien.scene);
-		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 1, 1)));
+		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 4, 0), glm::quat(glm::vec3(1,1,1))));
 		vrlib::tien::components::Light* light = new vrlib::tien::components::Light();
 		light->color = glm::vec4(1, 1, 0.8627f, 1);
 		light->intensity = 20.0f;
@@ -518,42 +475,6 @@ void TienEdit::init()
 		n->addComponent(new vrlib::tien::components::DynamicSkyBox());
 		n->getComponent<vrlib::tien::components::DynamicSkyBox>()->light = sunlight;
 	}
-
-	/*{
-		vrlib::tien::Node* n = new vrlib::tien::Node("Model", &tien.scene);
-		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(1,1,1)));
-		n->addComponent(new vrlib::tien::components::ModelRenderer("data/Models/vangogh/Enter a title.obj"));
-
-		//n->addComponent(new vrlib::tien::components::ModelRenderer("data/tientest/models/WoodenBox02.obj"));
-//		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 0), glm::quat(), glm::vec3(0.01f, 0.01f, 0.01f)));
-//		n->addComponent(new vrlib::tien::components::ModelRenderer("data/tientest/models/crytek-sponza/sponza.obj"));
-		n->getComponent<vrlib::tien::components::ModelRenderer>()->castShadow = false;
-	}*/
-	/*json v = json::parse(std::ifstream("data/virtueelpd/scenes/Real PD1 v1-6.json"));
-	for (const auto &o : v["objects"])
-	{
-		if (o["model"].asString().find(".fbx") != std::string::npos)
-			o["model"] = o["model"].asString().substr(0, o["model"].asString().size() - 4);
-
-
-		std::string fileName = "data/virtueelpd/models/" + o["category"].asString() + "/" + o["model"].asString() + "/" + o["model"].asString() + ".fbx";
-		std::ifstream file(fileName);
-		if (file.is_open())
-		{
-			file.close();
-			vrlib::tien::Node* n = new vrlib::tien::Node(o["model"], &tien.scene);
-			n->addComponent(new vrlib::tien::components::Transform(
-				glm::vec3(o["x"], o["y"], -o["z"].asFloat() + 15),
-				glm::quat(o["rotationquat"]["w"], o["rotationquat"]["x"], o["rotationquat"]["y"], o["rotationquat"]["z"]),
-				glm::vec3(o["scale"], o["scale"], o["scale"]) * 40.0f));
-			n->addComponent(new vrlib::tien::components::ModelRenderer(fileName));
-
-			if (o["model"].asString().find("realPD1") != std::string::npos)
-				n->getComponent<vrlib::tien::components::ModelRenderer>()->castShadow = false;
-		}
-		else
-			vrlib::logger << "Could not find file " << fileName << vrlib::Log::newline;
-	}*/
 
 
 	menuOverlay.focussedComponent = renderPanel;
@@ -1792,7 +1713,7 @@ void TienEdit::duplicate()
 	axis = Axis::XYZ;
 }
 
-void TienEdit::csgUnion()
+void TienEdit::csgOperate(bool keepOld, CsgOp operation)
 {
 	csgjs_model total;
 
@@ -1819,7 +1740,18 @@ void TienEdit::csgUnion()
 
 		for (auto &i : m->mesh->indices)
 			mesh.indices.push_back(i);
-		total = csgjs_union(total, mesh);
+		if(operation == CsgOp::Union)
+			total = csgjs_union(total, mesh);
+		else
+		{
+			if (n == objectTree->selectedItems[0]) // if this is the first item, don't subtract, but equal
+				total = mesh;
+			else if (operation == CsgOp::Difference)
+				total = csgjs_difference(total, mesh);
+			else if (operation == CsgOp::Intersect)
+				total = csgjs_intersection(total, mesh);
+
+		}
 	}
 
 
@@ -1842,8 +1774,12 @@ void TienEdit::csgUnion()
 	for (auto &i : total.indices)
 		newMesh->indices.push_back(i);
 	objectTree->selectedItems[0]->getComponent<vrlib::tien::components::MeshRenderer>()->updateMesh();
-	for (size_t i = 1; i < objectTree->selectedItems.size(); i++)
-		delete objectTree->selectedItems[i];
+	
+	if (!keepOld)
+	{
+		for (size_t i = 1; i < objectTree->selectedItems.size(); i++)
+			delete objectTree->selectedItems[i];
+	}
 	objectTree->selectedItems.erase(objectTree->selectedItems.begin() + 1, objectTree->selectedItems.end());
 	objectTree->update();
 	cacheSelection = true;
