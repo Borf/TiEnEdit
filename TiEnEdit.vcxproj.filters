@@ -129,6 +129,9 @@
     <ClInclude Include="BrowsePanel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="StubComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -221,6 +224,9 @@
     <ClCompile Include="BrowsePanel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StubComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TiEnEdit.rc">
@@ -236,20 +242,11 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\TiEnEdit\menu.json">
-      <Filter>data</Filter>
-    </None>
     <None Include="data\TiEnEdit\shaders\overlay.frag">
       <Filter>data\shaders</Filter>
     </None>
     <None Include="data\TiEnEdit\shaders\overlay.vert">
       <Filter>data\shaders</Filter>
-    </None>
-    <None Include="data\TiEnEdit\nodemenu.json">
-      <Filter>data</Filter>
-    </None>
-    <None Include="data\TiEnEdit\newnodemenu.json">
-      <Filter>data</Filter>
     </None>
     <None Include="data\TiEnEdit\shaders\editor.vert">
       <Filter>data\shaders</Filter>
@@ -257,9 +254,12 @@
     <None Include="data\TiEnEdit\shaders\editor.frag">
       <Filter>data\shaders</Filter>
     </None>
-    <None Include="data\TiEnEdit\stubs.json">
-      <Filter>data</Filter>
-    </None>
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="data\TiEnEdit\menu.json" />
+    <Text Include="data\TiEnEdit\newnodemenu.json" />
+    <Text Include="data\TiEnEdit\nodemenu.json" />
+    <Text Include="data\TiEnEdit\stubs.json" />
   </ItemGroup>
 </Project>

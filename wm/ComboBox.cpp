@@ -53,9 +53,13 @@ bool ComboBox::click(bool leftButton, const glm::ivec2 & clickPos, int clickCoun
 		focussed = false;
 		if(onChange)
 			onChange();
+		return true;
 	}
 	else if (inComponent(clickPos))
+	{
 		focussed = !focussed;
+		return true;
+	}
 	return false;
 }
 

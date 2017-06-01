@@ -60,6 +60,7 @@
 #include "wm/Image.h"
 #include "wm/Button.h"
 #include "wm/ScrollPanel.h"
+#include "wm/ComboBox.h"
 
 #include "actions/SelectionChangeAction.h"
 #include "actions/GroupAction.h"
@@ -68,7 +69,7 @@
 #include "actions/NodeRotateAction.h"
 #include "actions/NodeDeleteAction.h"
 
-
+#include "StubComponent.h"
 #include "EditorBuilderGui.h"
 #include "BrowsePanel.h"
 
@@ -76,81 +77,10 @@
 #define SCENEWIDTH 300
 #define PROPERTYWIDTH 300
 #define BROWSERHEIGHT 300
-
+#define BROWSERTOOLBARHEIGHT 32
 
 MouseState TienEdit::mouseState;
 MouseState TienEdit::lastMouseState;
-
-
-class StubComponent : public vrlib::tien::Component
-{
-public:
-	json stub;
-	json values;
-
-	StubComponent()
-	{
-
-	}
-	StubComponent(json v)
-	{
-		values = v;
-	}
-
-	virtual json toJson(json & meshes) const override
-	{
-		json ret = values;
-		ret["type"] = stub["name"];
-		return ret;
-	}
-	virtual void buildEditor(vrlib::tien::EditorBuilder* builder, bool folded)
-	{
-		builder->addTitle(stub["name"].get<std::string>() + " (stub)");
-		if (folded)
-			return;
-
-		for (auto &property : stub["properties"])
-		{
-			if (values.find(property["name"]) == values.end())
-				values[property["name"].get<std::string>()] = property["default"];
-
-			builder->beginGroup(property["name"]);
-			if (property["type"] == "string")
-				builder->addTextBox(values[property["name"].get<std::string>()].get<std::string>(), [this, &property](const std::string &newValue) { values[property["name"].get<std::string>()] = newValue; });
-			if (property["type"] == "model")
-				builder->addModelBox(values[property["name"].get<std::string>()].get<std::string>(), [this, &property](const std::string &newValue) { values[property["name"].get<std::string>()] = newValue; });
-			else if (property["type"] == "float")
-				builder->addFloatBox(values[property["name"].get<std::string>()].get<float>(), 
-					property["min"].get<float>(), 
-					property["max"].get<float>(), [this, &property](float newValue) {values[property["name"].get<std::string>()] = newValue; });
-			else if (property["type"] == "bool")
-				builder->addCheckbox(values[property["name"].get<std::string>()].get<bool>(), [this, &property](bool newValue) {values[property["name"].get<std::string>()] = newValue; });
-			else if (property["type"] == "color")
-			{
-				const json &colorValue = values[property["name"].get<std::string>()];
-				builder->addColorBox(glm::vec4(colorValue[0], colorValue[1], colorValue[2], colorValue[3]), [this, &property](const glm::vec4 &newValue) {
-					for (int i = 0; i < 4; i++)
-						values[property["name"].get<std::string>()][i] = newValue[i];
-				});
-			}
-			else if (property["type"] == "enum")
-			{
-				std::vector<std::string> enumValues;
-				for (const std::string &v : property["values"])
-					enumValues.push_back(v);
-				builder->addComboBox(values[property["name"].get<std::string>()].get<std::string>(), enumValues, [this, &property](const std::string &newValue) {values[property["name"].get<std::string>()] = newValue; });
-			}
-			else
-				vrlib::logger << "Unknown stub type: " << property["type"] << Log::newline;
-
-			builder->endGroup();
-		}
-
-
-
-	}
-
-};
 
 
 
@@ -361,15 +291,27 @@ void TienEdit::init()
 	
 	SplitPanel* subPanel = new SplitPanel(SplitPanel::Alignment::VERTICAL);
 	subPanel->addPanel(renderPanel = new RenderComponent(this));
-	subPanel->addPanel(new ScrollPanel(browsePanel = new BrowsePanel(this)));
-	subPanel->sizes[1] = BROWSERHEIGHT;
-	subPanel->sizes[0] = mainPanel->size.y - BROWSERHEIGHT;
+
+	SplitPanel* browseSplitter = new SplitPanel(SplitPanel::Alignment::VERTICAL);
+	subPanel->addPanel(browseSplitter);
+	browseSplitter->addPanel(browseToolbar.panel = new Panel());
+	browseSplitter->addPanel(new ScrollPanel(browsePanel = new BrowsePanel(this)));
+	browseSplitter->sizes[0] = BROWSERTOOLBARHEIGHT;
+
+	subPanel->sizes[1] = BROWSERHEIGHT + BROWSERTOOLBARHEIGHT;
+	subPanel->sizes[0] = mainPanel->size.y - BROWSERHEIGHT - BROWSERTOOLBARHEIGHT;
 
 	mainPanel->addPanel(subPanel);
 	propertiesPanel = new Panel();
 	propertiesPanel->size.x = PROPERTYWIDTH;
 	propertiesPanel->size.y = 100000;
 	mainPanel->addPanel(new ScrollPanel( propertiesPanel ));
+
+
+	browseToolbar.panel->components.push_back(browseToolbar.typeFilter = new ComboBox("all", glm::ivec2(5, 5)));
+	browseToolbar.typeFilter->size = glm::ivec2(100, 25);
+	browseToolbar.typeFilter->values = { "all", "models", "textures", "prefabs" };
+	browseToolbar.typeFilter->onChange = [this]() {browsePanel->rebuild(browsePanel->directory);  };
 
 
 	editorBuilder = new GuiEditor(this, propertiesPanel);
@@ -452,7 +394,7 @@ void TienEdit::init()
 	mainPanel->sizes[0] = SCENEWIDTH;
 	mainPanel->sizes[2] = PROPERTYWIDTH;
 	mainPanel->sizes[1] = mainPanel->size.x - SCENEWIDTH-PROPERTYWIDTH;
-	dynamic_cast<SplitPanel*>(mainPanel->components[1])->sizes[0] = mainPanel->size.y - BROWSERHEIGHT;
+	dynamic_cast<SplitPanel*>(mainPanel->components[1])->sizes[0] = mainPanel->size.y - BROWSERHEIGHT - BROWSERTOOLBARHEIGHT;
 	mainPanel->onReposition(nullptr);
 
 	vrlib::tien::Node* sunlight;
@@ -696,6 +638,8 @@ void TienEdit::draw()
 	menuOverlay.drawInit();
 	menuOverlay.drawRootMenu();
 	mainPanel->draw(&menuOverlay);
+	if(menuOverlay.focussedComponent)
+		menuOverlay.focussedComponent->draw(&menuOverlay);
 	menuOverlay.drawPopups();
 
 

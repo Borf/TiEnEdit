@@ -16,6 +16,7 @@ class Action;
 class GuiEditor;
 class GroupAction;
 class BrowsePanel;
+class ComboBox;
 
 class ToggleMenuItem;
 
@@ -80,6 +81,15 @@ public:
 	Tree<vrlib::tien::Node*>* objectTree;
 	BrowsePanel* browsePanel;
 	Panel* propertiesPanel;
+	
+	struct
+	{
+		Panel* panel = nullptr;
+		ComboBox* typeFilter = nullptr;
+
+	} browseToolbar;
+
+
 	GuiEditor* editorBuilder;
 
 	vrlib::math::Ray ray;

@@ -10,9 +10,9 @@ void Panel::draw(MenuOverlay * overlay)
 	for (auto c : components)
 		if (!c->focussed)
 			c->draw(overlay);
-	for (auto c : components)
+	/*for (auto c : components)
 		if (c->focussed)
-			c->draw(overlay);
+			c->draw(overlay);*/
 
 }
 

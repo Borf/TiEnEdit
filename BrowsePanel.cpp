@@ -5,6 +5,7 @@
 #include "wm/Image.h"
 #include "wm/SplitPanel.h"
 #include "wm/ScrollPanel.h"
+#include "wm/ComboBox.h"
 
 #include <VrLib/util.h>
 #include <VrLib/Texture.h>
@@ -77,8 +78,20 @@ void BrowsePanel::rebuild(const std::string & directory)
 			return false;
 		FileType type = fileType(s);
 
+
+		if (editor->browseToolbar.typeFilter && editor->browseToolbar.typeFilter->value != "all")
+		{
+			if (editor->browseToolbar.typeFilter->value == "models" && type != FileType::Model)
+				return true;
+			if (editor->browseToolbar.typeFilter->value == "textures" && type != FileType::Image && type != FileType::Video)
+				return true;
+			if (editor->browseToolbar.typeFilter->value == "prefabs" && type != FileType::Prefab)
+				return true;
+		}
 		if (type != FileType::Other)
 			return false;
+
+
 		return true;
 	}), files.end());
 
@@ -141,7 +154,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 		components.push_back(new Label(files[i], glm::ivec2(0, 0)));
 	}
 	if(editor->mainPanel->components.size() == 3) //TODO: ew
-		dynamic_cast<ScrollPanel*>(dynamic_cast<SplitPanel*>(editor->mainPanel->components[1])->components[1])->scrollOffset = glm::ivec2(0, 0); //TODO: ew too
+		dynamic_cast<ScrollPanel*>(dynamic_cast<SplitPanel*>(dynamic_cast<SplitPanel*>(editor->mainPanel->components[1])->components[1])->components[1])->scrollOffset = glm::ivec2(0, 0); //TODO: ew too
 	onReposition(nullptr);
 	editor->menuOverlay.focussedComponent = nullptr;
 }

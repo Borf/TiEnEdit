@@ -215,6 +215,10 @@ bool MenuOverlay::click(bool button)
 
 	Component* clickedComponent = getRootComponent()->getComponentAt(mousePos);
 
+	if (focussedComponent && focussedComponent->inComponent(mousePos))
+		clickedComponent = focussedComponent;
+
+
 	if (focussedComponent != clickedComponent)
 	{
 		if (focussedComponent)
@@ -291,6 +295,8 @@ bool MenuOverlay::mouseUp(bool button)
 
 
 	Component* clickedComponent = root->getComponentAt(mousePos);
+	if (focussedComponent && focussedComponent->inComponent(mousePos))
+		clickedComponent = focussedComponent;
 
 	if (focussedComponent != clickedComponent)
 	{
@@ -306,6 +312,9 @@ bool MenuOverlay::mouseUp(bool button)
 			focussedComponent->focus();
 		}
 	}
+
+	if (clickedComponent->click(button, mousePos, TienEdit::mouseState.clickCount))
+		return true;
 
 
 	if (root->click(button, mousePos, TienEdit::mouseState.clickCount))
