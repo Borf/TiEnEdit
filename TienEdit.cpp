@@ -313,6 +313,23 @@ void TienEdit::init()
 	browseToolbar.typeFilter->values = { "all", "models", "textures", "prefabs" };
 	browseToolbar.typeFilter->onChange = [this]() {browsePanel->rebuild(browsePanel->directory);  };
 
+	browseToolbar.panel->components.push_back(browseToolbar.searchFilter = new TextField("", glm::ivec2(105, 5)));
+	browseToolbar.searchFilter->emptyValue = "Search...";
+	browseToolbar.searchFilter->size = glm::ivec2(200, 25);
+
+	browseToolbar.searchFilter->onChange = [this]() {
+		static DelayedTask keyTask = 0;
+		if (keyTask != 0)
+			stopDelayed(keyTask);
+		keyTask = runDelayed(0.5, [this]()
+		{
+			browsePanel->rebuild(browsePanel->directory); 
+			menuOverlay.focussedComponent = browseToolbar.searchFilter;
+			keyTask = 0;
+		});
+	};
+
+
 
 	editorBuilder = new GuiEditor(this, propertiesPanel);
 
@@ -618,6 +635,20 @@ void TienEdit::preFrame(double frameTime, double totalTime)
 			a->node->transform->scale = a->originalScale * scale;
 		}
 	}
+
+
+	for (auto it = delayedTasks.begin(); it != delayedTasks.end();)
+	{
+		std::get<0>(it->second) -= frameTime / 1000.0f;
+		if (std::get<0>(it->second) <= 0)
+		{
+			std::get<1>(it->second)();
+			it = delayedTasks.erase(it);
+		}
+		else
+			it++;
+	}
+	
 
 
 	//update tien, though it is paused
@@ -1739,6 +1770,19 @@ void TienEdit::rebakeSelectedLights()
 				nn->light->rebake();
 		});
 	}
+}
+
+TienEdit::DelayedTask TienEdit::runDelayed(float time, std::function<void()> callback)
+{
+	static DelayedTask taskId = 1;
+	DelayedTask newTask = taskId++;
+	delayedTasks[newTask] = std::make_tuple(time, callback);
+	return newTask;
+}
+
+void TienEdit::stopDelayed(DelayedTask toStop)
+{
+	delayedTasks.erase(delayedTasks.find(toStop));
 }
 
 

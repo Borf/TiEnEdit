@@ -66,18 +66,28 @@ void BrowsePanel::rebuild(const std::string & directory)
 		delete c;
 	components.clear();
 
-	std::vector<std::string> files = vrlib::util::scandir(directory);
+	std::vector<std::string> files = vrlib::util::scandir(directory, editor->browseToolbar.searchFilter && editor->browseToolbar.searchFilter->value != "");
+
 	files.erase(std::remove_if(files.begin(), files.end(), [this](const std::string &s)
 	{
 
 		if (s.size() == 0)
 			return true;
-		if (s[0] == '.')
-			return true;
+
+		if (editor->browseToolbar.searchFilter && editor->browseToolbar.searchFilter->value != "")
+		{
+			std::vector<std::string> terms = vrlib::util::split(editor->browseToolbar.searchFilter->value, " ");
+			bool match = true;
+			for (auto &term : terms)
+				if (s.find(term) == std::string::npos)
+					match = false;
+			if (!match)
+				return true;
+		}
 		if (s[s.length() - 1] == '/')
 			return false;
-		FileType type = fileType(s);
 
+		FileType type = fileType(s);
 
 		if (editor->browseToolbar.typeFilter && editor->browseToolbar.typeFilter->value != "all")
 		{
@@ -151,7 +161,11 @@ void BrowsePanel::rebuild(const std::string & directory)
 		}
 		if (img)
 			components.push_back(img);
-		components.push_back(new Label(files[i], glm::ivec2(0, 0)));
+
+		std::string name = files[i];
+		if (name.rfind("/") != std::string::npos && name.rfind("/") != name.size()-1)
+			name = name.substr(name.rfind("/") + 1);
+		components.push_back(new Label(name, glm::ivec2(0, 0)));
 	}
 	if(editor->mainPanel->components.size() == 3) //TODO: ew
 		dynamic_cast<ScrollPanel*>(dynamic_cast<SplitPanel*>(dynamic_cast<SplitPanel*>(editor->mainPanel->components[1])->components[1])->components[1])->scrollOffset = glm::ivec2(0, 0); //TODO: ew too
@@ -162,7 +176,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 BrowsePanel::FileType BrowsePanel::fileType(const std::string & file)
 {
 	std::string extension = file;
-	if (extension.find("."))
+	if (extension.find(".") != std::string::npos)
 		extension = extension.substr(extension.rfind("."));
 	std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
 

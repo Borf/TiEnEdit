@@ -86,6 +86,7 @@ public:
 	{
 		Panel* panel = nullptr;
 		ComboBox* typeFilter = nullptr;
+		TextField* searchFilter = nullptr;
 
 	} browseToolbar;
 
@@ -194,4 +195,11 @@ public:
 	void csgOperate(bool keepOld, CsgOp operation);
 
 	void rebakeSelectedLights();
+
+
+	typedef int DelayedTask;
+	std::map<DelayedTask, std::tuple<float, std::function<void()> > >	delayedTasks;
+
+	DelayedTask runDelayed(float time, std::function<void()> callback);
+	void stopDelayed(DelayedTask toStop);
 };

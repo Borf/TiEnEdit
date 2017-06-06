@@ -66,6 +66,9 @@ void TextField::draw(MenuOverlay * overlay)
 		overlay->drawText("|", absPosition + glm::ivec2(5 + offset - 3, 13));
 	}
 
+	if (!focussed && value == "")
+		overlay->drawText(emptyValue, absPosition + glm::ivec2(5, 14));
+
 	scissorPop();
 }
 

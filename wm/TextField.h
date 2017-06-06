@@ -10,6 +10,7 @@ namespace vrlib { class TrueTypeFont;  }
 class TextField : public Component, public vrlib::tien::EditorBuilder::TextComponent
 {
 public:
+	std::string emptyValue;
 	std::string value;
 	int cursor;
 	int selectionEnd;
