@@ -85,6 +85,7 @@ public:
 	struct
 	{
 		Panel* panel = nullptr;
+		Label* directory = nullptr;
 		ComboBox* typeFilter = nullptr;
 		TextField* searchFilter = nullptr;
 

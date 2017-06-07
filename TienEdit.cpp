@@ -316,7 +316,6 @@ void TienEdit::init()
 	browseToolbar.panel->components.push_back(browseToolbar.searchFilter = new TextField("", glm::ivec2(105, 5)));
 	browseToolbar.searchFilter->emptyValue = "Search...";
 	browseToolbar.searchFilter->size = glm::ivec2(200, 25);
-
 	browseToolbar.searchFilter->onChange = [this]() {
 		static DelayedTask keyTask = 0;
 		if (keyTask != 0)
@@ -329,6 +328,10 @@ void TienEdit::init()
 		});
 	};
 
+	browseToolbar.panel->components.push_back(browseToolbar.directory = new Label("/data", glm::ivec2(305, 5)));
+	browseToolbar.directory->size = glm::ivec2(200, 25);
+	
+	browsePanel->rebuild("./data/models/");
 
 
 	editorBuilder = new GuiEditor(this, propertiesPanel);

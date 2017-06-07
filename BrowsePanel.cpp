@@ -15,11 +15,19 @@
 #include <algorithm>
 #include <filesystem> // windows only?
 #include <glm/gtc/matrix_transform.hpp>
+#include <sys/types.h>
+#include <sys/stat.h>
+#ifndef WIN32
+#include <unistd.h>
+#endif
+
+#ifdef WIN32
+#define stat _stat
+#endif
 
 BrowsePanel::BrowsePanel(TienEdit* editor)
 {
 	this->editor = editor;
-	rebuild("./data/NetworkEngine/models/cars/generic/");
 }
 
 
@@ -62,6 +70,9 @@ inline void BrowsePanel::onReposition(Component * parent)
 void BrowsePanel::rebuild(const std::string & directory)
 {
 	this->directory = directory;
+	if (editor->browseToolbar.directory)
+		editor->browseToolbar.directory->text = directory;
+
 	for (auto c : components)
 		delete c;
 	components.clear();
@@ -147,7 +158,26 @@ void BrowsePanel::rebuild(const std::string & directory)
 				img = new DraggableImage(editor, editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 256), glm::ivec2(333 + 128, 256 + 128), new DragProperties{ DragProperties::Type::Prefab, directory + files[i] });
 			else if (type == FileType::Image || type == FileType::Video)
 			{
-				auto tex = vrlib::Texture::loadCached(directory + files[i]);
+				std::string cacheFilename = "data/tienedit/cache/" + vrlib::util::replace(directory + files[i], "/", "_");
+				struct stat result;
+				if (stat((directory + files[i]).c_str(), &result) == 0)
+					cacheFilename += "." + std::to_string(result.st_mtime) + ".png";
+
+				if (!std::tr2::sys::exists(cacheFilename))
+				{
+					vrlib::Image* thumb = new vrlib::Image(directory + files[i]);
+					if (thumb && thumb->data && thumb->width > 0 && thumb->height > 0)
+					{
+						thumb->scale(128, 128);
+						thumb->flipv();
+						thumb->save(cacheFilename);
+					}
+					else
+						cacheFilename = directory + files[i];
+					if(thumb)
+						delete thumb;
+				}
+				auto tex = vrlib::Texture::loadCached(cacheFilename);
 				img = new DraggableImage(editor, tex, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(0, 0), glm::ivec2(tex->image->width, tex->image->height), new DragProperties{ DragProperties::Type::Texture, directory + files[i] });
 			}
 			else
