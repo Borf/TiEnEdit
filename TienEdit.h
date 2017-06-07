@@ -3,6 +3,7 @@
 #include <vrlib/NormalApp.h>
 #include <vrlib/tien/Tien.h>
 #include <VrLib/math/Ray.h>
+#include <VrLib/tien/components/MeshRenderer.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
@@ -190,6 +191,9 @@ public:
 	void deleteSelection();
 	void focusSelectedObject();
 	void duplicate();
+
+
+	void newMesh(const std::string &name, vrlib::tien::components::MeshRenderer::Mesh* mesh);
 
 	//csg
 	enum class CsgOp {		Union, Difference, Intersect };

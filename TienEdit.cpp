@@ -380,17 +380,9 @@ void TienEdit::init()
 				n->addComponent(new vrlib::tien::components::Transform());
 				perform(new SelectionChangeAction(this, { n }));
 			});
-			menu->setAction("new cube", [this]()
-			{
-				vrlib::tien::Node* n = new vrlib::tien::Node("cube", &tien.scene);
-				n->addComponent(new vrlib::tien::components::Transform());
-
-				auto mesh = new vrlib::tien::components::MeshRenderer::Cube();
-				mesh->material.texture = vrlib::Texture::loadCached("data/tienedit/textures/stub.png");
-
-				n->addComponent(new vrlib::tien::components::MeshRenderer(mesh));
-				perform(new SelectionChangeAction(this, { n }));
-			});
+			menu->setAction("new cube", std::bind(&TienEdit::newMesh, this, "cube", new vrlib::tien::components::MeshRenderer::Cube()));
+			menu->setAction("new plane", std::bind(&TienEdit::newMesh, this, "plane", new vrlib::tien::components::MeshRenderer::Plane()));
+			menu->setAction("new sphere", std::bind(&TienEdit::newMesh, this, "sphere", new vrlib::tien::components::MeshRenderer::Sphere()));
 		}
 	};
 	objectTree->selectItem = [this]()
@@ -1689,6 +1681,18 @@ void TienEdit::duplicate()
 	activeTool = EditTool::TRANSLATE;
 	originalPosition = getSelectionCenter();
 	axis = Axis::XYZ;
+}
+
+void TienEdit::newMesh(const std::string & name, vrlib::tien::components::MeshRenderer::Mesh * mesh)
+{
+	vrlib::tien::Node* n = new vrlib::tien::Node(name, &tien.scene);
+	n->addComponent(new vrlib::tien::components::Transform());
+
+	mesh->material.texture = vrlib::Texture::loadCached("data/tienedit/textures/stub.png");
+
+	n->addComponent(new vrlib::tien::components::MeshRenderer(mesh));
+	perform(new SelectionChangeAction(this, { n }));
+
 }
 
 void TienEdit::csgOperate(bool keepOld, CsgOp operation)
