@@ -134,6 +134,9 @@ public:
 	virtual void preFrame(double frameTime, double totalTime) override;
 
 	virtual void draw() override;
+	virtual void drawSelection();
+	virtual void drawSelectionOrigins();
+	virtual void drawPhysicsDebug();
 
 	virtual void mouseMove(int x, int y) override;
 	virtual void mouseScroll(int offset) override;

@@ -129,6 +129,7 @@
     <ClCompile Include="BrowsePanel.cpp" />
     <ClCompile Include="EditorBuilderGui.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MenuActions.cpp" />
     <ClCompile Include="menu\Menu.cpp" />
     <ClCompile Include="menu\MenuItem.cpp" />
     <ClCompile Include="menu\MenuOverlay.cpp" />
