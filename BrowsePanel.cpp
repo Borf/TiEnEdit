@@ -11,6 +11,7 @@
 #include <VrLib/Texture.h>
 #include <VrLib/Image.h>
 #include <VrLib/Model.h>
+#include <VrLib/gl/FBO.h>
 
 #include <algorithm>
 #include <filesystem> // windows only?
@@ -28,6 +29,24 @@
 BrowsePanel::BrowsePanel(TienEdit* editor)
 {
 	this->editor = editor;
+
+	modelPreviewShader = new vrlib::gl::Shader<ModelPreviewUniforms>("data/TiEnEdit/shaders/modelpreview.vert", "data/TiEnEdit/shaders/modelpreview.frag");
+	modelPreviewShader->bindAttributeLocation("a_position", 0);
+	modelPreviewShader->bindAttributeLocation("a_normal", 1);
+	modelPreviewShader->bindAttributeLocation("a_texcoord", 2);
+	modelPreviewShader->link();
+	modelPreviewShader->bindFragLocation("fragColor", 0);
+	modelPreviewShader->registerUniform(ModelPreviewUniforms::projectionMatrix, "projectionMatrix");
+	modelPreviewShader->registerUniform(ModelPreviewUniforms::modelMatrix, "modelMatrix");
+	modelPreviewShader->registerUniform(ModelPreviewUniforms::viewMatrix, "viewMatrix");
+	modelPreviewShader->registerUniform(ModelPreviewUniforms::s_texture, "s_texture");
+	modelPreviewShader->registerUniform(ModelPreviewUniforms::textureFactor, "textureFactor");
+	modelPreviewShader->registerUniform(ModelPreviewUniforms::color, "color");
+	modelPreviewShader->use();
+	modelPreviewShader->setUniform(ModelPreviewUniforms::s_texture, 0);
+
+
+
 }
 
 
@@ -136,7 +155,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 	{
 		Image* img = nullptr;
 		if (files[i][files[i].size() - 1] == '/')
-		{
+		{ //folders
 			if (std::tr2::sys::exists(directory + files[i] + ".icon.png"))
 				img = new Image(vrlib::Texture::loadCached(directory + files[i] + ".icon.png"), glm::ivec2(0, 0), glm::ivec2(120, 120));
 			else
@@ -153,7 +172,60 @@ void BrowsePanel::rebuild(const std::string & directory)
 		{
 			FileType type = fileType(files[i]);
 			if (type == FileType::Model)
-				img = new DraggableImage(editor, editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 128), glm::ivec2(333 + 128, 128 + 128), new DragProperties{ DragProperties::Type::Model, directory + files[i] });
+			{
+				std::string cacheFilename = "data/tienedit/cache/" + vrlib::util::replace(directory + files[i], "/", "_");
+				struct stat result;
+				if (stat((directory + files[i]).c_str(), &result) == 0)
+					cacheFilename += "." + std::to_string(result.st_mtime) + ".png";
+
+				//if (!std::tr2::sys::exists(cacheFilename))
+				{
+					vrlib::gl::FBO* fbo = new vrlib::gl::FBO(128,128,true);
+					
+					auto model = vrlib::Model::getModel<vrlib::gl::VertexP3N3T2>(directory + files[i]);
+					if (model)
+					{
+						glPushAttrib(GL_ALL_ATTRIB_BITS);
+						fbo->bind();
+						glViewport(0, 0, 128, 128);
+						glClearColor(1, 0, 0, 1);
+						glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+						modelPreviewShader->use();
+						modelPreviewShader->setUniform(ModelPreviewUniforms::viewMatrix, glm::lookAt(glm::vec3(0, 5, -10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)));
+						modelPreviewShader->setUniform(ModelPreviewUniforms::projectionMatrix, glm::perspective(75.0f, 1.0f, 0.01f, 50.0f));
+
+						model->draw([](const glm::mat4 &model)
+						{
+
+						},
+						[](const vrlib::Material &material)
+						{
+							if(material.texture)
+								material.texture->bind();
+							return true;
+						});
+
+
+
+						fbo->unbind();
+						editor->menuOverlay.shader->use();
+
+
+						glPopAttrib();
+						delete model;
+						fbo->saveAsFile(cacheFilename);
+						delete fbo;
+					}
+
+
+				}
+				auto tex = vrlib::Texture::loadCached(cacheFilename);
+				if(tex)
+					img = new DraggableImage(editor, tex, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(0, 0), glm::ivec2(tex->image->width, tex->image->height), new DragProperties{ DragProperties::Type::Texture, directory + files[i] });
+				else
+					img = new DraggableImage(editor, editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 128), glm::ivec2(333 + 128, 128 + 128), new DragProperties{ DragProperties::Type::Model, directory + files[i] });
+			}
 			else if (type == FileType::Prefab)
 				img = new DraggableImage(editor, editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 256), glm::ivec2(333 + 128, 256 + 128), new DragProperties{ DragProperties::Type::Prefab, directory + files[i] });
 			else if (type == FileType::Image || type == FileType::Video)

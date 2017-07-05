@@ -2,6 +2,7 @@
 
 #include "wm/Panel.h"
 #include "wm/Image.h"
+#include <VrLib/gl/shader.h>
 
 class TienEdit;
 namespace vrlib { class Texture; }
@@ -31,6 +32,20 @@ public:
 		Video,
 		Prefab
 	};
+
+
+	enum class ModelPreviewUniforms
+	{
+		projectionMatrix,
+		viewMatrix,
+		modelMatrix,
+		s_texture,
+		textureFactor,
+		color
+	};
+	vrlib::gl::Shader<ModelPreviewUniforms>* modelPreviewShader;
+
+
 
 	BrowsePanel(TienEdit* editor);
 	~BrowsePanel();

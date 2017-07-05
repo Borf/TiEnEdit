@@ -130,8 +130,6 @@ std::map<std::string, ComponentPair> componentFactory =
 	{ "PostProcessing Depth of Field", ComponentPair(
 		[](vrlib::tien::Node* n) { return new vrlib::tien::components::postprocessors::DoF(); },
 		[](const json &data, const json &totalJson) { return new vrlib::tien::components::postprocessors::DoF(); }) },
-
-
 };
 
 
@@ -146,10 +144,6 @@ TienEdit::TienEdit(const std::string &fileName) : NormalApp("TiEn scene Editor")
 TienEdit::~TienEdit()
 {
 }
-
-
-
-
 
 
 void TienEdit::init()
@@ -184,9 +178,7 @@ void TienEdit::init()
 			return c;
 		});
 	}
-
-
-
+	
 	//scaling ruler model
 	ruler = vrlib::Model::getModel<vrlib::gl::VertexP3T2>("data/TiEnEdit/models/ruler1/ruler1.fbx");
 
