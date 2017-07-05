@@ -399,10 +399,11 @@ void TienEdit::init()
 	vrlib::tien::Node* sunlight;
 	{
 		vrlib::tien::Node* n = new vrlib::tien::Node("Sunlight", &tien.scene);
-		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 4, 0), glm::quat(glm::vec3(1,1,1))));
+		n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 4, 0), glm::quat(glm::vec3(1,0,-1))));
 		vrlib::tien::components::Light* light = new vrlib::tien::components::Light();
 		light->color = glm::vec4(1, 1, 0.8627f, 1);
-		light->intensity = 20.0f;
+		light->intensity = 1.0f;
+		light->directionalAmbient = 0.5f;
 		light->type = vrlib::tien::components::Light::Type::directional;
 		light->shadow = vrlib::tien::components::Light::Shadow::shadowmap;
 		n->addComponent(light);
@@ -424,7 +425,7 @@ void TienEdit::init()
 
 
 	cameraPos = glm::vec3(0, 1.8f, 8.0f);
-	load();
+	//load();
 	tien.start();
 	tien.update(0.000001f);
 	tien.pause();

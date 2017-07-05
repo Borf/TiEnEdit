@@ -313,8 +313,9 @@ bool MenuOverlay::mouseUp(bool button)
 		}
 	}
 
-	if (clickedComponent->click(button, mousePos, TienEdit::mouseState.clickCount))
-		return true;
+	if(clickedComponent)
+		if (clickedComponent->click(button, mousePos, TienEdit::mouseState.clickCount))
+			return true;
 
 
 	if (root->click(button, mousePos, TienEdit::mouseState.clickCount))

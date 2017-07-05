@@ -178,8 +178,8 @@ void BrowsePanel::rebuild(const std::string & directory)
 				if (stat((directory + files[i]).c_str(), &result) == 0)
 					cacheFilename += "." + std::to_string(result.st_mtime) + ".png";
 
-				//if (!std::tr2::sys::exists(cacheFilename))
-				{
+				if (!std::tr2::sys::exists(cacheFilename))
+				{ //TODO: move this to a seperate method to generate thumbnail
 					vrlib::gl::FBO* fbo = new vrlib::gl::FBO(128,128,true);
 					
 					auto model = vrlib::Model::getModel<vrlib::gl::VertexP3N3T2>(directory + files[i]);
@@ -188,30 +188,84 @@ void BrowsePanel::rebuild(const std::string & directory)
 						glPushAttrib(GL_ALL_ATTRIB_BITS);
 						fbo->bind();
 						glViewport(0, 0, 128, 128);
-						glClearColor(1, 0, 0, 1);
+						glClearColor(1, 1, 1, 0);
 						glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+						
+
+						glm::vec3 size = model->aabb.getSize();
+						float farPlane = glm::max(size.x, glm::max(size.y, size.z));
+
 
 						modelPreviewShader->use();
-						modelPreviewShader->setUniform(ModelPreviewUniforms::viewMatrix, glm::lookAt(glm::vec3(0, 5, -10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)));
-						modelPreviewShader->setUniform(ModelPreviewUniforms::projectionMatrix, glm::perspective(75.0f, 1.0f, 0.01f, 50.0f));
+						modelPreviewShader->setUniform(ModelPreviewUniforms::projectionMatrix, glm::perspective(75.0f, 1.0f, 0.01f, farPlane * 10));
+						glm::mat4 camera;
+						camera = glm::scale(camera, glm::vec3(1, -1, 1));
+						camera = glm::rotate(camera, glm::radians(-5.0f), glm::vec3(1, 0, 0));
+						camera = glm::translate(camera, glm::vec3(0, 0, -farPlane * 5.0f));
+						camera = glm::rotate(camera, glm::radians(40.0f), glm::vec3(1, 0, 0));
 
-						model->draw([](const glm::mat4 &model)
+						modelPreviewShader->setUniform(ModelPreviewUniforms::viewMatrix, camera);
+						modelPreviewShader->setUniform(ModelPreviewUniforms::textureFactor, 1.0f);
+						modelPreviewShader->setUniform(ModelPreviewUniforms::color, glm::vec4(1,1,1,1));
+
+
+						glEnable(GL_DEPTH_TEST);
+
+						model->draw([this](const glm::mat4 &model)
 						{
-
+							modelPreviewShader->setUniform(ModelPreviewUniforms::modelMatrix, model);
 						},
-						[](const vrlib::Material &material)
+						[this](const vrlib::Material &material)
 						{
-							if(material.texture)
+							if (material.texture)
+							{
+								modelPreviewShader->setUniform(ModelPreviewUniforms::textureFactor, 1.0f);
+								modelPreviewShader->setUniform(ModelPreviewUniforms::color, glm::vec4(1, 1, 1, 1));
 								material.texture->bind();
+							}
+							else
+							{
+								modelPreviewShader->setUniform(ModelPreviewUniforms::textureFactor, 0.0f);
+								modelPreviewShader->setUniform(ModelPreviewUniforms::color, material.color.diffuse);
+
+							}
 							return true;
 						});
 
+						glBindVertexArray(0);
+						glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+						glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+						glDisable(GL_DEPTH_TEST);
+						glDisable(GL_CULL_FACE);
+						glEnable(GL_BLEND);
+
+						modelPreviewShader->setUniform(ModelPreviewUniforms::projectionMatrix, glm::ortho(0.0f, 128.0f, 128.0f, 0.0f, -100.0f, 100.0f));
+						modelPreviewShader->setUniform(ModelPreviewUniforms::viewMatrix, glm::mat4());
+						modelPreviewShader->setUniform(ModelPreviewUniforms::modelMatrix, glm::mat4());
+						modelPreviewShader->setUniform(ModelPreviewUniforms::textureFactor, 1.0f);
+						modelPreviewShader->setUniform(ModelPreviewUniforms::color, glm::vec4(1, 1, 1, 1));
+
+
+						glm::vec2 tl(333, 128);
+						glm::vec2 br(333 + 128, 128 + 128);
+						tl /= glm::vec2(1024, 1024);
+						br /= glm::vec2(1024, 1024);
+
+						std::vector<vrlib::gl::VertexP3N3T2> verts;
+						verts.push_back(vrlib::gl::VertexP3N3T2(glm::vec3(96,96,0), glm::vec3(0,0,1),		glm::vec2(tl.x, 1 - tl.y)));
+						verts.push_back(vrlib::gl::VertexP3N3T2(glm::vec3(128,96,0), glm::vec3(0, 0, 1),	glm::vec2(br.x, 1 - tl.y)));
+						verts.push_back(vrlib::gl::VertexP3N3T2(glm::vec3(128,128,0), glm::vec3(0, 0, 1),	glm::vec2(br.x, 1 - br.y)));
+						verts.push_back(vrlib::gl::VertexP3N3T2(glm::vec3(96,128,0), glm::vec3(0, 0, 1),	glm::vec2(tl.x, 1 - br.y)));
+
+						editor->menuOverlay.skinTexture->bind();
+						vrlib::gl::setAttributes<vrlib::gl::VertexP3N3T2>(&verts[0]);
+						glDrawArrays(GL_QUADS, 0, verts.size());
+						
 
 
 						fbo->unbind();
 						editor->menuOverlay.shader->use();
-
-
 						glPopAttrib();
 						delete model;
 						fbo->saveAsFile(cacheFilename);
@@ -222,7 +276,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 				}
 				auto tex = vrlib::Texture::loadCached(cacheFilename);
 				if(tex)
-					img = new DraggableImage(editor, tex, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(0, 0), glm::ivec2(tex->image->width, tex->image->height), new DragProperties{ DragProperties::Type::Texture, directory + files[i] });
+					img = new DraggableImage(editor, tex, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(0, 0), glm::ivec2(tex->image->width, tex->image->height), new DragProperties{ DragProperties::Type::Model, directory + files[i] });
 				else
 					img = new DraggableImage(editor, editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(128, 128), glm::ivec2(333, 128), glm::ivec2(333 + 128, 128 + 128), new DragProperties{ DragProperties::Type::Model, directory + files[i] });
 			}

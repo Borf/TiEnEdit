@@ -224,10 +224,10 @@
     <ClCompile Include="BrowsePanel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="StubComponent.cpp">
+    <ClCompile Include="MenuActions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MenuActions.cpp">
+    <ClCompile Include="StubComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -245,24 +245,36 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
+    <None Include="data\TiEnEdit\menu.json">
+      <Filter>data</Filter>
+    </None>
+    <None Include="data\TiEnEdit\shaders\overlay.frag">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\TiEnEdit\shaders\overlay.vert">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\TiEnEdit\nodemenu.json">
+      <Filter>data</Filter>
+    </None>
+    <None Include="data\TiEnEdit\newnodemenu.json">
+      <Filter>data</Filter>
+    </None>
+    <None Include="data\TiEnEdit\shaders\editor.vert">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\TiEnEdit\shaders\editor.frag">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\TiEnEdit\stubs.json">
+      <Filter>data</Filter>
+    </None>
     <None Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="data\TiEnEdit\menu.json" />
-    <Text Include="data\TiEnEdit\newnodemenu.json" />
-    <Text Include="data\TiEnEdit\nodemenu.json" />
-    <Text Include="data\TiEnEdit\stubs.json" />
-    <Text Include="data\TiEnEdit\shaders\editor.frag">
+    <None Include="data\TiEnEdit\shaders\modelpreview.frag">
       <Filter>data\shaders</Filter>
-    </Text>
-    <Text Include="data\TiEnEdit\shaders\editor.vert">
+    </None>
+    <None Include="data\TiEnEdit\shaders\modelpreview.vert">
       <Filter>data\shaders</Filter>
-    </Text>
-    <Text Include="data\TiEnEdit\shaders\overlay.frag">
-      <Filter>data\shaders</Filter>
-    </Text>
-    <Text Include="data\TiEnEdit\shaders\overlay.vert">
-      <Filter>data\shaders</Filter>
-    </Text>
+    </None>
   </ItemGroup>
 </Project>
