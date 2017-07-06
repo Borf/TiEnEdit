@@ -154,10 +154,14 @@ void BrowsePanel::rebuild(const std::string & directory)
 	for (size_t i = 0; i < files.size(); i++)
 	{
 		Image* img = nullptr;
+		Image* imgOverlay = nullptr;
 		if (files[i][files[i].size() - 1] == '/')
 		{ //folders
 			if (std::tr2::sys::exists(directory + files[i] + ".icon.png"))
+			{
 				img = new Image(vrlib::Texture::loadCached(directory + files[i] + ".icon.png"), glm::ivec2(0, 0), glm::ivec2(120, 120));
+				imgOverlay = new Image(vrlib::Texture::loadCached("data/tienedit/textures/folder.png"), glm::ivec2(0, 0), glm::ivec2(120, 120));
+			}
 			else
 				img = new Image(editor->menuOverlay.skinTexture, glm::ivec2(0, 0), glm::ivec2(120, 120), glm::ivec2(333, 0), glm::ivec2(333 + 128, 128));
 			img->onClick = [this, directory, i, files]()
@@ -317,6 +321,8 @@ void BrowsePanel::rebuild(const std::string & directory)
 		}
 		if (img)
 			components.push_back(img);
+		if (imgOverlay)
+			components.push_back(imgOverlay);
 
 		std::string name = files[i];
 		if (name.rfind("/") != std::string::npos && name.rfind("/") != name.size()-1)
@@ -378,6 +384,7 @@ DraggableImage::DraggableImage(TienEdit* editor, vrlib::Texture * texture, const
 {
 	this->editor = editor;
 	this->dragProperties = dragProperties;
+	this->focusable = true;
 	//TODO: simplify
 }
 

@@ -227,6 +227,9 @@ bool MenuOverlay::click(bool button)
 			focussedComponent->unfocus();
 		}
 		focussedComponent = clickedComponent;
+		if (!focussedComponent->focusable)
+			focussedComponent = nullptr;
+
 		if (focussedComponent)
 		{
 			focussedComponent->focussed = true;
@@ -234,10 +237,11 @@ bool MenuOverlay::click(bool button)
 		}
 	}
 
-
+	bool clicked = false;
 	if (focussedComponent)
-		focussedComponent->mouseDown(button, mousePos);
-
+		clicked |= focussedComponent->mouseDown(button, mousePos);
+	if (clickedComponent && !clicked)
+		clickedComponent->mouseDown(button, mousePos);
 
 	return lastClick = false;
 }
@@ -306,6 +310,8 @@ bool MenuOverlay::mouseUp(bool button)
 			focussedComponent->unfocus();
 		}
 		focussedComponent = clickedComponent;
+		if (!focussedComponent->focusable)
+			focussedComponent = nullptr;
 		if (focussedComponent)
 		{
 			focussedComponent->focussed = true;
@@ -346,8 +352,13 @@ bool MenuOverlay::mouseScroll(int offset)
 				focussedComponent->focussed = false;
 			}
 			focussedComponent = c;
-			c->focus();
-			c->focussed = true;
+			if (!c->focusable)
+				focussedComponent = nullptr;
+			if (c)
+			{
+				c->focus();
+				c->focussed = true;
+			}
 		}
 	}
 	return scrolled;
