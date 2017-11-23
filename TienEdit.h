@@ -183,6 +183,8 @@ public:
 	void newScene();
 	void save();
 	void load();
+	void importOld();
+
 	//edit
 	void undo();
 	void redo();

@@ -24,6 +24,10 @@
 				"name" : "options",
 				"type" : "item"
 			},
+      {
+        "name": "import old files",
+        "type" : "item"
+      },
 			{
 				"name" : "exit",
 				"type" : "item"

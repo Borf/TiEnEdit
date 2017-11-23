@@ -204,6 +204,7 @@ void TienEdit::init()
 	menuOverlay.rootMenu->setAction("file/new", std::bind(&TienEdit::newScene, this));
 	menuOverlay.rootMenu->setAction("file/open", std::bind(&TienEdit::load, this));
 	menuOverlay.rootMenu->setAction("file/save", std::bind(&TienEdit::save, this));
+	menuOverlay.rootMenu->setAction("file/import old files", std::bind(&TienEdit::importOld, this));
 
 	menuOverlay.rootMenu->setAction("edit/undo", std::bind(&TienEdit::undo, this));
 	menuOverlay.rootMenu->setAction("edit/redo", std::bind(&TienEdit::redo, this));
@@ -425,7 +426,7 @@ void TienEdit::init()
 
 
 	cameraPos = glm::vec3(0, 1.8f, 8.0f);
-	//load();
+	load();
 	tien.start();
 	tien.update(0.000001f);
 	tien.pause();

@@ -13,11 +13,17 @@
 #include <VrLib/Texture.h>
 #include <VrLib/util.h>
 #include <VrLib/csgjs.h>
+#include <VrLib/Log.h>
+#include <VrLib/Kernel.h>
 #include <vrlib/tien/components/Camera.h>
 #include <vrlib/tien/components/Transform.h>
 #include <vrlib/tien/components/Light.h>
 #include <vrlib/tien/components/StaticSkyBox.h>
 #include <vrlib/tien/components/DynamicSkyBox.h>
+#include <vrlib/tien/components/ModelRenderer.h>
+#include <vrlib/tien/components/MeshCollider.h>
+
+using vrlib::Log;
 
 
 void TienEdit::undo()
@@ -389,4 +395,107 @@ void TienEdit::sortScene()
 
 
 	objectTree->update();
+}
+
+
+
+void TienEdit::importOld()
+{
+	char* filter = "All\0 * .*\0Scenes\0 * .json\0";
+	char curdir[512];
+	_getcwd(curdir, 512);
+
+	std::string target = std::string(curdir) + "\\data\\virtueelpd\\scenes";
+
+	HWND hWnd = GetActiveWindow();
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = hWnd;
+
+	char buf[256];
+	ZeroMemory(buf, 256);
+	//strcpy(buf, fileName.c_str());
+	ofn.lpstrFile = buf;
+	ofn.nMaxFile = 256;
+	ofn.lpstrFilter = filter;
+	ofn.nFilterIndex = 0;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = target.c_str();
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
+	if (GetOpenFileName(&ofn))
+	{
+		_chdir(curdir);
+		fileName = buf;
+		std::replace(fileName.begin(), fileName.end(), '\\', '/');
+		if (fileName.find(".") == std::string::npos)
+			fileName += ".json";
+
+		vrlib::logger << "Opening " << fileName << Log::newline;
+		json saveFile = json::parse(std::ifstream(fileName));
+		tien.scene.reset();
+
+
+		{
+			vrlib::tien::Node* n = new vrlib::tien::Node("Main Camera", &tien.scene);
+			n->addComponent(new vrlib::tien::components::Transform(glm::vec3(0, 0, 5)));
+			n->addComponent(new vrlib::tien::components::Camera());
+			//		n->addComponent(new vrlib::tien::components::TransformAttach(mHead));
+		}
+
+		{
+			vrlib::tien::Node* n = new vrlib::tien::Node("Sunlight", &tien.scene);
+			n->addComponent(new vrlib::tien::components::Transform(glm::vec3(1, 1, 0.25f)));
+			vrlib::tien::components::Light* light = new vrlib::tien::components::Light();
+			light->color = glm::vec4(1, 1, 0.8627f, 1);
+			light->intensity = 20.0f;
+			light->type = vrlib::tien::components::Light::Type::directional;
+			light->shadow = vrlib::tien::components::Light::Shadow::shadowmap;
+			light->directionalAmbient = 0.5f;
+
+			n->addComponent(light);
+		}
+
+		for (auto &o : saveFile["objects"])
+		{
+			if (o["model"].get<std::string>().find(".fbx") != std::string::npos)
+			{
+				o["model"] = o["model"].get<std::string>().substr(0, o["model"].get<std::string>().size() - 4);
+			}
+
+
+			std::string fileName = "data/virtueelpd/models/" + o["category"].get<std::string>() + "/" + o["model"].get<std::string>() + "/" + o["model"].get<std::string>() + ".fbx";
+			std::ifstream file(fileName);
+			if (file.is_open())
+			{
+				file.close();
+				vrlib::tien::Node* n = new vrlib::tien::Node(o["model"].get<std::string>(), &tien.scene);
+				n->addComponent(new vrlib::tien::components::Transform(
+					glm::vec3(o["x"], o["y"], -o["z"].get<float>() + 10),
+					glm::quat(o["rotationquat"]["w"], o["rotationquat"]["x"], o["rotationquat"]["y"], o["rotationquat"]["z"]),
+					glm::vec3(o["scale"], o["scale"], o["scale"]) * 40.0f));
+				n->addComponent(new vrlib::tien::components::ModelRenderer(fileName));
+
+				if (o["model"].get<std::string>().find("realPD1") != std::string::npos)
+					n->getComponent<vrlib::tien::components::ModelRenderer>()->castShadow = false;
+
+				if (o["dynamicPhysics"].get<bool>())
+				{
+					n->addComponent(new vrlib::tien::components::MeshCollider(n, o["complexPhysics"].get<bool>()));
+					n->addComponent(new vrlib::tien::components::RigidBody(o["complexPhysics"].get<bool>() ? 0 : 1));
+				}
+
+			}
+			else
+				vrlib::logger << "Could not find file " << fileName << Log::newline;
+		}
+
+
+
+		//tien.scene.cameraNode = (vrlib::tien::Node*)tien.scene.findNodeWithComponent<vrlib::tien::components::Camera>(); //TODO: just for testing post processing filters
+		objectTree->selectedItems.clear();
+		objectTree->update();
+	}
+	_chdir(curdir);
 }

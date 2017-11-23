@@ -7,6 +7,7 @@ ComboBox::ComboBox(const std::string & value, glm::ivec2 position)
 {
 	this->value = value;
 	this->position = position;
+	this->focusable = true;
 }
 
 
