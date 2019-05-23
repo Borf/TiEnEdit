@@ -392,7 +392,7 @@ GuiEditor::FloatComponent * GuiEditor::addFloatBox(float value, float min, float
 			int oldSelectionEnd = selectionEnd;
 			bool ret = TextField::keyChar(character);
 			//check if the last key pressed actually contributed something. Don't check if it's a . and there's no period yet, or when there's a backspace
-			if (ret && getValue() == oldValueFloat && (character != '.' || value.find('.') != value.rfind('.')) && character != 8)
+			if (ret && getValue() == oldValueFloat && (character != '.' || value.find('.') != value.rfind('.')) && character != 8 && value != "0" && value != "-" && value != "-0")
 			{
 				value = oldValue;
 				selectionEnd = oldSelectionEnd;

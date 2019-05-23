@@ -145,7 +145,7 @@ void TienEdit::load()
 		vrlib::logger << "Opening " << fileName << Log::newline;
 		json saveFile = json::parse(std::ifstream(fileName));
 		tien.scene.reset();
-		tien.scene.fromJson(saveFile["scene"], saveFile, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, saveFile));
+		tien.scene.fromJson(saveFile["scene"], saveFile, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, saveFile, std::placeholders::_2));
 
 		//tien.scene.cameraNode = (vrlib::tien::Node*)tien.scene.findNodeWithComponent<vrlib::tien::components::Camera>(); //TODO: just for testing post processing filters
 		objectTree->selectedItems.clear();
@@ -224,7 +224,7 @@ void TienEdit::paste()
 	for (const json &n : clipboard["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
-		newNode->fromJson(n, clipboard);
+		newNode->fromJson(n, clipboard, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, clipboard, std::placeholders::_2));
 
 		newNode->fortree([](vrlib::tien::Node* n) {
 			n->guid = vrlib::util::getGuid();
@@ -272,7 +272,7 @@ void TienEdit::duplicate()
 	for (const json &n : clipboard["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
-		newNode->fromJson(n, clipboard);
+		newNode->fromJson(n, clipboard, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, clipboard, std::placeholders::_2));
 
 		newNode->fortree([](vrlib::tien::Node* n) {
 			n->guid = vrlib::util::getGuid();

@@ -1316,7 +1316,7 @@ void TienEdit::finishCurrentTransformAction()
 	}
 }
 
-vrlib::tien::Component * TienEdit::loadCallback(const json & value, const json &completeFile)
+vrlib::tien::Component * TienEdit::loadCallback(const json & value, const json &completeFile, const std::string a)
 {
 	std::string type = value["type"].get<std::string>();
 	if (componentFactory.find(type) != componentFactory.end())

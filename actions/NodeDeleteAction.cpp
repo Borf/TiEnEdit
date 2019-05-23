@@ -42,7 +42,7 @@ void NodeDeleteAction::undo(TienEdit * editor)
 	for (const json &n : data["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &editor->tien.scene);
-		newNode->fromJson(n, data);
+		newNode->fromJson(n, data, [](const json &, std::string) { return nullptr; });
 		if (n.find("parent") != n.end())
 			newNode->setParent(editor->tien.scene.findNodeWithGuid(n["parent"]));
 		editor->objectTree->selectedItems.push_back(newNode);

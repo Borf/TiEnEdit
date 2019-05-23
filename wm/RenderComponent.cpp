@@ -82,7 +82,7 @@ void RenderComponent::handleDrag(DragProperties* properties)
 		for (auto &n : saveFile["nodes"])
 		{
 			vrlib::tien::Node* newNode = new vrlib::tien::Node("", &editor->tien.scene);
-			newNode->fromJson(n, saveFile, std::bind(&TienEdit::loadCallback, editor, std::placeholders::_1, saveFile));
+			newNode->fromJson(n, saveFile, std::bind(&TienEdit::loadCallback, editor, std::placeholders::_1, saveFile, std::placeholders::_2));
 			newNode->transform->position = mousePos;
 			a->actions.push_back(new NodeNewAction(newNode));
 			newNodes.push_back(newNode);

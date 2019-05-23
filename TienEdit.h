@@ -49,7 +49,7 @@ struct MouseState
 	};
 };
 
-class TienEdit : public vrlib:: NormalApp
+class TienEdit : public vrlib::NormalApp
 {
 public:
 	vrlib::Kernel* kernel;
@@ -169,7 +169,7 @@ public:
 	void finishCurrentTransformAction();
 
 
-	vrlib::tien::Component* loadCallback(const json &value, const json &completeFile);
+	vrlib::tien::Component* loadCallback(const json &value, const json &completeFile, const std::string);
 
 
 	ToggleMenuItem* debugPhysics;
