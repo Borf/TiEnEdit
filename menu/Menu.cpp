@@ -12,7 +12,7 @@
 using vrlib::logger; using vrlib::Log;
 
 
-Menu::Menu(const json &data)
+Menu::Menu(const nlohmann::json &data)
 {
 	for (size_t i = 0; i < data.size(); i++)
 	{
@@ -44,7 +44,7 @@ std::map<std::string, Menu*> Menu::loadedMenus;
 Menu* Menu::load(const std::string & filename)
 {
 	if (loadedMenus.find(filename) == loadedMenus.end())
-		loadedMenus[filename] = new Menu(json::parse(std::ifstream(filename)));
+		loadedMenus[filename] = new Menu(nlohmann::json::parse(std::ifstream(filename)));
 	return loadedMenus[filename];
 }
 
@@ -177,7 +177,7 @@ void Menu::setMenu(std::string menuLoc, MenuItem* menuItem)
 		}
 	}
 	
-	Menu* menu = new Menu(json::array());
+	Menu* menu = new Menu(nlohmann::json::array());
 	menu->setMenu(menuLoc.substr(first.length() == menuLoc.length() ? first.length() : first.length() + 1), menuItem);
 	menuItems.push_back(new SubMenuMenuItem(first, menu));
 }

@@ -8,14 +8,14 @@ StubComponent::StubComponent()
 {
 
 }
-StubComponent::StubComponent(json v)
+StubComponent::StubComponent(nlohmann::json v)
 {
 	values = v;
 }
 
-json StubComponent::toJson(json & meshes) const
+nlohmann::json StubComponent::toJson(nlohmann::json & meshes) const
 {
-	json ret = values;
+	nlohmann::json ret = values;
 	ret["type"] = stub["name"];
 	return ret;
 }
@@ -44,7 +44,7 @@ void StubComponent::buildEditor(vrlib::tien::EditorBuilder* builder, bool folded
 			builder->addCheckbox(values[property["name"].get<std::string>()].get<bool>(), [this, &property](bool newValue) {values[property["name"].get<std::string>()] = newValue; });
 		else if (property["type"] == "color")
 		{
-			const json &colorValue = values[property["name"].get<std::string>()];
+			const nlohmann::json &colorValue = values[property["name"].get<std::string>()];
 			builder->addColorBox(glm::vec4(colorValue[0], colorValue[1], colorValue[2], colorValue[3]), [this, &property](const glm::vec4 &newValue) {
 				for (int i = 0; i < 4; i++)
 					values[property["name"].get<std::string>()][i] = newValue[i];

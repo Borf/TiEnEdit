@@ -9,7 +9,7 @@ namespace vrlib { namespace tien { class Node;  } }
 class NodeDeleteAction : public Action
 {
 	std::vector<vrlib::tien::Node*> selectedNodes;
-	json data;
+	nlohmann::json data;
 public:
 	NodeDeleteAction(const std::vector<vrlib::tien::Node*> &selectedNodes);
 

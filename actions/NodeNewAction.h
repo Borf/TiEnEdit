@@ -5,7 +5,7 @@
 
 class NodeNewAction : public Action
 {
-	json nodeData;
+	nlohmann::json nodeData;
 	vrlib::tien::Node* node;
 public:
 	NodeNewAction(vrlib::tien::Node* newNode);

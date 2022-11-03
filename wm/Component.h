@@ -2,6 +2,7 @@
 
 #include <glm/vec2.hpp>
 #include <list>
+#include <string>
 
 class MenuOverlay;
 

@@ -14,6 +14,7 @@
 
 #include <VrLib/util.h>
 #include <glm/glm.hpp>
+#include <sstream>
 
 GuiEditor::GuiEditor(TienEdit* editor, Panel * panel)
 {

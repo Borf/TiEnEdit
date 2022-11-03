@@ -11,7 +11,7 @@ class MenuItem;
 
 class Menu
 {
-	Menu(const json &data);
+	Menu(const nlohmann::json &data);
 	static std::map<std::string, Menu*> loadedMenus;
 public:
 	static Menu* load(const std::string &filename);

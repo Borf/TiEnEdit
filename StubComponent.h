@@ -5,13 +5,13 @@
 class StubComponent : public vrlib::tien::Component
 {
 public:
-	json stub;
-	json values;
+	nlohmann::json stub;
+	nlohmann::json values;
 
 	StubComponent();
-	StubComponent(json v);
+	StubComponent(nlohmann::json v);
 
-	virtual json toJson(json & meshes) const override;
+	virtual nlohmann::json toJson(nlohmann::json & meshes) const override;
 	virtual void buildEditor(vrlib::tien::EditorBuilder* builder, bool folded);
 
 };

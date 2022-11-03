@@ -16,7 +16,7 @@ void NodeNewAction::perform(TienEdit * editor)
 	else
 	{
 		node = new vrlib::tien::Node("", &editor->tien.scene);
-		node->fromJson(nodeData["node"], nodeData["meshes"], [](const json &, std::string) { return nullptr; });
+		node->fromJson(nodeData["node"], nodeData["meshes"], [](const nlohmann::json &, std::string) { return nullptr; });
 		if (nodeData.find("parent") != nodeData.end())
 			node->setParent(editor->tien.scene.findNodeWithGuid(nodeData["parent"]));
 	}

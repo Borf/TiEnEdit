@@ -169,7 +169,7 @@ public:
 	void finishCurrentTransformAction();
 
 
-	vrlib::tien::Component* loadCallback(const json &value, const json &completeFile, const std::string);
+	vrlib::tien::Component* loadCallback(const nlohmann::json &value, const nlohmann::json &completeFile);
 
 
 	ToggleMenuItem* debugPhysics;

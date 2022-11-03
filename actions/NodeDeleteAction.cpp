@@ -24,7 +24,7 @@ void NodeDeleteAction::perform(TienEdit * editor)
 
 	for (auto c : selectedNodes)
 	{
-		json node = c->asJson(data["meshes"]);
+		nlohmann::json node = c->asJson(data["meshes"]);
 		if(c->parent)
 			node["parent"] = c->parent->guid;
 		data["nodes"].push_back(node);
@@ -39,10 +39,10 @@ void NodeDeleteAction::perform(TienEdit * editor)
 
 void NodeDeleteAction::undo(TienEdit * editor)
 {
-	for (const json &n : data["nodes"])
+	for (const nlohmann::json &n : data["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &editor->tien.scene);
-		newNode->fromJson(n, data, [](const json &, std::string) { return nullptr; });
+		newNode->fromJson(n, data, [](const nlohmann::json &, std::string) { return nullptr; });
 		if (n.find("parent") != n.end())
 			newNode->setParent(editor->tien.scene.findNodeWithGuid(n["parent"]));
 		editor->objectTree->selectedItems.push_back(newNode);

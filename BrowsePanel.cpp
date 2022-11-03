@@ -157,7 +157,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 		Image* imgOverlay = nullptr;
 		if (files[i][files[i].size() - 1] == '/')
 		{ //folders
-			if (std::tr2::sys::exists(directory + files[i] + ".icon.png"))
+			if (std::filesystem::exists(directory + files[i] + ".icon.png"))
 			{
 				img = new Image(vrlib::Texture::loadCached(directory + files[i] + ".icon.png"), glm::ivec2(0, 0), glm::ivec2(120, 120));
 				imgOverlay = new Image(vrlib::Texture::loadCached("data/tienedit/textures/folder.png"), glm::ivec2(0, 0), glm::ivec2(120, 120));
@@ -182,7 +182,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 				if (stat((directory + files[i]).c_str(), &result) == 0)
 					cacheFilename += "." + std::to_string(result.st_mtime) + ".png";
 
-				if (!std::tr2::sys::exists(cacheFilename))
+				if (!std::filesystem::exists(cacheFilename))
 				{ //TODO: move this to a seperate method to generate thumbnail
 					vrlib::gl::FBO* fbo = new vrlib::gl::FBO(128,128,true);
 					
@@ -293,7 +293,7 @@ void BrowsePanel::rebuild(const std::string & directory)
 				if (stat((directory + files[i]).c_str(), &result) == 0)
 					cacheFilename += "." + std::to_string(result.st_mtime) + ".png";
 
-				if (!std::tr2::sys::exists(cacheFilename))
+				if (!std::filesystem::exists(cacheFilename))
 				{
 					vrlib::Image* thumb = new vrlib::Image(directory + files[i]);
 					if (thumb && thumb->data && thumb->width > 0 && thumb->height > 0)

@@ -3,6 +3,7 @@
 
 #include <direct.h>
 #include <fstream>
+#include <sstream>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -24,7 +25,6 @@
 #include <vrlib/tien/components/MeshCollider.h>
 
 using vrlib::Log;
-
 
 void TienEdit::undo()
 {
@@ -100,8 +100,8 @@ void TienEdit::save()
 
 		vrlib::logger << "Save" << vrlib::Log::newline;
 		vrlib::logger << "Saving to " << fileName;
-		json saveFile;
-		saveFile["meshes"] = json::array();
+		nlohmann::json saveFile;
+		saveFile["meshes"] = nlohmann::json::array();
 		saveFile["scene"] = tien.scene.asJson(saveFile["meshes"]);
 		std::ofstream(fileName) << std::setw(4) << saveFile;
 	}
@@ -143,9 +143,9 @@ void TienEdit::load()
 			fileName += ".json";
 
 		vrlib::logger << "Opening " << fileName << Log::newline;
-		json saveFile = json::parse(std::ifstream(fileName));
+		nlohmann::json saveFile = nlohmann::json::parse(std::ifstream(fileName));
 		tien.scene.reset();
-		tien.scene.fromJson(saveFile["scene"], saveFile, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, saveFile, std::placeholders::_2));
+		tien.scene.fromJson(saveFile["scene"], saveFile, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, saveFile));
 
 		//tien.scene.cameraNode = (vrlib::tien::Node*)tien.scene.findNodeWithComponent<vrlib::tien::components::Camera>(); //TODO: just for testing post processing filters
 		objectTree->selectedItems.clear();
@@ -153,6 +153,7 @@ void TienEdit::load()
 	}
 	_chdir(curdir);
 }
+
 
 
 void TienEdit::deleteSelection()
@@ -197,8 +198,8 @@ void TienEdit::copy()
 {
 	vrlib::logger << "Copy" << vrlib::Log::newline;
 
-	json clipboard;
-	clipboard["nodes"] = json::array();
+	nlohmann::json clipboard;
+	clipboard["nodes"] = nlohmann::json::array();
 	for (auto c : objectTree->selectedItems)
 	{
 		// TODO: only copy parents, not children of selected parents
@@ -213,7 +214,7 @@ void TienEdit::paste()
 {
 	vrlib::logger << "Paste" << vrlib::Log::newline;
 
-	json clipboard = json::parse(std::stringstream(fromClipboard()));
+	nlohmann::json clipboard = nlohmann::json::parse(std::stringstream(fromClipboard()));
 	if (clipboard.is_null())
 	{
 		vrlib::logger << "Invalid json on clipboard" << vrlib::Log::newline;
@@ -221,10 +222,10 @@ void TienEdit::paste()
 	}
 
 	objectTree->selectedItems.clear();
-	for (const json &n : clipboard["nodes"])
+	for (const nlohmann::json& n : clipboard["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
-		newNode->fromJson(n, clipboard, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, clipboard, std::placeholders::_2));
+		newNode->fromJson(n, clipboard, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, clipboard));
 
 		newNode->fortree([](vrlib::tien::Node* n) {
 			n->guid = vrlib::util::getGuid();
@@ -252,10 +253,12 @@ void TienEdit::focusSelectedObject()
 	cameraRotTo = glm::quat(mat);
 }
 
+
+
 void TienEdit::duplicate()
 {
-	json clipboard;
-	clipboard["nodes"] = json::array();
+	nlohmann::json clipboard;
+	clipboard["nodes"] = nlohmann::json::array();
 	for (auto c : objectTree->selectedItems)
 	{
 		// TODO: only copy parents, not children of selected parents
@@ -269,10 +272,10 @@ void TienEdit::duplicate()
 	}
 
 	objectTree->selectedItems.clear();
-	for (const json &n : clipboard["nodes"])
+	for (const nlohmann::json& n : clipboard["nodes"])
 	{
 		vrlib::tien::Node* newNode = new vrlib::tien::Node("", &tien.scene);
-		newNode->fromJson(n, clipboard, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, clipboard, std::placeholders::_2));
+		newNode->fromJson(n, clipboard, std::bind(&TienEdit::loadCallback, this, std::placeholders::_1, clipboard));
 
 		newNode->fortree([](vrlib::tien::Node* n) {
 			n->guid = vrlib::util::getGuid();
@@ -433,7 +436,7 @@ void TienEdit::importOld()
 			fileName += ".json";
 
 		vrlib::logger << "Opening " << fileName << Log::newline;
-		json saveFile = json::parse(std::ifstream(fileName));
+		nlohmann::json saveFile = nlohmann::json::parse(std::ifstream(fileName));
 		tien.scene.reset();
 
 
@@ -483,7 +486,7 @@ void TienEdit::importOld()
 				if (o["dynamicPhysics"].get<bool>())
 				{
 					n->addComponent(new vrlib::tien::components::MeshCollider(n, o["complexPhysics"].get<bool>()));
-					n->addComponent(new vrlib::tien::components::RigidBody(o["complexPhysics"].get<bool>() ? 0 : 1));
+					n->addComponent(new vrlib::tien::components::RigidBody(o["complexPhysics"].get<bool>() ? 0.0f : 1.0f));
 				}
 
 			}
